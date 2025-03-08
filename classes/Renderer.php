@@ -52,6 +52,12 @@ class Renderer
 
                     $campaign = Campaigns::getCampaignById($campaignId);
 
+                    if ($testMode){
+                        Logs::addLog("Test campaign started {$campaign->post_title}", "Test campaign {$campaign->post_title} started");
+                    } else {
+                        Logs::addLog("Campaign started {$campaign->post_title}", "Campaign {$campaign->post_title} started");
+                    }
+
                     $audiences = $campaign->audiences;
 
                     $template = Campaigns::lockTemplate($campaign, $testMode);
@@ -136,13 +142,16 @@ class Renderer
 
                                     $emailBody = Campaigns::fillTemplate($template, $campaign, $subscriber);
                                     sleep(1);
+                                    Logs::addLog("Email sent to {$email}", "Email sent to {$email}");
                                     $emailSendingResult = wp_mail($email, $campaign->subject, $emailBody);
                                     if ($emailSendingResult) {
                                         $emailsSent++;
                                         Subscribers::sentEmail($subscriber->id, $campaign->id);
+                                        Logs::addLog("Email sent to {$email} successfully!", "Email sent to {$email} successfully!");
                                     } else {
                                         $emailsFailed++;
                                         Subscribers::sentEmailFailed($subscriber->id, $campaign->id);
+                                        Logs::addLog("Email sending to {$email} failed!", "Email sending to {$email} failed!");
                                     }
                                 } else {
                                     $emailsSkipped++;
@@ -164,6 +173,7 @@ class Renderer
                     if (!$testMode) {
                         Campaigns::finished($campaign);
                     }
+                    Logs::addLog("Campaign finished {$campaign->post_title}", "Campaign {$campaign->post_title} finished");
                 }
                 require MAWIBLAH_PLUGIN_DIR . "/templates/campaign/list.php";
                 exit;

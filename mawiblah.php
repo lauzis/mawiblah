@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Mawiblah
  * Plugin URI: https://github.com/lauzis/
- * Description: Fff-ine, will build myown mailchimp... with blackjack and hookers.
+ * Description: Fff-ine, will build my own mailchimp... with blackjack and hookers.
  * Version: 1.0.1
  * Author: Aivars Lauzis
  * Author URI: https://github.com/lauzis/
@@ -64,6 +64,7 @@ require(MAWIBLAH_PLUGIN_DIR . '/classes/Campaigns.php');
 require(MAWIBLAH_PLUGIN_DIR . '/classes/GravityForms.php');
 require(MAWIBLAH_PLUGIN_DIR . '/classes/Renderer.php');
 require(MAWIBLAH_PLUGIN_DIR . '/classes/Visits.php');
+require(MAWIBLAH_PLUGIN_DIR . '/classes/Logs.php');
 
 
 
@@ -77,6 +78,7 @@ function mawiblah_init(): void
     \Mawiblah\Subscribers::registerPostType();
     \Mawiblah\Campaigns::init();
     \Mawiblah\Visits::init();
+    \Mawiblah\Logs::init();
 }
 
 add_action('init', 'mawiblah_init');

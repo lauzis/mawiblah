@@ -18,9 +18,16 @@ Projects budget yearly is about 100 $ at the moment.
 - Imports audience from Gravity Form entries
 
 ## Change log
+--- 1.0.1 ---
+- added some minimal action logger, for debuging to see why flow of sending out campaing.
+
 --- initial MVP ---
 
 Minimal functionality only to achieve my needs. Maybe will make it more universal at later point in time.
+
+## In progress
+- Logs for actions and errors
+
 
 ## Todo list
 - Sand out by time
@@ -29,7 +36,6 @@ Minimal functionality only to achieve my needs. Maybe will make it more universa
 - Import via files
 - Add audience/subscribers
 - Ajax email send out / cron job
-- Logs for actions and errors
 - Count email send out failures
 - Default template
 - Overwrite the template via hooks or templates stored in theme

@@ -1,6 +1,6 @@
 # MAWIBLAH - Mailch!mp viz blek džek end hūkers
   
-# Why?
+## Why?
 - Good news - we have reached 2k newsletter subscribers.
 - Bad news - we reached 2k newsletter subscribers.
 
@@ -9,7 +9,7 @@ I thought maybe 5$ per month or something, but no... we should spend about 50$ p
 Projects budget yearly is about 100 $ at the moment. 
 "Fine... will do my own Mailchimp... with blackjack and hookers"
 
-# What it does
+## What it does
 - Sends out emails to the email list.
 - Email list is collected via Gravity Forms entries. But one could add the mailing list manually.
 - Email template that is sent out is generated via shortcodes. 
@@ -17,12 +17,12 @@ Projects budget yearly is about 100 $ at the moment.
 - Importing list of unsubscribed from mailchimp
 - Imports audience from Gravity Form entries
 
-# Change log
+## Change log
 --- initial MVP ---
 
 Minimal functionality only to achieve my needs. Maybe will make it more universal at later point in time.
 
-# Todo list
+## Todo list
 - Sand out by time
 - GF sync seperte from audiences
 - Hide default menus

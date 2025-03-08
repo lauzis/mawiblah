@@ -27,7 +27,8 @@ Minimal functionality only to achieve my needs. Maybe will make it more universa
 
 ## In progress
 - Logs for actions and errors
-
+  - Add possibility to switch/on logging
+  - Add possibility to clear logs
 
 ## Todo list
 - Sand out by time

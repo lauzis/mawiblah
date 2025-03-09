@@ -1,25 +1,40 @@
 # MAWIBLAH - Mailch!mp viz blek džek end hūkers
   
+## What is it?
+- It is a WordPress plugin that sends out emails to the list of subscribers.
+
 ## Why?
 - Good news - we have reached 2k newsletter subscribers.
 - Bad news - we reached 2k newsletter subscribers.
 
-Free tear of mailchimp is until 2k subscribers, but next tier is pretty expensive. 
+Free tear of mailchimp is until 2k subscribers, but next tier is pretty expensive.
 I thought maybe 5$ per month or something, but no... we should spend about 50$ per month. Per month Karl.
-Projects budget yearly is about 100 $ at the moment. 
-"Fine... will do my own Mailchimp... with blackjack and hookers"
+Kind of steep increase as our projects budget  is about 100$ yearly at the moment.
+
+So... "Fine... will do my own Mailchimp... with blackjack and hookers"
 
 ## What it does
 - Sends out emails to the email list.
 - Email list is collected via Gravity Forms entries. But one could add the mailing list manually.
-- Email template that is sent out is generated via shortcodes. 
-- Unsibscribe functuallity
+- Email template that is sent out is generated via shortcodes.
+- Unsubscribe functionality
 - Importing list of unsubscribed from mailchimp
 - Imports audience from Gravity Form entries
 
+## Support
+This is a free plugin, so support is limited.
+
+Main idea is to create functionality that is needed for the particular project, there is no intention to make it work
+on all possible configurations and setups.
+
 ## Change log
+--- 1.0.2 ---
+- added to log function that it adds extra data to the content of the log
+- fixed issue that in some cases was sending twice to same email, issue was that in the source there was same address 
+used  with some of the leters capitalized
+
 --- 1.0.1 ---
-- added some minimal action logger, for debuging to see why flow of sending out campaing.
+- added some minimal action logger, for debugging to see why flow of sending out campaign.
 
 --- initial MVP ---
 
@@ -40,6 +55,6 @@ Minimal functionality only to achieve my needs. Maybe will make it more universa
 - Count email send out failures
 - Default template
 - Overwrite the template via hooks or templates stored in theme
-- in test mode  get emails before hand loop
+- in test mode  get emails beforehand loop
 - more detailed wp_mail error messages, maybe have to switch to smtp mailer
-- move edit/create to the wordpress default functions, add  additional fields via hooks
+- move edit/create to the WordPress default functions, add  additional fields via hooks

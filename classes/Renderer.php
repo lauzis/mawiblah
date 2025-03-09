@@ -53,9 +53,16 @@ class Renderer
                     $campaign = Campaigns::getCampaignById($campaignId);
 
                     if ($testMode){
-                        Logs::addLog("Test campaign started {$campaign->post_title}", "Test campaign {$campaign->post_title} started");
+                        Logs::addLog("TEST MODE campaign started: {$campaign->post_title}", "Test campaign {$campaign->post_title} started",[
+                            'campaign'=>$campaign
+                            ]
+                         );
                     } else {
-                        Logs::addLog("Campaign started {$campaign->post_title}", "Campaign {$campaign->post_title} started");
+                        Logs::addLog("Campaign started: {$campaign->post_title}", "Campaign {$campaign->post_title} started",
+                            [
+                                'campaign'=>$campaign
+                            ]
+                        );
                     }
 
                     $audiences = $campaign->audiences;
@@ -85,6 +92,7 @@ class Renderer
                             $emails = GravityForms::getAllEmailsForForm($id);
 
                             foreach ($emails as $email) {
+                                $email = trim(strtolower($email));
 
                                 if (isset($uniqueEmails[$email])){
                                     continue;
@@ -96,15 +104,24 @@ class Renderer
                                 if ($index < $iteration ) {
                                     continue;
                                 }
-                                $currentTIme = time();
-                                if ($currentTIme - $startTime > $maxTime - 2) {
-                                    wp_redirect(Helpers::generatePluginUrl(['action' => 'list']));
-                                    die();
-                                }
                                 $subscriber = Subscribers::getSubscriber($email);
                                 if (!$subscriber) {
                                     $subscriber = Subscribers::addSubscriber($email);
                                 }
+                                $currentTIme = time();
+                                if ($currentTIme - $startTime > $maxTime - 2) {
+                                    Logs::addLog("Campaign stopped {$campaign->post_title} as we are running out of time", "Campaign {$campaign->post_title} stopped",
+                                        [
+                                            'campaign'=>$campaign,
+                                            'audience'=>$audience,
+                                            'subscriber'=>$subscriber,
+                                            'uniqueEmails'=>$uniqueEmails
+                                        ]
+                                    );
+                                    wp_redirect(Helpers::generatePluginUrl(['action' => 'list']));
+                                    die();
+                                }
+
 
                                 if (is_array($subscriber->audiences) && count($subscriber->audiences) > 0) {
                                     $found = false;
@@ -142,16 +159,32 @@ class Renderer
 
                                     $emailBody = Campaigns::fillTemplate($template, $campaign, $subscriber);
                                     sleep(1);
-                                    Logs::addLog("Email sent to {$email}", "Email sent to {$email}");
+
+                                    Logs::addLog("Email sending to {$email}, from audience {$audienceName}", "Email sent to {$email}", [
+                                        'campaign'=>$campaign,
+                                        'audience'=>$audience,
+                                        'subscriber'=>$subscriber,
+                                        'uniqueEmails'=>$uniqueEmails
+                                    ]);
                                     $emailSendingResult = wp_mail($email, $campaign->subject, $emailBody);
                                     if ($emailSendingResult) {
                                         $emailsSent++;
                                         Subscribers::sentEmail($subscriber->id, $campaign->id);
-                                        Logs::addLog("Email sent to {$email} successfully!", "Email sent to {$email} successfully!");
+                                        Logs::addLog("Email sent to {$email} successfully!", "Email sent to {$email} successfully!",[
+                                            'campaign'=>$campaign,
+                                            'audience'=>$audience,
+                                            'subscriber'=>$subscriber,
+                                            'uniqueEmails'=>$uniqueEmails
+                                        ]);
                                     } else {
                                         $emailsFailed++;
                                         Subscribers::sentEmailFailed($subscriber->id, $campaign->id);
-                                        Logs::addLog("Email sending to {$email} failed!", "Email sending to {$email} failed!");
+                                        Logs::addLog("Email sending to {$email} failed!", "Email sending to {$email} failed!",[
+                                            'campaign'=>$campaign,
+                                            'audience'=>$audience,
+                                            'subscriber'=>$subscriber,
+                                            'uniqueEmails'=>$uniqueEmails
+                                        ]);
                                     }
                                 } else {
                                     $emailsSkipped++;
@@ -173,7 +206,12 @@ class Renderer
                     if (!$testMode) {
                         Campaigns::finished($campaign);
                     }
-                    Logs::addLog("Campaign finished {$campaign->post_title}", "Campaign {$campaign->post_title} finished");
+                    Logs::addLog("Campaign finished: {$campaign->post_title}", "Campaign {$campaign->post_title} finished",[
+                        'campaign'=>$campaign,
+                        'audience'=>$audience,
+                        'subscriber'=>$subscriber,
+                        'uniqueEmails'=>$uniqueEmails
+                    ]);
                 }
                 require MAWIBLAH_PLUGIN_DIR . "/templates/campaign/list.php";
                 exit;

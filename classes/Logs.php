@@ -94,10 +94,15 @@ class Logs
         return null;
     }
 
-    public static function addLog(string $action, string $message = ""): object
+    public static function addLog(string $action, string $message = "", $additionalObjects = []): object
     {
+        foreach($additionalObjects as $key => $object){
+            $message .= "<h2>$key</h2>";
+            $message .= "<pre>";
+            $message .= "\n" . print_r($object, true);
+            $message .= "</pre>";
+        }
 
-        // Prepare the post data
         $post_data = [
             'post_title' => $action,
             'post_content' => $message,
@@ -105,7 +110,6 @@ class Logs
             'post_type' => self::postType(), // Replace with your custom post type
         ];
 
-        // Insert the post into the database
         $post_id = wp_insert_post($post_data);
 
         if (!is_wp_error($post_id)) {

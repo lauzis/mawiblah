@@ -224,12 +224,6 @@ class Renderer
                     $campaignId = $_GET['campaignId'];
                     $campaign = Campaigns::getCampaignById($campaignId);
 
-                    ?>
-                    <pre>
-                        <?php print_r($campaign); ?>
-                    </pre>
-                    <?php
-
                     require MAWIBLAH_PLUGIN_DIR . "/templates/campaign/add-campaign.php";
                 }
                 break;

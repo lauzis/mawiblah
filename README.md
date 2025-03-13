@@ -28,15 +28,20 @@ Main idea is to create functionality that is needed for the particular project, 
 on all possible configurations and setups.
 
 ## Change log
---- 1.0.2 ---
+### --- 1.0.3 ---
+- removed somed debug code 
+- fixed issue with wpml translations, probably this was due to the order of plugin registration or something. And at time
+when email tempalte was read the wpml was not inicialized. Rewrote that request for template would go through rest request. 
+
+### --- 1.0.2 ---
 - added to log function that it adds extra data to the content of the log
 - fixed issue that in some cases was sending twice to same email, issue was that in the source there was same address 
 used  with some of the leters capitalized
 
---- 1.0.1 ---
+### --- 1.0.1 ---
 - added some minimal action logger, for debugging to see why flow of sending out campaign.
 
---- initial MVP ---
+### --- initial MVP ---
 
 Minimal functionality only to achieve my needs. Maybe will make it more universal at later point in time.
 
@@ -47,7 +52,8 @@ Minimal functionality only to achieve my needs. Maybe will make it more universa
 
 ## Todo list
 - Sand out by time
-- GF sync seperte from audiences
+- GF sync seperte from audiences, so audiences would come only from "Mawiblac audiences", 
+and there would be some syncing mechanism. checking last entry. if last entry is newer than last sync, then sync.
 - Hide default menus
 - Import via files
 - Add audience/subscribers
@@ -58,3 +64,6 @@ Minimal functionality only to achieve my needs. Maybe will make it more universa
 - in test mode  get emails beforehand loop
 - more detailed wp_mail error messages, maybe have to switch to smtp mailer
 - move edit/create to the WordPress default functions, add  additional fields via hooks
+- Update selftests
+  - Check if there is email templates
+  - Check if theme has email templates

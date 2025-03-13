@@ -2,9 +2,6 @@
 
 <div class="flex ">
     <div class="flex-column">
-        <pre>
-            <?php print_r($campaign); ?>
-        </pre>
         <form action="<?= \Mawiblah\Helpers::getCurrentUrl(); ?>&create-compaign" method="POST" class="create-campaign-form">
             <label for="title">Title</label>
             <input type="text" name="title" id="title" value="<?= isset($campaign) ? $campaign->post_title : ''; ?>">

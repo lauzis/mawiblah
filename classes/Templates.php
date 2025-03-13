@@ -4,16 +4,46 @@ namespace Mawiblah;
 class Templates
 {
 
-    public static function getEmailTemplateByName($templateName){
+    public static function getTemplateByNameViaRest($templateName): string
+    {
+        $cookies = [];
+        foreach ($_COOKIE as $name => $value) {
+            if (strpos($name, 'wordpress_logged_in_') !== false || strpos($name, 'wp-settings-') !== false) {
+                $cookies[] = $name . '=' . $value;
+            }
+        }
+        $cookieHeader = implode('; ', $cookies);
+
+        $url = "/wp-json/mawiblah/v1/get-html-template";
+        $postData = (object) ['template'=> $templateName];
+
+         $response = wp_remote_post(site_url() . $url, [
+             'body' => json_encode($postData),
+             'headers' => [
+                 'Content-Type' => 'application/json',
+                 'X-WP-Nonce' => wp_create_nonce('wp_rest'),
+                 'cookie' => $cookieHeader
+             ],
+             'timeout'=> 15,
+         ]);
+
+        $body = wp_remote_retrieve_body($response);
+        $data = json_decode($body);
+        return $data->template;
+    }
+
+    public static function getEmailTemplateByName($templateName)
+    {
         $dir = MAWIBLAH_PLUGIN_DIR . '/email_templates';
         $files = scandir($dir);
         foreach ($files as $file) {
-            if ( pathinfo($file, PATHINFO_FILENAME) === $templateName) {
+            if (pathinfo($file, PATHINFO_FILENAME) === $templateName) {
                 return file_get_contents($dir . '/' . $file);
             }
         }
         return false;
     }
+
     public static function getArrayOfEmailTemplates(): array
     {
         $templates = [];
@@ -29,7 +59,7 @@ class Templates
         return $templates;
     }
 
-    public static function validateEmailTemplate(string $emailTemplate):bool
+    public static function validateEmailTemplate(string $emailTemplate): bool
     {
         $dir = MAWIBLAH_PLUGIN_DIR . '/email_templates';
         $files = scandir($dir);
@@ -41,13 +71,13 @@ class Templates
         return false;
     }
 
-    public static function copyTemplate( int $campaignId, bool $testMode): string | bool
+    public static function copyTemplate(int $campaignId, bool $testMode): string|bool
     {
         $templateName = get_post_meta($campaignId, 'template', true);
         $templateArchived = get_post_meta($campaignId, 'email_template_copied', true);
 
         $dir = MAWIBLAH_PLUGIN_DIR . '/email_templates/archieved';
-        $template = do_shortcode(self::getEmailTemplateByName($templateName));
+        $template = self::getTemplateByNameViaRest($templateName);
 
         if ($template) {
             if (!$templateArchived || $testMode) {

@@ -451,12 +451,12 @@ class Campaigns
 
         $links = $campaign->links;
         if (isset($links[$url])) {
-            $links[$url] = $links[$url] + 1;
+            $links[$url] = (int) $links[$url] + 1;
         } else {
             $links[$url] = 1;
         }
         update_post_meta($campaign->id, 'links', json_encode($links));
 
-        return $campaign->linksClicked + 1;
+        return (int) $campaign->linksClicked + 1;
     }
 }

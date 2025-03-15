@@ -28,6 +28,9 @@ Main idea is to create functionality that is needed for the particular project, 
 on all possible configurations and setups.
 
 ## Change log
+### --- 1.0.4 ---
+- fixed issue with the registering visit from link stats
+
 ### --- 1.0.3 ---
 - removed somed debug code 
 - fixed issue with wpml translations, probably this was due to the order of plugin registration or something. And at time

@@ -28,6 +28,9 @@ Main idea is to create functionality that is needed for the particular project, 
 on all possible configurations and setups.
 
 ## Change log
+### --- 1.0.5 ---
+-- fix for two messages at the same time at the unsub
+
 ### --- 1.0.4 ---
 - fixed issue with the registering visit from link stats
 

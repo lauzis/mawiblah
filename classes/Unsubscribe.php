@@ -91,10 +91,13 @@ class Unsubscribe
                         add_post_meta($subscriber->id, 'unsubed_feedback', $feedback, false);
                     }
                     include(MAWIBLAH_TEMPLATE_DIR . '/unsubscribe/unsubed.php');
+                    exit;
                 } else {
                     include(MAWIBLAH_TEMPLATE_DIR . '/unsubscribe/not-found.php');
+                    exit;
                 }
                 include(MAWIBLAH_TEMPLATE_DIR . '/unsubscribe/already-unsubed.php');
+                exit;
             }
 
         } else {

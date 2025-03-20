@@ -74,6 +74,13 @@ class Renderer
                     $emailsFailed = $counters->emailsFailed ?? 0;
                     $emailsSkipped = $counters->emailsSkipped ?? 0;
                     $emailsUnsubed = $counters->emailsUnsubed ?? 0;
+                    $skippingReasons = [
+                        'unsubed'=>[],
+                        'testMode'=>[],
+                        'alreadySent'=>[],
+                        'notUniqueEmail'=>[],
+                        'skippingToPlaceWeLeftOf'=>[]
+                    ];
 
 
                     $iteration = get_post_meta($campaign->id, 'iteration', true);
@@ -95,6 +102,7 @@ class Renderer
                                 $email = trim(strtolower($email));
 
                                 if (isset($uniqueEmails[$email])){
+                                    $skippingReasons['notUniqueEmail'][]=$email;
                                     continue;
                                 }
                                 $uniqueEmails[$email] = true;
@@ -102,6 +110,7 @@ class Renderer
                                 $index++;
                                 //skipp to the place where we left off
                                 if ($index < $iteration ) {
+                                    $skippingReasons['skippingToPlaceWeLeftOf'][]=$email;
                                     continue;
                                 }
                                 $subscriber = Subscribers::getSubscriber($email);
@@ -116,7 +125,8 @@ class Renderer
                                             'audience'=>$audience,
                                             'subscriber'=>$subscriber,
                                             'uniqueEmails'=>$uniqueEmails,
-                                            'testMode'=>$testMode
+                                            'testMode'=>$testMode,
+                                            'skippingReasons'=>$skippingReasons
                                         ]
                                     );
                                     wp_redirect(Helpers::generatePluginUrl(['action' => 'list']));
@@ -142,18 +152,21 @@ class Renderer
 
                                 if ($subscriber->unsubed) {
                                     $emailsUnsubed++;
+                                    $skippingReasons['unsubed'][]=$email;
                                     continue;
                                 }
 
                                 if (Subscribers::checkMailchimpUnsubedAudience($email)) {
                                     Subscribers::unsub($email, false, 'In mailchimp audience was unsubed already');
                                     Subscribers::addSubscriberToAudience($subscriber->id, $unsubedAudience->term_id);
+                                    $skippingReasons['unsubed'][]=$email;
                                     $emailsUnsubed++;
                                     continue;
                                 }
 
                                 $emailIsSent = Subscribers::isEmailSent($subscriber->id, $campaign->id);
                                 $isTester = Subscribers::isTester($subscriber);
+
 
                                 if ((!$emailIsSent && !$testMode) || ($testMode && $isTester)) {
                                     Subscribers::sendingEmail($subscriber->id, $campaign->id);
@@ -166,7 +179,8 @@ class Renderer
                                         'audience'=>$audience,
                                         'subscriber'=>$subscriber,
                                         'uniqueEmails'=>$uniqueEmails,
-                                        'testMode'=>$testMode
+                                        'testMode'=>$testMode,
+                                        'skippingReasons'=>$skippingReasons
                                     ]);
                                     $emailSendingResult = wp_mail($email, $campaign->subject, $emailBody);
                                     if ($emailSendingResult) {
@@ -177,7 +191,8 @@ class Renderer
                                             'audience'=>$audience,
                                             'subscriber'=>$subscriber,
                                             'uniqueEmails'=>$uniqueEmails,
-                                            'testMode'=>$testMode
+                                            'testMode'=>$testMode,
+                                            'skippingReasons'=>$skippingReasons
                                         ]);
                                     } else {
                                         $emailsFailed++;
@@ -187,10 +202,17 @@ class Renderer
                                             'audience'=>$audience,
                                             'subscriber'=>$subscriber,
                                             'uniqueEmails'=>$uniqueEmails,
-                                            'testMode'=>$testMode
+                                            'testMode'=>$testMode,
+                                            'skippingReasons'=>$skippingReasons
                                         ]);
                                     }
                                 } else {
+                                    if ($emailIsSent && !isTester){
+                                        $skippingReasons['alreadySent'][]=$email;
+                                    }
+                                
+
+
                                     $emailsSkipped++;
                                 }
 
@@ -214,7 +236,9 @@ class Renderer
                         'campaign'=>$campaign,
                         'audience'=>$audience,
                         'subscriber'=>$subscriber,
-                        'uniqueEmails'=>$uniqueEmails
+                        'uniqueEmails'=>$uniqueEmails,
+                        'testMode'=>$testMode,
+                        'skippingReasons'=>$skippingReasons
                     ]);
                 }
                 require MAWIBLAH_PLUGIN_DIR . "/templates/campaign/list.php";

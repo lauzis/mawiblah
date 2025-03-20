@@ -115,7 +115,8 @@ class Renderer
                                             'campaign'=>$campaign,
                                             'audience'=>$audience,
                                             'subscriber'=>$subscriber,
-                                            'uniqueEmails'=>$uniqueEmails
+                                            'uniqueEmails'=>$uniqueEmails,
+                                            'testMode'=>$testMode
                                         ]
                                     );
                                     wp_redirect(Helpers::generatePluginUrl(['action' => 'list']));
@@ -164,7 +165,8 @@ class Renderer
                                         'campaign'=>$campaign,
                                         'audience'=>$audience,
                                         'subscriber'=>$subscriber,
-                                        'uniqueEmails'=>$uniqueEmails
+                                        'uniqueEmails'=>$uniqueEmails,
+                                        'testMode'=>$testMode
                                     ]);
                                     $emailSendingResult = wp_mail($email, $campaign->subject, $emailBody);
                                     if ($emailSendingResult) {
@@ -174,7 +176,8 @@ class Renderer
                                             'campaign'=>$campaign,
                                             'audience'=>$audience,
                                             'subscriber'=>$subscriber,
-                                            'uniqueEmails'=>$uniqueEmails
+                                            'uniqueEmails'=>$uniqueEmails,
+                                            'testMode'=>$testMode
                                         ]);
                                     } else {
                                         $emailsFailed++;
@@ -183,7 +186,8 @@ class Renderer
                                             'campaign'=>$campaign,
                                             'audience'=>$audience,
                                             'subscriber'=>$subscriber,
-                                            'uniqueEmails'=>$uniqueEmails
+                                            'uniqueEmails'=>$uniqueEmails,
+                                            'testMode'=>$testMode
                                         ]);
                                     }
                                 } else {

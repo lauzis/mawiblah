@@ -51,12 +51,8 @@ used  with some of the leters capitalized
 
 Minimal functionality only to achieve my needs. Maybe will make it more universal at later point in time.
 
-## In progress
-- Logs for actions and errors
-  - Add possibility to switch/on logging
-  - Add possibility to clear logs
 
-## Todo list
+## Todo
 - Sand out by time
 - GF sync seperte from audiences, so audiences would come only from "Mawiblac audiences", 
 and there would be some syncing mechanism. checking last entry. if last entry is newer than last sync, then sync.

@@ -28,6 +28,9 @@ Main idea is to create functionality that is needed for the particular project, 
 on all possible configurations and setups.
 
 ## Change log
+### --- 1.0.6 ---
+-- nonce fixes for ajax requests
+
 ### --- 1.0.5 ---
 -- fix for two messages at the same time at the unsub
 
@@ -51,6 +54,8 @@ used  with some of the leters capitalized
 
 Minimal functionality only to achieve my needs. Maybe will make it more universal at later point in time.
 
+## Known issues
+- Texts in unsubscribe scenario is not translated
 
 ## Todo
 - Sand out by time

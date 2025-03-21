@@ -28,6 +28,9 @@ Main idea is to create functionality that is needed for the particular project, 
 on all possible configurations and setups.
 
 ## Change log
+### --- 1.0.7 ---
+-- some logging mechanisms updated, added skipped emails logging
+
 ### --- 1.0.6 ---
 -- nonce fixes for ajax requests
 

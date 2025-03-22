@@ -68,29 +68,35 @@ Minimal functionality only to achieve my needs. Maybe will make it more universa
 - Texts in unsubscribe scenario is not translated
 
 ## Todo
-- Sand out by time
-- GF sync separate from audiences, so audiences would come only from "Mawiblah audiences", 
-and there would be some syncing mechanism. checking last entry. if last entry is newer than last sync, then sync.
-- Hide default menus
-- Import via files
-- Add audience/subscribers
-- Ajax email send out / cron job
-- Count email send out failures
-- Default template
-- Overwrite the template via hooks or templates stored in theme
-- in test mode  get emails beforehand loop
-- more detailed wp_mail error messages, maybe have to switch to smtp mailer
-- move edit/create to the WordPress default functions, add  additional fields via hooks
+- Bugfixes
+  - Todo scenario Sent campaing -> Test -> Send again - Testing resets counter and status, so its possible same campaign to be sent out twice.
+- New Features
+  - Dublicate the campaing, so dont need to reset it.
+  - Sand out by time (reacurance), once per month.
+  - Import via files
+  - Ajax email send out / cron job
+  - Count email send out failures if some email has some x times failed, then mark it as failed and dont send out anymore
+  - We have click time, but we need to check how the "open" email is detected and implement
+  - Overall stats / welcome panel
+    - Email sent stats
+    - Email opened stats
+    - Link clicked stats
+    - Open timings stats
+    - Conversion stats
+- Refactoring
+  - GF sync separate from audiences, so audiences would come only from "Mawiblah audiences", 
+  and there would be some syncing mechanism. checking last entry. if last entry is newer than last sync, then sync. Probably best would be to have seperate import section, where users could import subscribers.
+  - In test mode  get emails beforehand loop
+  - more detailed wp_mail error messages, maybe have to switch to smtp mailer
+  - move edit/create to the WordPress default functions, add  additional fields via hooks
+- Imporvememts
+  - Hide default menus or move them to the submenu
+  - Default template - create default template that would work out of the box for some one that makes mistake and sets up this plugin in his wordpres project
+  - Overwrite the template via hooks or templates stored in theme
 - Update self tests
   - Check if there is email templates
   - Check if theme has email templates
-- We have click time, but we need to check how the "open" email is detected and implement
-- Overall stats / welcome panel
-  - Email sent stats
-  - Email opened stats
-  - Link clicked stats
-  - Open timings stats
-  - Conversion stats
-- Todo scenario Sent campaing -> Test -> Send again - Testing resets counter and status, so its possible
-same campaign to be sent out twice.
-- Dublicate the campaing, so dont need to reset it.
+
+
+  
+

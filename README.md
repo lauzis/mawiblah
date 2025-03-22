@@ -20,6 +20,9 @@ So... "Fine... will do my own Mailchimp... with blackjack and hookers"
 - Unsubscribe functionality
 - Importing list of unsubscribed from mailchimp
 - Imports audience from Gravity Form entries
+- Tracking clicks for the campaigns
+- Tracking click timing for the campaigns
+- Logging of the actions 
 
 ## Support
 This is a free plugin, so support is limited.
@@ -28,6 +31,10 @@ Main idea is to create functionality that is needed for the particular project, 
 on all possible configurations and setups.
 
 ## Change log
+### --- 1.0.8 ---
+- saving click time for stats, and so one could check what is most "active" time for opening emails
+- fixed logical issue, all subscribers got flag that have already sent email tot hat address
+
 ### --- 1.0.7 ---
 -- some logging mechanisms updated, added skipped emails logging
 
@@ -41,14 +48,14 @@ on all possible configurations and setups.
 - fixed issue with the registering visit from link stats
 
 ### --- 1.0.3 ---
-- removed somed debug code 
+- removed some debug code 
 - fixed issue with wpml translations, probably this was due to the order of plugin registration or something. And at time
-when email tempalte was read the wpml was not inicialized. Rewrote that request for template would go through rest request. 
+when email template was read the wpml was not initialized. Rewrote that request for template would go through rest request. 
 
 ### --- 1.0.2 ---
 - added to log function that it adds extra data to the content of the log
 - fixed issue that in some cases was sending twice to same email, issue was that in the source there was same address 
-used  with some of the leters capitalized
+used  with some of the letters capitalized
 
 ### --- 1.0.1 ---
 - added some minimal action logger, for debugging to see why flow of sending out campaign.
@@ -62,7 +69,7 @@ Minimal functionality only to achieve my needs. Maybe will make it more universa
 
 ## Todo
 - Sand out by time
-- GF sync seperte from audiences, so audiences would come only from "Mawiblac audiences", 
+- GF sync separate from audiences, so audiences would come only from "Mawiblah audiences", 
 and there would be some syncing mechanism. checking last entry. if last entry is newer than last sync, then sync.
 - Hide default menus
 - Import via files
@@ -74,6 +81,16 @@ and there would be some syncing mechanism. checking last entry. if last entry is
 - in test mode  get emails beforehand loop
 - more detailed wp_mail error messages, maybe have to switch to smtp mailer
 - move edit/create to the WordPress default functions, add  additional fields via hooks
-- Update selftests
+- Update self tests
   - Check if there is email templates
   - Check if theme has email templates
+- We have click time, but we need to check how the "open" email is detected and implement
+- Overall stats / welcome panel
+  - Email sent stats
+  - Email opened stats
+  - Link clicked stats
+  - Open timings stats
+  - Conversion stats
+- Todo scenario Sent campaing -> Test -> Send again - Testing resets counter and status, so its possible
+same campaign to be sent out twice.
+- Dublicate the campaing, so dont need to reset it.

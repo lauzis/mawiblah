@@ -287,7 +287,7 @@ class Subscribers
     {
         $sent = get_post_meta($subscriberId, 'sent_' . $campaignId, true);
 
-        return $sent !== false;
+        return (bool) $sent;
     }
     public static function isTester($subscriber): bool
     {

@@ -457,6 +457,8 @@ class Campaigns
         }
         update_post_meta($campaign->id, 'links', json_encode($links));
 
+        add_post_meta($campaign->id, 'click_time', time(),false);
+
         return (int) $campaign->linksClicked + 1;
     }
 }

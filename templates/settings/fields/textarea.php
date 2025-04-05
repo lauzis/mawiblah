@@ -1,4 +1,4 @@
-<div class="gae-form-field" id="gae-form-field-<?= $id ?>">
+<div class="gae-form-field" id="gae-form-field-<?= esc_attr($id) ?>">
 
   <label for="<?= $id ?>">
     <?= $title ?>

@@ -107,7 +107,16 @@ use Mawiblah\Settings;
                                     <?php if ($id === "gea-debug-ip") {
                                         $description .= Gae_Admin::get_translation("<br/>You current IP address is: ") . $_SERVER["REMOTE_ADDR"];
                                     } ?>
-                                    <li><?php require(mawiblah_INCLUDES_PATH . "/fields/" . $field["type"] . ".php"); ?></li>
+                                    <li><?php 
+                                        $allowed_types = ['text', 'textarea', 'select', 'checkbox', 'switch']; // Add all valid field types
+                                        $type = in_array($field["type"], $allowed_types) ? $field["type"] : 'text';
+                                        $field_path = mawiblah_INCLUDES_PATH . "/fields/" . $type . ".php";
+                                        if (file_exists($field_path)) {
+                                            require($field_path);
+                                        } else {
+                                            echo "Field type not found: " . htmlspecialchars($type);
+                                        }
+                                    ?></li>
                                 <?php endforeach; ?>
                             </ul>
                         </div>

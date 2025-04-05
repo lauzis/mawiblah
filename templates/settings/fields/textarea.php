@@ -5,10 +5,10 @@
   </label>
 
   <textarea 
-  name="<?= $id ?>" 
-  id="<?= $id ?>" 
-  placeholder="<?= $placeholder ?>" 
-  ><?= $value ? $value : $default_value; ?></textarea>
+  name="<?= esc_attr($id) ?>" 
+  id="<?= esc_attr($id) ?>" 
+  placeholder="<?= esc_attr($placeholder) ?>" 
+  ><?= esc_textarea($value ? $value : $default_value); ?></textarea>
 
   <?php if ($description): ?>
     <p class="gae-form-field-description"><?= $description ?></p>

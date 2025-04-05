@@ -8,7 +8,7 @@ use Mawiblah\Settings;
     <?php Settings::settings_page_visited(); ?>
     <?php $sections = Settings::get_sections(); ?>
     <h1><?= Settings::get_translation('MAWIBLAH settings'); ?>
-        - <?php print mawiblah_PUGIN_NAME . " " . mawiblah_CURRENT_VERSION; ?></h1>
+        - <?php print mawiblah_PLUGIN_NAME . " " . mawiblah_CURRENT_VERSION; ?></h1>
     <?php Settings::print_all_messages(); ?>
     <p>
         <?= Settings::get_translation(""); ?>

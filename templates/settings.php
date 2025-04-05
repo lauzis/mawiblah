@@ -70,7 +70,7 @@ use Mawiblah\Settings;
             <div id="<?= $section["id"] ?>" class="postbox-container <?= MAWIBLAH_PLUGIN_DIRECTORY_NAME ?>-section<?= $enabled ?><?= $last ?>">
 
                 <div class="meta-box-sortables closed">
-                    <div id="<?= $section["id"] ?>-" class="postbox <?= $section["id"] ?> ">
+                    <div id="<?= $section["id"] ?>" class="postbox <?= $section["id"] ?> ">
 
                         <button type="button" class="handlediv section-title" aria-expanded="false">
                             <span class="screen-reader-text"><?= Settings::get_translation("Toggle panel"); ?>: <?= Settings::get_translation($section["title"]); ?></span>

@@ -10,6 +10,8 @@ class Init
     const MAWIBLAH_CAMPAIGNS = 'mawiblah-campaigns';
     const MAWIBLAH_EMAIL_TEMPLATES = 'mawiblah-email-templates';
     const MAWIBLAH_TESTS = 'mawiblah-tests';
+
+    const MAWIBLAH_SETTINGS = 'mawiblah-settings';
     public function init(): void
     {
         if (is_admin()) {
@@ -25,8 +27,9 @@ class Init
             self::MAWIBLAH,
             self::MAWIBLAH_CAMPAIGNS,
             self::MAWIBLAH_EMAIL_TEMPLATES,
-            self::MAWIBLAH_TESTS
-,        ];
+            self::MAWIBLAH_TESTS,
+            self::MAWIBLAH_SETTINGS,
+        ];
     }
 
     public static function add_settings_link_to_plugin_list($links)
@@ -150,6 +153,15 @@ class Init
             [$this, 'tests']
         );
 
+        add_submenu_page(
+            'mawiblah',
+            'Settings',
+            'Settings',
+            'manage_options',
+            self::MAWIBLAH_SETTINGS,
+            [$this, 'settings']
+        );
+
     }
 
     public function emailTemplates() {
@@ -167,5 +179,10 @@ class Init
 
     public function tests() {
         Renderer::tests();
+    }
+
+
+    public function settings() {
+        Renderer::settings();
     }
 }

@@ -29,6 +29,10 @@ if (!defined('MAWIBLAH_PLUGIN_FILE')) {
     define('MAWIBLAH_PLUGIN_FILE', plugin_basename(__FILE__));
 }
 
+if (!defined('MAWIBLAH_CONFIG_PATH')) {
+    define('MAWIBLAH_CONFIG_PATH', MAWIBLAH_PLUGIN_DIR.'/config');
+}
+
 if (!defined('MAWIBLAH_UPLOAD_DIR')) {
     $uploadDir = wp_get_upload_dir();
     $baseDir = $uploadDir['basedir'] . '/mawiblah';
@@ -52,6 +56,8 @@ if (!defined('MAWIBLAH_REPORT_URL')) {
 
 define('MAWIBLAH_POST_TYPE_PREFIX', 'mawiblah_');
 
+
+require(MAWIBLAH_PLUGIN_DIR . '/classes/Settings.php');
 require(MAWIBLAH_PLUGIN_DIR . '/classes/Helpers.php');
 require(MAWIBLAH_PLUGIN_DIR . '/classes/Init.php');
 require(MAWIBLAH_PLUGIN_DIR . '/classes/Tests.php');

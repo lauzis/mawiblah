@@ -11,7 +11,8 @@
   ><?= esc_textarea($value ? $value : $default_value); ?></textarea>
 
   <?php if ($description): ?>
-    <p class="gae-form-field-description"><?= $description ?></p>
+-    <p class="gae-form-field-description"><?= $description ?></p>
++    <p class="gae-form-field-description"><?= esc_html($description) ?></p>
   <?php endif; ?>
 
 </div>

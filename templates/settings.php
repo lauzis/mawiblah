@@ -3,19 +3,19 @@
 use Mawiblah\Settings;
 
 ?>
-<div class="<?= gae_PLUGIN_DIRECTORY_NAME ?>">
+<div class="<?= MAWIBLAH_PLUGIN_DIRECTORY_NAME ?>">
 
     <?php Settings::settings_page_visited(); ?>
     <?php $sections = Settings::get_sections(); ?>
     <h1><?= Settings::get_translation('MAWIBLAH settings'); ?>
-        - <?php print gae_PUGIN_NAME . " " . gae_CURRENT_VERSION; ?></h1>
+        - <?php print mawiblah_PUGIN_NAME . " " . mawiblah_CURRENT_VERSION; ?></h1>
     <?php Settings::print_all_messages(); ?>
     <p>
         <?= Settings::get_translation(""); ?>
     </p>
 
     <?php if (Settings::show_donation_block()) : ?>
-        <?php include(gae_INCLUDES_PATH . "/donation.php"); ?>
+        <?php include(mawiblah_INCLUDES_PATH . "/donation.php"); ?>
     <?php endif; ?>
 
     <?php
@@ -38,7 +38,7 @@ use Mawiblah\Settings;
 
     ?>
 
-    <form method="post" action="<?= Settings::get_settings_page_url() ?>" class="<?= gae_PLUGIN_DIRECTORY_NAME ?>" autocomplete="off">
+    <form method="post" action="<?= Settings::get_settings_page_url() ?>" class="<?= MAWIBLAH_PLUGIN_DIRECTORY_NAME ?>" autocomplete="off">
         <?php settings_fields('gae-settings-group'); ?>
         <?php $count_of_sections = count($sections); ?>
         <?php $counter=0; ?>
@@ -49,7 +49,7 @@ use Mawiblah\Settings;
 
             <?php
                 if ($counter===$count_of_sections){
-                    $last=" ".gae_PLUGIN_DIRECTORY_NAME."-section-last";
+                    $last=" ".MAWIBLAH_PLUGIN_DIRECTORY_NAME."-section-last";
                 } else {
                     $last="";
                 }
@@ -67,7 +67,7 @@ use Mawiblah\Settings;
 
             } ?>
 
-            <div id="<?= $section["id"] ?>" class="postbox-container <?= gae_PLUGIN_DIRECTORY_NAME ?>-section<?= $enabled ?><?= $last ?>">
+            <div id="<?= $section["id"] ?>" class="postbox-container <?= MAWIBLAH_PLUGIN_DIRECTORY_NAME ?>-section<?= $enabled ?><?= $last ?>">
 
                 <div class="meta-box-sortables closed">
                     <div id="<?= $section["id"] ?>-" class="postbox <?= $section["id"] ?> ">
@@ -85,17 +85,17 @@ use Mawiblah\Settings;
 
                         <div class="inside">
 
-                            <p class="<?= gae_PLUGIN_DIRECTORY ?>-description">
+                            <p class="<?= mawiblah_PLUGIN_DIRECTORY ?>-description">
                                 <?= Settings::get_translation($section["description"]); ?>
                             </p>
 
                             <?php if (!empty($section["example"])): ?>
-                                <code class="<?= gae_PLUGIN_DIRECTORY ?>-code">
+                                <code class="<?= mawiblah_PLUGIN_DIRECTORY ?>-code">
                                     <?= htmlentities(Settings::get_translation($section["example"])); ?>
                                 </code>
                             <?php endif; ?>
 
-                            <ul id="section-<?= $section["id"] ?>-content" class="<?= gae_PLUGIN_DIRECTORY_NAME ?>-content">
+                            <ul id="section-<?= $section["id"] ?>-content" class="<?= MAWIBLAH_PLUGIN_DIRECTORY_NAME ?>-content">
                                 <?php foreach ($section["fields"] as $field): ?>
                                     <?php $title = Settings::get_translation($field["title"]) ?>
                                     <?php $id = $field["id"] ?>
@@ -107,7 +107,7 @@ use Mawiblah\Settings;
                                     <?php if ($id === "gea-debug-ip") {
                                         $description .= Gae_Admin::get_translation("<br/>You current IP address is: ") . $_SERVER["REMOTE_ADDR"];
                                     } ?>
-                                    <li><?php require(gae_INCLUDES_PATH . "/fields/" . $field["type"] . ".php"); ?></li>
+                                    <li><?php require(mawiblah_INCLUDES_PATH . "/fields/" . $field["type"] . ".php"); ?></li>
                                 <?php endforeach; ?>
                             </ul>
                         </div>
@@ -117,9 +117,9 @@ use Mawiblah\Settings;
 
             </div>
         <?php endforeach; ?>
-        <section class="<?= gae_PLUGIN_DIRECTORY_NAME ?>-submit">
+        <section class="<?= MAWIBLAH_PLUGIN_DIRECTORY_NAME ?>-submit">
             <input type="submit" class="button-primary" value="<?= Settings::get_translation('Save Changes') ?>"/>
-            <?php if (gae_DEVELOPER): ?>
+            <?php if (MAWIBLAH_DEVELOPER): ?>
                 <a href="<?= Settings::get_settings_page_url() ?>&generate-pot-file" class="button-secondary">
                     <?= Settings::get_translation('Generate Translation Template') ?> <?= sprintf(Settings::get_translation("(Collected %s items)"),Settings::get_translation_count()); ?></a>
 

@@ -6,7 +6,7 @@ use Gae_Logger;
 class Settings
 {
 
-    public static $folder_that_should_be_writable = [gae_GENERATE_PATH, gae_LOG_PATH];
+    public static $folder_that_should_be_writable = [mawiblah_GENERATE_PATH, mawiblah_LOG_PATH];
     private static $messages = [];
     private static $permissionFailure = false;
 
@@ -15,11 +15,11 @@ class Settings
         // removing options
         self::remove_sections_options();
         // removing files
-        array_map('unlink', glob(gae_GENERATE_PATH . "*.*"));
-        array_map('unlink', glob(gae_LOG_PATH . "*.*"));
+        array_map('unlink', glob(mawiblah_GENERATE_PATH . "*.*"));
+        array_map('unlink', glob(mawiblah_LOG_PATH . "*.*"));
         //removing dirs
-        rmdir(gae_GENERATE_PATH);
-        rmdir(gae_LOG_PATH);
+        rmdir(mawiblah_GENERATE_PATH);
+        rmdir(mawiblah_LOG_PATH);
     }
 
     public static function activate()
@@ -67,8 +67,8 @@ class Settings
         $parent_slug = "index.php";    # For Dashboard
         #$parent_slug="edit.php";		# For Posts
         // more examples at http://codex.wordpress.org/Administration_Menus
-        //add_submenu_page( $parent_slug, __("HTML Title 4", EMU2_I18N_DOMAIN), __("Menu title 4", EMU2_I18N_DOMAIN), 9, gae_PLUGIN_DIRECTORY.'/gae_settings_page.php');
-        add_filter('plugin_action_links_' . plugin_basename(gae_PLUGIN_FILE), 'Settings::add_settings_link_to_plugin_list');
+        //add_submenu_page( $parent_slug, __("HTML Title 4", EMU2_I18N_DOMAIN), __("Menu title 4", EMU2_I18N_DOMAIN), 9, mawiblah_PLUGIN_DIRECTORY.'/mawiblah_settings_page.php');
+        add_filter('plugin_action_links_' . plugin_basename(mawiblah_PLUGIN_FILE), 'Settings::add_settings_link_to_plugin_list');
 
     }
 
@@ -147,7 +147,7 @@ class Settings
 
     private static function remove_sections_options()
     {
-        $sections = json_decode(file_get_contents(gae_INCLUDES_PATH . "/sections.json"), true);
+        $sections = json_decode(file_get_contents(mawiblah_INCLUDES_PATH . "/sections.json"), true);
 
         foreach ($sections as $sk => $s) {
 
@@ -190,7 +190,7 @@ class Settings
 
     public static function add_css()
     {
-        echo '<link id="' . gae_PLUGIN_DIRECTORY . '" rel="stylesheet" href="' . gae_CSS_URL . '/gae-admin.css' . '" type="text/css" media="all" />';
+        echo '<link id="' . mawiblah_PLUGIN_DIRECTORY . '" rel="stylesheet" href="' . mawiblah_CSS_URL . '/gae-admin.css' . '" type="text/css" media="all" />';
     }
 
     public static function add_scripts()
@@ -200,13 +200,13 @@ class Settings
                 add_action('admin_head', 'Settings::add_css');
             }
         }
-        wp_enqueue_script('Settings_script', gae_JS_URL . '/gae-admin.js');
+        wp_enqueue_script('Settings_script', mawiblah_JS_URL . '/gae-admin.js');
     }
 
     public static function add_settings_link_to_plugin_list($links)
     {
         if (ģae_DONATION_SHOW_LINKS) {
-            $links[] = '<a target="_blank" href="' . gae_DONATION_URL . '">Donate</a>';
+            $links[] = '<a target="_blank" href="' . mawiblah_DONATION_URL . '">Donate</a>';
         }
         $links[] = '<a href="' . self::get_settings_page_url() . '">Settings</a>';
         return $links;
@@ -252,7 +252,7 @@ class Settings
 
     public static function get_translation_count()
     {
-        $translationIdsFile = gae_TRANSLATION_IDS_FILE;
+        $translationIdsFile = mawiblah_TRANSLATION_IDS_FILE;
         $translationIds = [];
         if (file_exists($translationIdsFile)) {
             $translationIds = unserialize(file_get_contents($translationIdsFile));
@@ -263,10 +263,10 @@ class Settings
     public static function get_translation($text, $params = [])
     {
 
-        if (gae_DEVELOPER) {
+        if (MAWIBLAH_DEVELOPER) {
 
             $text_id = strip_tags($text);
-            $translationIdsFile = gae_TRANSLATION_IDS_FILE;
+            $translationIdsFile = mawiblah_TRANSLATION_IDS_FILE;
             $translationIds = [];
             $changed = false;
             if (file_exists($translationIdsFile)) {
@@ -311,7 +311,7 @@ class Settings
 
     public static function generate_pot_file()
     {
-        if (gae_DEVELOPER) {
+        if (MAWIBLAH_DEVELOPER) {
 
             $pot_header = '
 msgid ""
@@ -336,9 +336,9 @@ msgstr ""
 "X-Poedit-SearchPathExcluded-3: lang\n"
 
 ';
-            $translationIdsFile = gae_TRANSLATION_IDS_FILE;
-            $potFile = gae_GENERATE_PATH . gae_PLUGIN_DIRECTORY_NAME . ".pot";
-            $potFileUrl = gae_GENERATE_URL . gae_PLUGIN_DIRECTORY_NAME . ".pot";
+            $translationIdsFile = mawiblah_TRANSLATION_IDS_FILE;
+            $potFile = mawiblah_GENERATE_PATH . MAWIBLAH_PLUGIN_DIRECTORY_NAME . ".pot";
+            $potFileUrl = mawiblah_GENERATE_URL . MAWIBLAH_PLUGIN_DIRECTORY_NAME . ".pot";
 
             $dir_potFile = dirname($potFile);
 

@@ -17,6 +17,10 @@ if (!defined('MAWIBLAH_PLUGIN_DIR')) {
     define('MAWIBLAH_PLUGIN_DIR', untrailingslashit(plugin_dir_path(__FILE__)));
 }
 
+if (!defined('MAWIBLAH_PLUGIN_DIRECTORY_NAME')) {
+    define( 'MAWIBLAH_PLUGIN_DIRECTORY_NAME', "mawiblah");
+}
+
 if (!defined('MAWIBLAH_PLUGIN_URL')) {
     define('MAWIBLAH_PLUGIN_URL', untrailingslashit(plugin_dir_url(__FILE__)));
 }
@@ -56,6 +60,7 @@ if (!defined('MAWIBLAH_REPORT_URL')) {
 
 define('MAWIBLAH_POST_TYPE_PREFIX', 'mawiblah_');
 
+define('MAWIBLAH_DEVELOPER', true);
 
 require(MAWIBLAH_PLUGIN_DIR . '/classes/Settings.php');
 require(MAWIBLAH_PLUGIN_DIR . '/classes/Helpers.php');
@@ -71,8 +76,6 @@ require(MAWIBLAH_PLUGIN_DIR . '/classes/GravityForms.php');
 require(MAWIBLAH_PLUGIN_DIR . '/classes/Renderer.php');
 require(MAWIBLAH_PLUGIN_DIR . '/classes/Visits.php');
 require(MAWIBLAH_PLUGIN_DIR . '/classes/Logs.php');
-
-
 
 function mawiblah_init(): void
 {

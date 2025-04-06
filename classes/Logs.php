@@ -11,6 +11,11 @@ class Logs
         self::registerPostType();
     }
 
+    public static function enabled()
+    {
+        return get_option('mawiblah-debug', false) === 'enable-db-log';
+    }
+
     public static function postType()
     {
         return MAWIBLAH_POST_TYPE_PREFIX . 'log';
@@ -76,11 +81,11 @@ class Logs
         $post->activity = get_post_meta($post->id, 'activity', true) ?? 0;
         $post->activityTotal = get_post_meta($post->id, 'activityTotal', true) ?? 0;
 
-        if (!$post->logId){
+        if (!$post->logId) {
             update_post_meta($post->id, 'logId', md5($post->id));
         }
 
-        $post->audiences = get_the_terms( $post->ID, Logs::postType() . '_category' );
+        $post->audiences = get_the_terms($post->ID, Logs::postType() . '_category');
 
         return $post;
     }
@@ -96,7 +101,11 @@ class Logs
 
     public static function addLog(string $action, string $message = "", $additionalObjects = []): object
     {
-        foreach($additionalObjects as $key => $object){
+        if (!self::enabled()) {
+            return false;
+        }
+
+        foreach ($additionalObjects as $key => $object) {
             $message .= "<h2>$key</h2>";
             $message .= "<pre>";
             $message .= "\n" . print_r($object, true);
@@ -119,7 +128,8 @@ class Logs
         return self::getLog($post_id);
     }
 
-    public static function getLogByLogId ($LogId) {
+    public static function getLogByLogId($LogId)
+    {
 
         $postsByMeta = get_posts([
             'post_type' => self::postType(),

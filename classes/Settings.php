@@ -42,7 +42,7 @@ class Settings
 
     public static function get_settings_page_url()
     {
-        return esc_url(get_admin_url(null, 'options-general.php?page=' . self::get_settings_page_relative_path()));
+        return esc_url(get_admin_url(null, 'admin.php?page=' . self::get_settings_page_relative_path()));
     }
 
     public static function get_settings_page_relative_path()

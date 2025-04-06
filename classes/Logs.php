@@ -69,10 +69,8 @@ class Logs
         register_post_type(Logs::postType(), $args);
     }
 
-
     public static function appendMeta($post)
     {
-
         $post->id = $post->ID;
         $post->email = get_post_meta($post->id, 'email', true);
         $post->logId = get_post_meta($post->id, 'logId', true);
@@ -99,7 +97,7 @@ class Logs
         return null;
     }
 
-    public static function addLog(string $action, string $message = "", $additionalObjects = []): object
+    public static function addLog(string $action, string $message = "", $additionalObjects = []): object|bool
     {
         if (!self::enabled()) {
             return false;
@@ -121,11 +119,11 @@ class Logs
 
         $post_id = wp_insert_post($post_data);
 
-        if (!is_wp_error($post_id)) {
-            // Save the email as a meta field
+        if ($post_id) {
+            return self::getLog($post_id);
         }
 
-        return self::getLog($post_id);
+        return false;
     }
 
     public static function getLogByLogId($LogId)

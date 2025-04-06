@@ -106,11 +106,11 @@ use Mawiblah\Settings;
                                     <li><?php
                                         $allowed_types = ['text', 'textarea', 'select', 'checkbox', 'switch']; // Add all valid field types
                                         $type = in_array($field["type"], $allowed_types) ? $field["type"] : 'text';
-                                        $field_path = MAWIBLAH_TEMPLATES_PATH . "/fields/" . $type . ".php";
+                                        $field_path = MAWIBLAH_TEMPLATES_PATH . "/settings/fields/" . $type . ".php";
                                         if (file_exists($field_path)) {
                                             require($field_path);
                                         } else {
-                                            echo "Field type not found: " . htmlspecialchars($type);
+                                            echo "Field type not found: " . htmlspecialchars($type)." file: ".$field_path;
                                         }
                                     ?></li>
                                 <?php endforeach; ?>

@@ -14,13 +14,13 @@ if (!class_exists('\\Mawiblah\\Settings')) {
 }
 use Mawiblah\Settings;
 ?>
-<div class="gae-form-field gae-form-field-select" id="gae-form-field-<?= esc_attr($id) ?>">
+<div class="mawiblah-form-field mawiblah-form-field-select" id="mawiblah-form-field-<?= esc_attr($id) ?>">
 
     <label for="<?= esc_attr($id) ?>">
         <?= esc_html($title) ?>
     </label>
 
-    <div class="gae-form-field-select-wrap">
+    <div class="mawiblah-form-field-select-wrap">
         <select name="<?= esc_attr($id) ?>" id="<?= esc_attr($id) ?>">
             <?php foreach($options as $o): ?>
                 <?php 
@@ -37,7 +37,7 @@ use Mawiblah\Settings;
     </div>
 
     <?php if ($description): ?>
-        <p class="gae-form-field-description"><?= esc_html($description) ?></p>
+        <p class="mawiblah-form-field-description"><?= esc_html($description) ?></p>
     <?php endif; ?>
 
 </div>

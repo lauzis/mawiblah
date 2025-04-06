@@ -1,4 +1,4 @@
-<div class="gae-form-field" id="gae-form-field-<?= esc_attr($id) ?>">
+<div class="mawiblah-form-field" id="mawiblah-form-field-<?= esc_attr($id) ?>">
 
   <label for="<?= $id ?>">
     <?= $title ?>
@@ -11,8 +11,8 @@
   ><?= esc_textarea($value ? $value : $default_value); ?></textarea>
 
   <?php if ($description): ?>
--    <p class="gae-form-field-description"><?= $description ?></p>
-+    <p class="gae-form-field-description"><?= esc_html($description) ?></p>
+-    <p class="mawiblah-form-field-description"><?= $description ?></p>
++    <p class="mawiblah-form-field-description"><?= esc_html($description) ?></p>
   <?php endif; ?>
 
 </div>

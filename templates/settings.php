@@ -8,15 +8,11 @@ use Mawiblah\Settings;
     <?php Settings::settings_page_visited(); ?>
     <?php $sections = Settings::get_sections(); ?>
     <h1><?= Settings::get_translation('MAWIBLAH settings'); ?>
-        - <?php print mawiblah_PLUGIN_NAME . " " . mawiblah_CURRENT_VERSION; ?></h1>
+        - <?php print MAWIBLAH_PLUGIN_NAME . " " . MAWIBLAH_VERSION; ?></h1>
     <?php Settings::print_all_messages(); ?>
     <p>
         <?= Settings::get_translation(""); ?>
     </p>
-
-    <?php if (Settings::show_donation_block()) : ?>
-        <?php include(mawiblah_INCLUDES_PATH . "/donation.php"); ?>
-    <?php endif; ?>
 
     <?php
         $enabled_values = [
@@ -85,12 +81,12 @@ use Mawiblah\Settings;
 
                         <div class="inside">
 
-                            <p class="<?= mawiblah_PLUGIN_DIRECTORY ?>-description">
+                            <p class="<?= MAWIBLAH_PLUGIN_DIR ?>-description">
                                 <?= Settings::get_translation($section["description"]); ?>
                             </p>
 
                             <?php if (!empty($section["example"])): ?>
-                                <code class="<?= mawiblah_PLUGIN_DIRECTORY ?>-code">
+                                <code class="<?= MAWIBLAH_PLUGIN_DIR ?>-code">
                                     <?= htmlentities(Settings::get_translation($section["example"])); ?>
                                 </code>
                             <?php endif; ?>
@@ -107,10 +103,10 @@ use Mawiblah\Settings;
                                     <?php if ($id === "gea-debug-ip") {
                                         $description .= Gae_Admin::get_translation("<br/>You current IP address is: ") . $_SERVER["REMOTE_ADDR"];
                                     } ?>
-                                    <li><?php 
+                                    <li><?php
                                         $allowed_types = ['text', 'textarea', 'select', 'checkbox', 'switch']; // Add all valid field types
                                         $type = in_array($field["type"], $allowed_types) ? $field["type"] : 'text';
-                                        $field_path = mawiblah_INCLUDES_PATH . "/fields/" . $type . ".php";
+                                        $field_path = MAWIBLAH_TEMPLATES_PATH . "/fields/" . $type . ".php";
                                         if (file_exists($field_path)) {
                                             require($field_path);
                                         } else {

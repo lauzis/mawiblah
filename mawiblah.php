@@ -10,15 +10,17 @@
  */
 
 if (!defined('MAWIBLAH_VERSION')) {
-    define('MAWIBLAH_VERSION', '1.0.8.'.time());
+    define('MAWIBLAH_VERSION', '1.0.8.' . time());
 }
+
+define('MAWIBLAH_PLUGIN_NAME', 'Mawiblah');
 
 if (!defined('MAWIBLAH_PLUGIN_DIR')) {
     define('MAWIBLAH_PLUGIN_DIR', untrailingslashit(plugin_dir_path(__FILE__)));
 }
 
 if (!defined('MAWIBLAH_PLUGIN_DIRECTORY_NAME')) {
-    define( 'MAWIBLAH_PLUGIN_DIRECTORY_NAME', "mawiblah");
+    define('MAWIBLAH_PLUGIN_DIRECTORY_NAME', "mawiblah");
 }
 
 if (!defined('MAWIBLAH_PLUGIN_URL')) {
@@ -26,7 +28,7 @@ if (!defined('MAWIBLAH_PLUGIN_URL')) {
 }
 
 if (!defined('MAWIBLAH_TEMPLATE_DIR')) {
-    define( 'MAWIBLAH_TEMPLATE_DIR', MAWIBLAH_PLUGIN_DIR.'/templates');
+    define('MAWIBLAH_TEMPLATE_DIR', MAWIBLAH_PLUGIN_DIR . '/templates');
 }
 
 if (!defined('MAWIBLAH_PLUGIN_FILE')) {
@@ -34,7 +36,7 @@ if (!defined('MAWIBLAH_PLUGIN_FILE')) {
 }
 
 if (!defined('MAWIBLAH_CONFIG_PATH')) {
-    define('MAWIBLAH_CONFIG_PATH', MAWIBLAH_PLUGIN_DIR.'/config');
+    define('MAWIBLAH_CONFIG_PATH', MAWIBLAH_PLUGIN_DIR . '/config');
 }
 
 if (!defined('MAWIBLAH_UPLOAD_DIR')) {
@@ -59,8 +61,14 @@ if (!defined('MAWIBLAH_REPORT_URL')) {
 }
 
 define('MAWIBLAH_POST_TYPE_PREFIX', 'mawiblah_');
-
+$uloads_dir = wp_upload_dir();
 define('MAWIBLAH_DEVELOPER', true);
+define('MAWIBLAH_GENERATE_PATH', str_replace('\\', '/', $uloads_dir["basedir"] . '/gae/'));
+define('MAWIBLAH_TRANSLATION_IDS_FILE', MAWIBLAH_GENERATE_PATH . MAWIBLAH_PLUGIN_DIRECTORY_NAME . ".serialized.php");
+
+define('MAWIBLAH_LOG_PATH', str_replace('\\', '/', $uloads_dir["basedir"] . '/gae-logs/'));
+define('MAWIBLAH_TEMPLATES_PATH', MAWIBLAH_PLUGIN_DIR . "/templates");
+
 
 require(MAWIBLAH_PLUGIN_DIR . '/classes/Settings.php');
 require(MAWIBLAH_PLUGIN_DIR . '/classes/Helpers.php');
@@ -92,7 +100,9 @@ function mawiblah_init(): void
 
 add_action('init', 'mawiblah_init');
 
-function mawiblah_load_textdomain() {
+function mawiblah_load_textdomain()
+{
     load_plugin_textdomain('mawiblah', false, dirname(plugin_basename(__FILE__)) . '/languages');
 }
+
 add_action('plugins_loaded', 'mawiblah_load_textdomain');

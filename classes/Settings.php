@@ -6,7 +6,7 @@ use Gae_Logger;
 class Settings
 {
 
-    public static $folder_that_should_be_writable = [mawiblah_GENERATE_PATH, mawiblah_LOG_PATH];
+    public static $folder_that_should_be_writable = [MAWIBLAH_GENERATE_PATH, MAWIBLAH_LOG_PATH];
     private static $messages = [];
     private static $permissionFailure = false;
 
@@ -15,11 +15,11 @@ class Settings
         // removing options
         self::remove_sections_options();
         // removing files
-        array_map('unlink', glob(mawiblah_GENERATE_PATH . "*.*"));
-        array_map('unlink', glob(mawiblah_LOG_PATH . "*.*"));
+        array_map('unlink', glob(MAWIBLAH_GENERATE_PATH . "*.*"));
+        array_map('unlink', glob(MAWIBLAH_LOG_PATH . "*.*"));
         //removing dirs
-        rmdir(mawiblah_GENERATE_PATH);
-        rmdir(mawiblah_LOG_PATH);
+        rmdir(MAWIBLAH_GENERATE_PATH);
+        rmdir(MAWIBLAH_LOG_PATH);
     }
 
     public static function activate()
@@ -38,9 +38,7 @@ class Settings
         //register settings
         //gea_register_scripts();
         //self::add_scripts();
-
     }
-
 
     public static function get_settings_page_url()
     {
@@ -67,8 +65,8 @@ class Settings
         $parent_slug = "index.php";    # For Dashboard
         #$parent_slug="edit.php";		# For Posts
         // more examples at http://codex.wordpress.org/Administration_Menus
-        //add_submenu_page( $parent_slug, __("HTML Title 4", EMU2_I18N_DOMAIN), __("Menu title 4", EMU2_I18N_DOMAIN), 9, mawiblah_PLUGIN_DIRECTORY.'/mawiblah_settings_page.php');
-        add_filter('plugin_action_links_' . plugin_basename(mawiblah_PLUGIN_FILE), 'Settings::add_settings_link_to_plugin_list');
+        //add_submenu_page( $parent_slug, __("HTML Title 4", EMU2_I18N_DOMAIN), __("Menu title 4", EMU2_I18N_DOMAIN), 9, MAWIBLAH_PLUGIN_DIR.'/mawiblah_settings_page.php');
+        add_filter('plugin_action_links_' . plugin_basename(MAWIBLAH_PLUGIN_FILE), 'Settings::add_settings_link_to_plugin_list');
 
     }
 
@@ -147,7 +145,7 @@ class Settings
 
     private static function remove_sections_options()
     {
-        $sections = json_decode(file_get_contents(mawiblah_INCLUDES_PATH . "/sections.json"), true);
+        $sections = json_decode(file_get_contents(MAWIBLAH_CONFIG_PATH . "/sections.json"), true);
 
         foreach ($sections as $sk => $s) {
 
@@ -190,7 +188,7 @@ class Settings
 
     public static function add_css()
     {
-        echo '<link id="' . mawiblah_PLUGIN_DIRECTORY . '" rel="stylesheet" href="' . mawiblah_CSS_URL . '/gae-admin.css' . '" type="text/css" media="all" />';
+        echo '<link id="' . MAWIBLAH_PLUGIN_DIR . '" rel="stylesheet" href="' . mawiblah_CSS_URL . '/gae-admin.css' . '" type="text/css" media="all" />';
     }
 
     public static function add_scripts()
@@ -252,7 +250,7 @@ class Settings
 
     public static function get_translation_count()
     {
-        $translationIdsFile = mawiblah_TRANSLATION_IDS_FILE;
+        $translationIdsFile = MAWIBLAH_TRANSLATION_IDS_FILE;
         $translationIds = [];
         if (file_exists($translationIdsFile)) {
             $translationIds = unserialize(file_get_contents($translationIdsFile));
@@ -266,7 +264,7 @@ class Settings
         if (MAWIBLAH_DEVELOPER) {
 
             $text_id = strip_tags($text);
-            $translationIdsFile = mawiblah_TRANSLATION_IDS_FILE;
+            $translationIdsFile = MAWIBLAH_TRANSLATION_IDS_FILE;
             $translationIds = [];
             $changed = false;
             if (file_exists($translationIdsFile)) {
@@ -336,9 +334,8 @@ msgstr ""
 "X-Poedit-SearchPathExcluded-3: lang\n"
 
 ';
-            $translationIdsFile = mawiblah_TRANSLATION_IDS_FILE;
-            $potFile = mawiblah_GENERATE_PATH . MAWIBLAH_PLUGIN_DIRECTORY_NAME . ".pot";
-            $potFileUrl = mawiblah_GENERATE_URL . MAWIBLAH_PLUGIN_DIRECTORY_NAME . ".pot";
+            $translationIdsFile = MAWIBLAH_TRANSLATION_IDS_FILE;
+            $potFile = MAWIBLAH_GENERATE_PATH . MAWIBLAH_PLUGIN_DIRECTORY_NAME . ".pot";
 
             $dir_potFile = dirname($potFile);
 

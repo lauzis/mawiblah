@@ -47,13 +47,11 @@
     },
     {
       "id":"mawiblah-dont-send-emails",
--      "title":"Can disable actual email sending",
-+      "title":"Email sending behavior",
+      "title":"Can disable actual email sending",
       "type":"select",
       "value":"",
       "placeholder":"",
--      "default_value":"disabled",
-+      "default_value":"send-emails",
+      "default_value":"disabled",
       "options":[
         {
           "value":"send-emails",

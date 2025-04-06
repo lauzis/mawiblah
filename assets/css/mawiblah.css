@@ -136,7 +136,6 @@ body {
     width: auto;
 }
 
-
 .btn-danger {
     background-color: darkred; /* WordPress blue */
 }
@@ -156,7 +155,6 @@ body {
 .mawiblah-success {
     color:green;
 }
-
 
 .message div {
     text-align: center;
@@ -185,4 +183,156 @@ body {
 
 .wrap.mawiblah table tr:nth-child(odd) {
     background-color: #f1f1f1;
+}
+
+
+.mawiblah-form-field > label {
+    display: block;
+    font-weight:bold;
+    width:100%;
+    white-space: normal;
+    max-width: 500px;
+    margin-top:20px;
+}
+
+.mawiblah-form-field > .mawiblah-form-field-select-wrap{
+    height:auto;
+    padding:0;
+    text-align:left;
+    margin-top:5px;
+    width:100%;
+    border-style:solid;
+    border-width:1px;
+    max-width: 500px;
+    overflow:hidden;
+}
+.mawiblah-form-field > .mawiblah-form-field-select-wrap > select {
+    height:auto;
+    padding:5px 0 5px 5px;
+    text-align:left;
+    margin-top:0;
+    width:100%;
+    border-style:solid;
+    border-width:0;
+}
+.mawiblah-form-field > input,
+.mawiblah-form-field > textarea {
+    height:auto;
+    padding:5px 5px;
+    text-align:left;
+    margin-top:5px;
+    width:100%;
+    border-style:solid;
+    border-width:1px;
+    max-width: 500px;
+    border-color:#000;
+}
+.mawiblah-form-field > textarea {
+    min-height:200px;
+}
+
+.mawiblah-form-field > p {
+    font-style:italic;
+    padding:0px;
+    margin:0px;
+    max-width: 500px;
+}
+
+
+.mawiblah-message{
+    margin:20px 20px 20px 0;
+}
+
+.section-disabled h2{
+    color:darkred;
+}
+.section-enabled h2{
+    color:darkgreen;
+}
+
+.section-disabled h2:after {
+    padding-right:10px;
+    position: relative;
+    top:3px;
+    font-family: dashicons;
+    color:darkred;
+    content:"\f335";
+}
+.section-enabled h2:after{
+    padding-right:10px;
+    position: relative;
+    top:4px;
+    font-family: dashicons;
+    color:darkgreen;
+    content:"\f147";
+}
+
+
+form.google-analytics-events{
+    padding-left:30px;
+    padding-right:30px;
+}
+
+.google-analytics-events > h1{
+    padding:30px 30px 30px 30px;
+
+}
+
+.google-analytics-events > p {
+    padding:0 30px 30px 30px;
+    max-width:560px;
+}
+
+.mawiblah-submit {
+    padding:30px 30px 30px 0;
+    overflow:hidden;
+    height:40px;
+}
+.mawiblah-section {
+    position:relative;
+    width:100%;
+}
+
+.mawiblah-section > h1 {
+    line-height: 26px;
+}
+
+.mawiblah-section h2.section-title {
+    font-size:18px;
+    padding:0 0 0 20px;
+    margin:0;
+    cursor:pointer;
+    line-height: 40px;
+}
+
+.closed .toggle-indicator::before {
+    content:"\f140" !important;
+}
+
+.mawiblah-section code {
+    padding:10px;
+    font-family: monospace;
+    display:block;
+}
+
+.mawiblah-section .inside
+{
+    padding-left:30px;
+    padding-right:30px;
+}
+
+.mawiblah-description {
+    padding:0 30px;
+    border-style:solid;
+    border-width:0 0 0 1px;
+    max-width: 500px;
+}
+
+/* (The duplicate CSS rules have been removed.) */
+
+/* The empty `.section-open` rule has been removed as it serves no purpose. */
+
+
+.mawiblah-section-last {
+    border-bottom-width:1px;
 }

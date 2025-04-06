@@ -1,0 +1,68 @@
+[
+  {
+    "id": "time-between-emails",
+    "title": "Time between emails (in seconds)",
+    "description": "Set the time between emails. If to send out with some delay.",
+    "fields": [
+      {
+        "id": "mawiblah-time-between-emails",
+        "title": "Time between emails",
+        "type": "text",
+        "value": "",
+        "placeholder": "1",
+        "default_value": "1"
+      }
+    ]
+  },
+  {
+    "id": "debug",
+    "title": "Debuging",
+    "description": "Enable this for testing purposes, to see to what elements events are added and if they fire at all.",
+    "fields": [
+      {
+        "id": "mawiblah-debug",
+        "title": "Debug the events",
+        "type": "select",
+        "value": "",
+        "placeholder": "",
+        "default_value": "disabled",
+        "options": [
+          {
+            "value": "disabled",
+            "title": "Disabled"
+          },
+          {
+            "value": "enable-db-log",
+            "title": "Enable - db log"
+          }
+        ]
+      },
+      {
+        "id": "mawiblah-debug-ip",
+        "title": "Restrict output by ip (comma separated)",
+        "type": "text",
+        "value": "",
+        "placeholder": "127.0.0.1",
+        "default_value": ""
+      },
+      {
+        "id": "mawiblah-dont-send-emails",
+        "title": "Can disable actual email sending",
+        "type": "select",
+        "value": "",
+        "placeholder": "",
+        "default_value": "disabled",
+        "options": [
+          {
+            "value": "send-emails",
+            "title": "Send emails"
+          },
+          {
+            "value": "dont-send-emails",
+            "title": "Dont send emails"
+          }
+        ]
+      }
+    ]
+  }
+]

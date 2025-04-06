@@ -277,4 +277,10 @@ class Renderer
         require MAWIBLAH_PLUGIN_DIR . "/templates/tests.php";
         exit;
     }
+
+    public static function settings()
+    {
+        require MAWIBLAH_PLUGIN_DIR . "/templates/settings.php";
+        exit;
+    }
 }

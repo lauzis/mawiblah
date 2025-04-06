@@ -11,6 +11,11 @@ class Logs
         self::registerPostType();
     }
 
+    public static function enabled()
+    {
+        return get_option('mawiblah-debug', false) === 'enable-db-log';
+    }
+
     public static function postType()
     {
         return MAWIBLAH_POST_TYPE_PREFIX . 'log';
@@ -64,10 +69,8 @@ class Logs
         register_post_type(Logs::postType(), $args);
     }
 
-
     public static function appendMeta($post)
     {
-
         $post->id = $post->ID;
         $post->email = get_post_meta($post->id, 'email', true);
         $post->logId = get_post_meta($post->id, 'logId', true);
@@ -76,11 +79,11 @@ class Logs
         $post->activity = get_post_meta($post->id, 'activity', true) ?? 0;
         $post->activityTotal = get_post_meta($post->id, 'activityTotal', true) ?? 0;
 
-        if (!$post->logId){
+        if (!$post->logId) {
             update_post_meta($post->id, 'logId', md5($post->id));
         }
 
-        $post->audiences = get_the_terms( $post->ID, Logs::postType() . '_category' );
+        $post->audiences = get_the_terms($post->ID, Logs::postType() . '_category');
 
         return $post;
     }
@@ -94,9 +97,13 @@ class Logs
         return null;
     }
 
-    public static function addLog(string $action, string $message = "", $additionalObjects = []): object
+    public static function addLog(string $action, string $message = "", $additionalObjects = []): object|false
     {
-        foreach($additionalObjects as $key => $object){
+        if (!self::enabled()) {
+            return false;
+        }
+
+        foreach ($additionalObjects as $key => $object) {
             $message .= "<h2>$key</h2>";
             $message .= "<pre>";
             $message .= "\n" . print_r($object, true);
@@ -112,26 +119,10 @@ class Logs
 
         $post_id = wp_insert_post($post_data);
 
-        if (!is_wp_error($post_id)) {
-            // Save the email as a meta field
+        if ($post_id) {
+            return self::getLog($post_id);
         }
 
-        return self::getLog($post_id);
-    }
-
-    public static function getLogByLogId ($LogId) {
-
-        $postsByMeta = get_posts([
-            'post_type' => self::postType(),
-            'meta_query' => [
-                [
-                    'key' => 'LogId',
-                    'value' => $LogId,
-                    'compare' => '='
-                ]
-            ]
-        ]);
-
-        return self::appendMeta($postsByMeta[0]);
+        return false;
     }
 }

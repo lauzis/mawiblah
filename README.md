@@ -35,8 +35,8 @@ on all possible configurations and setups.
 ### --- 1.0.9 ---
 -- Introduced a dedicated settings page in the admin interface, providing a centralized location for configuration.
 -- Added options to control email intervals and enable debugging with IP restrictions.
--- Possible to switch db logging via settings page.
--- Testing/Shout-out to https://coderabit.ai for the help with the code. Will see how it goes, but for now it seems helpful.
+-- Ability to toggle database logging via the settings page.
+-- Testing/Shout-out to [coderabit.ai](https://coderabit.ai) for the help with the code. Will see how it goes, but for now it seems helpful.
 
 ### --- 1.0.8 ---
 - saving click time for stats, and so one could check what is most "active" time for opening emails

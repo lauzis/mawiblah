@@ -97,7 +97,7 @@ class Logs
         return null;
     }
 
-    public static function addLog(string $action, string $message = "", $additionalObjects = []): object|bool
+    public static function addLog(string $action, string $message = "", $additionalObjects = []): object|false
     {
         if (!self::enabled()) {
             return false;
@@ -124,22 +124,5 @@ class Logs
         }
 
         return false;
-    }
-
-    public static function getLogByLogId($LogId)
-    {
-
-        $postsByMeta = get_posts([
-            'post_type' => self::postType(),
-            'meta_query' => [
-                [
-                    'key' => 'LogId',
-                    'value' => $LogId,
-                    'compare' => '='
-                ]
-            ]
-        ]);
-
-        return self::appendMeta($postsByMeta[0]);
     }
 }

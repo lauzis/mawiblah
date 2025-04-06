@@ -20,7 +20,8 @@
   "description":"Enable this for testing purposes, to see to what elements events are added and if they fire at all.",
   "fields": [
     {
-      "id":"gae-debug",
+-      "id":"gae-debug",
++      "id":"mawiblah-debug",
       "title":"Debug the events",
       "type":"select",
       "value":"",
@@ -64,5 +65,6 @@
       ]
     }
   ]
+}
 }
 ]

@@ -352,8 +352,7 @@ form.google-analytics-events{
     content:"\f147";
 }
 
-.section-open {
-}
+/* The empty `.section-open` rule has been removed as it serves no purpose. */
 
 
 .mawiblah-section-last {

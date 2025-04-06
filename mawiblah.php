@@ -68,6 +68,7 @@ define('MAWIBLAH_TRANSLATION_IDS_FILE', MAWIBLAH_GENERATE_PATH . MAWIBLAH_PLUGIN
 
 define('MAWIBLAH_LOG_PATH', str_replace('\\', '/', $uloads_dir["basedir"] . '/gae-logs/'));
 define('MAWIBLAH_TEMPLATES_PATH', MAWIBLAH_PLUGIN_DIR . "/templates");
+define('MAWIBLAH_SETTINGS_PAGE', 'mawiblah-settings');
 
 
 require(MAWIBLAH_PLUGIN_DIR . '/classes/Settings.php');

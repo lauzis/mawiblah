@@ -47,7 +47,7 @@ class Settings
 
     public static function get_settings_page_relative_path()
     {
-        return MAWIBLAH_PLUGIN_DIR . '/mawiblah.php';
+        return MAWIBLAH_SETTINGS_PAGE;
     }
 
     public static function create_menu()
@@ -159,7 +159,8 @@ class Settings
     public static function get_sections()
     {
         $options_updated = false;
-        $sections = json_decode(file_get_contents(MAWIBLAH_CONFIG_PATH . "/sections.json"), true);
+        $sectionsFile = MAWIBLAH_CONFIG_PATH . "/sections.json";
+        $sections = json_decode(file_get_contents($sectionsFile), true);
 
         foreach ($sections as $sk => $s) {
 

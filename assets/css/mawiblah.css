@@ -328,29 +328,7 @@ form.google-analytics-events{
     max-width: 500px;
 }
 
-.section-disabled h2{
-    color:darkred;
-}
-.section-enabled h2{
-    color:darkgreen;
-}
-
-.section-disabled h2:after {
-    padding-right:10px;
-    position: relative;
-    top:3px;
-    font-family: dashicons;
-    color:darkred;
-    content:"\f335";
-}
-.section-enabled h2:after{
-    padding-right:10px;
-    position: relative;
-    top:4px;
-    font-family: dashicons;
-    color:darkgreen;
-    content:"\f147";
-}
+/* (The duplicate CSS rules have been removed.) */
 
 /* The empty `.section-open` rule has been removed as it serves no purpose. */
 

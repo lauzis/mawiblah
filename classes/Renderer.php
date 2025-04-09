@@ -192,7 +192,11 @@ class Renderer
                                     'testMode' => $testMode,
                                     'skippingReasons' => $skippingReasons
                                 ]);
-                                $emailSendingResult = wp_mail($email, $campaign->subject, $emailBody);
+
+                                if (Settings::sendEmails()) {
+                                    $emailSendingResult = wp_mail($email, $campaign->subject, $emailBody);
+                                }
+
                                 if ($emailSendingResult) {
                                     $emailsSent++;
                                     Subscribers::sentEmail($subscriber->id, $campaign->id);

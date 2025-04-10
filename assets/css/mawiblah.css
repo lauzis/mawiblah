@@ -336,3 +336,10 @@ form.google-analytics-events{
 .mawiblah-section-last {
     border-bottom-width:1px;
 }
+.mawiblah-settings-table th {
+    padding:20px;
+    width: 25%;
+}
+.mawiblah-settings-table td {
+    width: 25%;
+}

@@ -376,4 +376,15 @@ msgstr ""
             self::add_message("Pot file generated. You will find it here $potFile");
         }
     }
+
+    public static function sendEmails():bool
+    {
+        $value = get_option("mawiblah-dont-send-email");
+
+        if ($value ==='dont-send-emails') {
+            return false;
+        }
+
+        return true;
+    }
 }

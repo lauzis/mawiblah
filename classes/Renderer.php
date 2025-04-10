@@ -80,7 +80,8 @@ class Renderer
                         'notATester' => [],
                         'alreadySent' => [],
                         'notUniqueEmail' => [],
-                        'skippingToPlaceWeLeftOf' => []
+                        'skippingToPlaceWeLeftOf' => [],
+                        'emailSendingIsDisabled' => [],
                     ];
 
                     $iteration = get_post_meta($campaign->id, 'iteration', true);
@@ -126,7 +127,7 @@ class Renderer
                                             'subscriber' => $subscriber,
                                             'uniqueEmails' => $uniqueEmails,
                                             'testMode' => $testMode,
-                                            'skippingReasons' => $skippingReasons
+                                            'skippingReasons' => $skippingReasons,
                                         ]
                                     );
                                     wp_redirect(Helpers::generatePluginUrl(['action' => 'list']));
@@ -192,7 +193,16 @@ class Renderer
                                     'testMode' => $testMode,
                                     'skippingReasons' => $skippingReasons
                                 ]);
-                                $emailSendingResult = wp_mail($email, $campaign->subject, $emailBody);
+
+                                $emailSendingResult = false;
+                                if (Settings::sendEmails()) {
+                                    $emailSendingResult = wp_mail($email, $campaign->subject, $emailBody);
+                                } else {
+                                    $skippingReasons['emailSendingIsDisabled'][] = $email;
+                                    $emailsSkipped++;
+                                    continue;
+                                }
+
                                 if ($emailSendingResult) {
                                     $emailsSent++;
                                     Subscribers::sentEmail($subscriber->id, $campaign->id);

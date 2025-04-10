@@ -34,6 +34,7 @@ on all possible configurations and setups.
 
 ### --- 1.0.10 ---
 - Implemented setting to skip actual email sending for testing/debugging purposes.
+- Settings output in test page
 
 ### --- 1.0.9 ---
 - Introduced a dedicated settings page in the admin interface, providing a centralized location for configuration.

@@ -25,14 +25,14 @@ use Mawiblah\Settings;
             <tbody>
             <?php foreach ($fields as $field) : ?>
                 <tr>
-                    <td><?= $field['title']; ?></td>
-                    <td><?= $field['id']; ?></td>
-                    <td><?= $field['value']; ?></td>
+                    <td><?= esc_html($field['title']); ?></td>
+                    <td><?= esc_html($field['id']); ?></td>
+                    <td><?= esc_html($field['value']); ?></td>
                     <td>
                         <?php if (isset($field['options'])) : ?>
                             <ul>
                                 <?php foreach ($field['options'] as $option) : ?>
-                                    <li><?= $option['title']; ?>: <?= $option['value']; ?></li>
+                                    <li><?= esc_html($option['title']); ?>: <?= esc_html($option['value']); ?></li>
                                 <?php endforeach; ?>
                             </ul>
                         <?php else : ?>

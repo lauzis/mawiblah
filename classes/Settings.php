@@ -380,6 +380,7 @@ msgstr ""
     public static function sendEmails():bool
     {
         $value = get_option("mawiblah-dont-send-email");
+
         if ($value ==='dont-send-emails') {
             return false;
         }

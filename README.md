@@ -32,6 +32,9 @@ on all possible configurations and setups.
 
 ## Change log
 
+### --- 1.0.10 ---
+- Implemented setting to skip actual email sending for testing/debugging purposes.
+
 ### --- 1.0.9 ---
 - Introduced a dedicated settings page in the admin interface, providing a centralized location for configuration.
 - Added options to control email intervals and enable debugging with IP restrictions.

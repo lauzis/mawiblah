@@ -36,7 +36,7 @@ on all possible configurations and setups.
 - Implemented setting to skip actual email sending for testing/debugging purposes.
 - Settings output in test page
 
-![settings-output-in-test.jpg](readme-assets/settings-output-in-test.jpg)
+![Settings output in the test page](readme-assets/settings-output-in-test.jpg)
 
 ### --- 1.0.9 ---
 - Introduced a dedicated settings page in the admin interface, providing a centralized location for configuration.
@@ -44,7 +44,7 @@ on all possible configurations and setups.
 - Ability to toggle database logging via the settings page.
 - Testing/Shout-out to [coderabit.ai](https://coderabit.ai) for the help with the code. Will see how it goes, but for now it seems helpful.
   
-![Example Image](readme-assets/settings.jpg)
+![Settings page](readme-assets/settings.jpg)
 
 ### --- 1.0.8 ---
 - saving click time for stats, and so one could check what is most "active" time for opening emails
@@ -77,7 +77,7 @@ used  with some of the letters capitalized
 
 ### --- initial MVP ---
 Minimal functionality only to achieve my needs. Maybe will make it more universal at later point in time.
-![mvp.jpg](readme-assets/mvp.jpg)
+![Mvp version](readme-assets/mvp.jpg)
 
 ## Known issues
 - Texts in unsubscribe scenario is not translated

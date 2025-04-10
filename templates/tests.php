@@ -1,6 +1,8 @@
 <?php
-    use Mawiblah\Tests;
-    use Mawiblah\Settings;
+
+use Mawiblah\Tests;
+use Mawiblah\Settings;
+
 ?>
 <div class="wrap mawiblah">
     <h1>Self Tests</h1>
@@ -8,12 +10,40 @@
     <h2> Settings </h2>
     <?php $settings = Settings::get_sections(); ?>
     <?php foreach ($settings as $value) : ?>
-        <h3><?= $value['title']; ?>[<?= $value['id']; ?>]</h3>
+        <h3><?= $value['title']; ?></h3>
+        <p><?= $value['description']; ?></p>
         <?php $fields = $value['fields']; ?>
-        <?php foreach ($fields as $field) : ?>
-            <h4><?= $field['title']; ?> [<?= $field['id']; ?>]</h4>
-            <p>[<?= $field['id']; ?>]=[<?= $field['value']; ?>]</p>
-        <?php endforeach; ?>
+        <table class="mawiblah-settings-table">
+            <thead>
+            <tr>
+                <th>Field</th>
+                <th>Id</th>
+                <th>Value</th>
+                <th>Options</th>
+            </tr>
+            </thead>
+            <tbody>
+            <?php foreach ($fields as $field) : ?>
+                <tr>
+                    <td><?= $field['title']; ?></td>
+                    <td><?= $field['id']; ?></td>
+                    <td><?= $field['value']; ?></td>
+                    <td>
+                        <?php if (isset($field['options'])) : ?>
+                            <ul>
+                                <?php foreach ($field['options'] as $option) : ?>
+                                    <li><?= $option['title']; ?>: <?= $option['value']; ?></li>
+                                <?php endforeach; ?>
+                            </ul>
+                        <?php else : ?>
+                            No options
+                        <?php endif; ?>
+                    </td>
+                </tr>
+            <?php endforeach; ?>
+            </tbody>
+        </table>
+        <br/>
     <?php endforeach; ?>
 
     <h2> Actions </h2>

@@ -109,4 +109,9 @@ class GravityForms
         $form = \GFAPI::get_form($formId);
         return $form['title'];
     }
+
+
+    public static function updateLastInteraction(){
+
+    }
 }

@@ -103,6 +103,7 @@ class Subscribers
         $post->unsubed = get_post_meta($post->id, 'unsubed', true);
         $post->activity = get_post_meta($post->id, 'activity', true) ?? 0;
         $post->activityTotal = get_post_meta($post->id, 'activityTotal', true) ?? 0;
+        $post->lastInteraction = get_post_meta($post->id, 'lastInteraction', true) ?? date("Y-m-d H:i:s", 0);
 
         if (!$post->subscriberId){
             update_post_meta($post->id, 'subscriberId', md5($post->id));
@@ -313,6 +314,13 @@ class Subscribers
         return $term;
     }
 
+
+    public static function updateLastInteraction(int $subscriberId, string | null $interactionDate):void
+    {
+        $interactionDate = $interactionDate ?? date("Y-m-d H:i:s");
+        update_post_meta($subscriberId, 'lastInteraction', $interactionDate);
+    }
+
     public static function sendingEmail(int $subscriberId, int $campaignId):void
     {
         update_post_meta($subscriberId, 'sent_' . $campaignId, 'sending');
@@ -321,6 +329,7 @@ class Subscribers
     public static function sentEmail(int $subscriberId, int $campaignId):void
     {
         update_post_meta($subscriberId, 'sent_' . $campaignId, 'sent');
+        self::updateLastInteraction($subscriberId);
     }
 
     public static function sentEmailFailed(int $subscriberId, int $campaignId):void

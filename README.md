@@ -32,6 +32,9 @@ on all possible configurations and setups.
 
 ## Change log
 
+### --- 1.0.11 ---
+- Add meta field to the subscribers post type for last interaction, added update after email is sent
+
 ### --- 1.0.10 ---
 - Implemented setting to skip actual email sending for testing/debugging purposes.
 - Settings output in test page

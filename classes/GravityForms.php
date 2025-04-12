@@ -4,13 +4,31 @@ namespace Mawiblah;
 
 class GravityForms
 {
+    public static function init()
+    {
+        add_action('gform_after_submission', function ($entry, $form) {
+            foreach ($form['fields'] as $field) {
+                if ($field->type === 'email') {
+                    $emailFieldId = $field->id;
+                    if (!empty($entry[$emailFieldId])) {
+                        $email = $entry[$emailFieldId];
+                        // Perform your logic with the email
+                        $subscriber = Subscribers::getSubscriber($email);
+                        if ($subscriber){
+                            Subscribers::updateLastInteraction($subscriber->id);
+                        }
+                    }
+                }
+            }
+        }, 10, 2);
+    }
     public static function getArrayOfGravityForms(): array
     {
         $GravityForms = \GFAPI::get_forms();
         return $GravityForms;
     }
 
-    public static function getGravityFormWitheEmailFieldIds()
+    public static function getGravityFormWithEmailFieldIds()
     {
         $forms = self::getArrayOfGravityForms();
         $ids = [];
@@ -34,7 +52,7 @@ class GravityForms
     public static function findEmail($email)
     {
 
-        $formsWihtEmailField = self::getGravityFormWitheEmailFieldIds();
+        $formsWihtEmailField = self::getGravityFormWithEmailFieldIds();
         $emails = [];
 
         foreach ($formsWihtEmailField as $form) {
@@ -63,7 +81,7 @@ class GravityForms
 
     public static function getAllEmails(): array
     {
-        $formsWihtEmailField = self::getGravityFormWitheEmailFieldIds();
+        $formsWihtEmailField = self::getGravityFormWithEmailFieldIds();
         $emails = [];
 
         foreach ($formsWihtEmailField as $form) {
@@ -105,13 +123,8 @@ class GravityForms
     }
 
 
-    public static function getFormName($formId){
+    public static function getFormName($formId) {
         $form = \GFAPI::get_form($formId);
         return $form['title'];
-    }
-
-
-    public static function updateLastInteraction(){
-
     }
 }

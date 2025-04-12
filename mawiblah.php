@@ -93,10 +93,11 @@ function mawiblah_init(): void
 
     \Mawiblah\ShortCodes::register();
     \Mawiblah\Unsubscribe::init();
-    \Mawiblah\Subscribers::registerPostType();
+    \Mawiblah\Subscribers::init();
     \Mawiblah\Campaigns::init();
     \Mawiblah\Visits::init();
     \Mawiblah\Logs::init();
+    \Mawiblah\GravityForms::init();
 }
 
 add_action('init', 'mawiblah_init');

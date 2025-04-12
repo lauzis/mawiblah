@@ -30,7 +30,7 @@ class Subscribers
         // Add your custom output here
         $metadata = self::getMetaData($post->ID);
         echo '<div>';
-        echo '<h3>Custom Output Section</h3>';
+        echo '<h3>Meta data</h3>';
         foreach ($metadata as $key => $value) {
             echo '<p><strong>' . esc_html($key) . ':</strong> ' . esc_html($value) . '</p>';
         }
@@ -340,7 +340,7 @@ class Subscribers
         return false;
     }
 
-    public static function ubsubedAudience()
+    public static function unsubedAudience()
     {
         $term = get_term_by('name', 'Unsubed', Subscribers::postType() . '_category');
         if (!$term) {

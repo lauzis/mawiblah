@@ -2,6 +2,10 @@ body {
     background-color: #e2e2e2; /* Different color for the body */
 }
 
+.mawiblah{
+    padding-inline-end:15px;
+}
+
 .create-campaign-form {
     background-color: #f1f1f1; /* Light gray background */
     padding: 20px;
@@ -291,6 +295,8 @@ form.google-analytics-events{
 .mawiblah-section {
     position:relative;
     width:100%;
+    margin-inline-end: 30px;
+    backgroud-color:red;
 }
 
 .mawiblah-section > h1 {

@@ -1,12 +1,27 @@
 [
   {
+    "id": "mawiblah-dont-disturn-threshold",
+    "title": "Dont disturb threshold",
+    "description": "The threshold/delta between emails to one subcriber. If the threshold is not reached, the email will not be sent. We dont want to bother subscribers that did recieve email aready lately.",
+    "fields": [
+      {
+        "id": "mawiblah-dont-disturb-threshold",
+        "title": "Time between the subscriber is contacred again (in seconds)",
+        "type": "text",
+        "value": "",
+        "placeholder": "2592000",
+        "default_value": "2592000"
+      }
+    ]
+  },
+  {
     "id": "time-between-emails",
     "title": "Time between emails (in seconds)",
     "description": "Set the time between emails. If to send out with some delay.",
     "fields": [
       {
         "id": "mawiblah-time-between-emails",
-        "title": "Time between emails",
+        "title": "Time between emails (in seconds)",
         "type": "text",
         "value": "",
         "placeholder": "1",

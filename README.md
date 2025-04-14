@@ -13,6 +13,8 @@ Kind of steep increase as our projects budget  is about 100$ yearly at the momen
 
 So... "Fine... will do my own Mailchimp... with blackjack and hookers"
 
+![Mawiblah name](readme-assets/mawiblah.jpg)
+
 ## What it does
 - Sends out emails to the email list.
 - Email list is collected via Gravity Forms entries. But one could add the mailing list manually.
@@ -34,6 +36,9 @@ on all possible configurations and setups.
 
 ### --- 1.0.11 ---
 - Add meta field to the subscribers post type for last interaction, added update after email is sent
+- Added meta settings field to controll the time between emails to the same subscriber
+  
+![dont disturb settings](readme-assets/dont-disturb-threshold.png)![Mawiblah name](readme-assets/mawiblah.jpg)
 
 ### --- 1.0.10 ---
 - Implemented setting to skip actual email sending for testing/debugging purposes.

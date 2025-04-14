@@ -46,7 +46,7 @@ class Renderer
                 if (isset($_GET['campaignId'])) {
                     $startTime = time();
                     $maxTime = ini_get('max_execution_time');
-                    $unsubedAudience = Subscribers::ubsubedAudience();
+                    $unsubedAudience = Subscribers::unsubedAudience();
 
                     $campaignId = $_GET['campaignId'];
 
@@ -184,16 +184,12 @@ class Renderer
                                 $lastInteraction = $subscriber->lastInteraction;
                                 $doNotDisturbThreshold = Settings::dontDisturbThreshold();
                                 // current tiem did not go over the reshold
-                                if (!$testMode && !$isTester && time() < strtotime($lastInteraction) + $doNotDisturbThreshold) {
-
+                                if (time() < strtotime($lastInteraction) + $doNotDisturbThreshold) {
                                     $skippingReasons['donNotDisturb'][] = $email;
 
-                                    print_r($skippingReasons);
-                                    print("skip no disturb");
-
-                                    die();
-
-                                    continue;
+                                    if (!$testMode && !$isTester){
+                                        continue;
+                                    }
                                 }
 
                                 Subscribers::sendingEmail($subscriber->id, $campaign->id);

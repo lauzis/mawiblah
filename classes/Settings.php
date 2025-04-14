@@ -379,13 +379,11 @@ msgstr ""
 
     public static function sendEmails():bool
     {
-        $value = get_option("mawiblah-dont-send-email");
+        return self::getOption("mawiblah-dont-send-email");
+    }
 
-        if ($value ==='dont-send-emails') {
-            return false;
-        }
-
-        return true;
+    public static function dontDisturbThreshold(){
+        return self::getOption('mawiblah-dont-disturb-threshold');
     }
 
     public static function getOption($optionId)

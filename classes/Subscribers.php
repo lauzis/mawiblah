@@ -440,4 +440,9 @@ class Subscribers
         return $subscriber->activity;
     }
 
+    public static function dontDisturbThreshold()
+    {
+        return Settings::getOption('mawiblah-dont-disturb-threshold');
+    }
+
 }

@@ -387,4 +387,26 @@ msgstr ""
 
         return true;
     }
+
+    public static function getOption($optionId)
+    {
+        // TODO: return default value if option not set
+        $value = get_option($optionId);
+
+        if (!$value) {
+            $sections = self::get_sections();
+            foreach ($sections as $section) {
+                foreach ($section['fields'] as $field) {
+                    if ($field['id'] === $optionId) {
+                        if ($field['type']!=='boolean'){
+                            return $field['default_value'];
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+
+        return $value;
+    }
 }

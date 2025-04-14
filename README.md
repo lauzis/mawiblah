@@ -38,7 +38,7 @@ on all possible configurations and setups.
 - Add meta field to the subscribers post type for last interaction, added update after email is sent
 - Added meta settings field to controll the time between emails to the same subscriber
   
-![dont disturb settings](readme-assets/dont-disturb-threshold.png)![Mawiblah name](readme-assets/mawiblah.jpg)
+![dont disturb settings](readme-assets/dont-disturb-threshold.png)
 
 ### --- 1.0.10 ---
 - Implemented setting to skip actual email sending for testing/debugging purposes.

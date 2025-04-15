@@ -85,7 +85,7 @@ class Unsubscribe
             } else {
                 if ($subscriber->unsubToken === $unsubToken) {
                     update_post_meta($subscriber->id, 'unsubed', true);
-                    $audience = Subscribers::ubsubedAudience();
+                    $audience = Subscribers::unsubedAudience();
                     Subscribers::addSubscriberToAudience($subscriber->id, $audience->term_id);
                     if (!empty($feedback)) {
                         add_post_meta($subscriber->id, 'unsubed_feedback', $feedback, false);

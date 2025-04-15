@@ -379,12 +379,32 @@ msgstr ""
 
     public static function sendEmails():bool
     {
-        $value = get_option("mawiblah-dont-send-email");
+        return self::getOption("mawiblah-dont-send-email");
+    }
 
-        if ($value ==='dont-send-emails') {
-            return false;
+    public static function dontDisturbThreshold(){
+        return self::getOption('mawiblah-dont-disturb-threshold');
+    }
+
+    public static function getOption($optionId)
+    {
+        // TODO: return default value if option not set
+        $value = get_option($optionId);
+
+        if (!$value) {
+            $sections = self::get_sections();
+            foreach ($sections as $section) {
+                foreach ($section['fields'] as $field) {
+                    if ($field['id'] === $optionId) {
+                        if ($field['type']!=='boolean'){
+                            return $field['default_value'];
+                        }
+                        break;
+                    }
+                }
+            }
         }
 
-        return true;
+        return $value;
     }
 }

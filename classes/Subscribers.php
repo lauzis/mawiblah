@@ -8,7 +8,33 @@ class Subscribers
     // exampel http://gudlenieks.test/?utm_source=email&utm_medium=email&utm_campaign=monthly-email&mawiblahId=%7BmawiblahId%7D&unsubscribe=%7Bemail%7D
     public static function init()
     {
+        self::registerPostType();
+        add_action('add_meta_boxes', [self::class, 'addMetaBoxes']);
+    }
 
+    public static function addMetaBoxes()
+    {
+
+        add_meta_box(
+            'mawiblahMetadata', // Unique ID for the meta box
+            'Metadata',               // Title of the meta box
+            [self::class, 'renderMetaData'], // Callback function to render the content
+            self::postType(),         // Post type where the meta box will appear
+            'normal',                 // Context (normal, side, advanced)
+            'default'                 // Priority
+        );
+    }
+
+    public static function renderMetaData($post)
+    {
+        // Add your custom output here
+        $metadata = self::getMetaData($post->ID);
+        echo '<div>';
+        echo '<h3>Meta data</h3>';
+        foreach ($metadata as $key => $value) {
+            echo '<p><strong>' . esc_html($key) . ':</strong> ' . esc_html($value) . '</p>';
+        }
+        echo '</div>';
     }
 
     public static function postType()
@@ -63,7 +89,6 @@ class Subscribers
 
         register_post_type(Subscribers::postType(), $args);
 
-
         // Register custom taxonomy
         $taxonomy_labels = [
             'name' => _x('Subscriber Audiences', 'taxonomy general name', 'mawiblah'),
@@ -89,9 +114,41 @@ class Subscribers
         ];
 
         register_taxonomy(Subscribers::postType() . '_category', [Subscribers::postType()], $taxonomy_args);
-
     }
 
+    public static function getMetaKeys()
+    {
+        return [
+            'email' => [
+                'key' => 'email',
+                'default_value' => ''
+            ],
+            'subscriberId' => [
+                'key' => 'subscriberId',
+                'default_value' => ''
+            ],
+            'unsubToken' => [
+                'key' => 'unsubToken',
+                'default_value' => ''
+            ],
+            'unsubed' => [
+                'key' => 'unsubed',
+                'default_value' => ''
+            ],
+            'activity' => [
+                'key' => 'activity',
+                'default_value' => ''
+            ],
+            'activityTotal' => [
+                'key' => 'activityTotal',
+                'default_value' => ''
+            ],
+            'lastInteraction' => [
+                'key' => 'lastInteraction',
+                'default_value' => ''
+            ]
+        ];
+    }
 
     public static function appendMeta($post)
     {
@@ -103,15 +160,25 @@ class Subscribers
         $post->unsubed = get_post_meta($post->id, 'unsubed', true);
         $post->activity = get_post_meta($post->id, 'activity', true) ?? 0;
         $post->activityTotal = get_post_meta($post->id, 'activityTotal', true) ?? 0;
+        $post->lastInteraction = get_post_meta($post->id, 'lastInteraction', true) ?? date("Y-m-d H:i:s", 0);
 
-        if (!$post->subscriberId){
+        if (!$post->subscriberId) {
             update_post_meta($post->id, 'subscriberId', md5($post->id));
         }
 
-
-        $post->audiences = get_the_terms( $post->ID, Subscribers::postType() . '_category' );
+        $post->audiences = get_the_terms($post->ID, Subscribers::postType() . '_category');
 
         return $post;
+    }
+
+    public static function getMetaData($postId)
+    {
+        $metaKeys = self::getMetaKeys();
+        $metaData = [];
+        foreach ($metaKeys as $key => $value) {
+            $metaData[$key] = get_post_meta($postId, $key, true);
+        }
+        return $metaData;
     }
 
     public static function getSubscriber($email): object|null
@@ -189,7 +256,6 @@ class Subscribers
         }
     }
 
-
     public static function validateAudiences(array $audiences): bool
     {
         $gravityForms = GravityForms::getArrayOfGravityForms();
@@ -227,14 +293,14 @@ class Subscribers
             foreach ($listOfTaxanomies as $taxanomy) {
                 $gfId = get_term_meta($taxanomy->term_id, 'gravityFormsId', true);
                 if ($gfId === $gravityFormId) {
-                    return (object) $taxanomy;
+                    return (object)$taxanomy;
                 }
             }
         }
 
         if (!empty($title)) {
 
-            return (object) self::createAudience($title, $description, $gravityFormId);
+            return (object)self::createAudience($title, $description, $gravityFormId);
         }
 
         return null;
@@ -264,18 +330,18 @@ class Subscribers
             return false;
         }
 
-        $file = fopen($mailchimpUnsubFile,"r");
+        $file = fopen($mailchimpUnsubFile, "r");
 
-        while (($data = fgetcsv($file)) !== FALSE)
-        {
-           if ($data[0] === $email) {
-               return true;
-           }
+        while (($data = fgetcsv($file)) !== FALSE) {
+            if ($data[0] === $email) {
+                return true;
+            }
         }
         return false;
     }
 
-    public static function ubsubedAudience(){
+    public static function unsubedAudience()
+    {
         $term = get_term_by('name', 'Unsubed', Subscribers::postType() . '_category');
         if (!$term) {
             $term = wp_insert_term('Unsubed', Subscribers::postType() . '_category');
@@ -287,8 +353,9 @@ class Subscribers
     {
         $sent = get_post_meta($subscriberId, 'sent_' . $campaignId, true);
 
-        return (bool) $sent;
+        return (bool)$sent;
     }
+
     public static function isTester($subscriber): bool
     {
         $testerFlag = get_post_meta($subscriber->id, 'tester', true);
@@ -297,15 +364,16 @@ class Subscribers
 
         $inTesterAudience = false;
 
-        foreach($audiences as $audience){
-            if($audience->term_id === $testerCategory->term_id){
+        foreach ($audiences as $audience) {
+            if ($audience->term_id === $testerCategory->term_id) {
                 $inTesterAudience = true;
             }
         }
-        return  $testerFlag || $inTesterAudience;
+        return $testerFlag || $inTesterAudience;
     }
 
-    public static function testerAudience(){
+    public static function testerAudience()
+    {
         $term = get_term_by('name', 'Testers', Subscribers::postType() . '_category');
         if (!$term) {
             $term = wp_insert_term('Testers', Subscribers::postType() . '_category');
@@ -313,22 +381,30 @@ class Subscribers
         return $term;
     }
 
-    public static function sendingEmail(int $subscriberId, int $campaignId):void
+    public static function updateLastInteraction(int $subscriberId, string|null $interactionDate = null): void
+    {
+        $interactionDate = $interactionDate ?? date("Y-m-d H:i:s");
+        update_post_meta($subscriberId, 'lastInteraction', $interactionDate);
+    }
+
+    public static function sendingEmail(int $subscriberId, int $campaignId): void
     {
         update_post_meta($subscriberId, 'sent_' . $campaignId, 'sending');
     }
 
-    public static function sentEmail(int $subscriberId, int $campaignId):void
+    public static function sentEmail(int $subscriberId, int $campaignId): void
     {
         update_post_meta($subscriberId, 'sent_' . $campaignId, 'sent');
+        self::updateLastInteraction($subscriberId);
     }
 
-    public static function sentEmailFailed(int $subscriberId, int $campaignId):void
+    public static function sentEmailFailed(int $subscriberId, int $campaignId): void
     {
         update_post_meta($subscriberId, 'sent_' . $campaignId, 'failed');
     }
 
-    public static function getSubscriberBySubscriberId ($subscriberId) {
+    public static function getSubscriberBySubscriberId($subscriberId)
+    {
 
         $postsByMeta = get_posts([
             'post_type' => self::postType(),
@@ -344,8 +420,8 @@ class Subscribers
         return self::appendMeta($postsByMeta[0]);
     }
 
-    public static function linksClicked($subscriberId) {
-
+    public static function linksClicked($subscriberId)
+    {
         $subscriber = self::getSubscriberBySubscriberId($subscriberId);
         $subscriber->activityTotal++;
         update_post_meta($subscriber->id, 'activityTotal', $subscriber->activityTotal);
@@ -362,6 +438,11 @@ class Subscribers
         $subscriber->activity++;
         update_post_meta($subscriber->id, 'activity', $subscriber->activity);
         return $subscriber->activity;
+    }
+
+    public static function dontDisturbThreshold()
+    {
+        return Settings::getOption('mawiblah-dont-disturb-threshold');
     }
 
 }

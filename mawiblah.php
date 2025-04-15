@@ -10,7 +10,7 @@
  */
 
 if (!defined('MAWIBLAH_VERSION')) {
-    define('MAWIBLAH_VERSION', '1.0.10.' . time());
+    define('MAWIBLAH_VERSION', '1.0.11.' . time());
 }
 
 define('MAWIBLAH_PLUGIN_NAME', 'Mawiblah');
@@ -93,10 +93,11 @@ function mawiblah_init(): void
 
     \Mawiblah\ShortCodes::register();
     \Mawiblah\Unsubscribe::init();
-    \Mawiblah\Subscribers::registerPostType();
+    \Mawiblah\Subscribers::init();
     \Mawiblah\Campaigns::init();
     \Mawiblah\Visits::init();
     \Mawiblah\Logs::init();
+    \Mawiblah\GravityForms::init();
 }
 
 add_action('init', 'mawiblah_init');

@@ -46,7 +46,7 @@ class Renderer
                 if (isset($_GET['campaignId'])) {
                     $startTime = time();
                     $maxTime = ini_get('max_execution_time');
-                    $unsubedAudience = Subscribers::ubsubedAudience();
+                    $unsubedAudience = Subscribers::unsubedAudience();
 
                     $campaignId = $_GET['campaignId'];
 
@@ -82,6 +82,7 @@ class Renderer
                         'notUniqueEmail' => [],
                         'skippingToPlaceWeLeftOf' => [],
                         'emailSendingIsDisabled' => [],
+                        'donNotDisturb' => [],
                     ];
 
                     $iteration = get_post_meta($campaign->id, 'iteration', true);
@@ -118,6 +119,7 @@ class Renderer
                                 if (!$subscriber) {
                                     $subscriber = Subscribers::addSubscriber($email);
                                 }
+
                                 $currentTIme = time();
                                 if ($currentTIme - $startTime > $maxTime - 2) {
                                     Logs::addLog("Campaign stopped {$campaign->post_title} as we are running out of time", "Campaign {$campaign->post_title} stopped",
@@ -133,7 +135,6 @@ class Renderer
                                     wp_redirect(Helpers::generatePluginUrl(['action' => 'list']));
                                     die();
                                 }
-
 
                                 if (is_array($subscriber->audiences) && count($subscriber->audiences) > 0) {
                                     $found = false;
@@ -178,6 +179,17 @@ class Renderer
                                     $skippingReasons['alreadySent'][] = $email;
                                     $emailsSkipped++;
                                     continue;
+                                }
+
+                                $lastInteraction = $subscriber->lastInteraction;
+                                $doNotDisturbThreshold = Settings::dontDisturbThreshold();
+                                // current tiem did not go over the reshold
+                                if (time() < strtotime($lastInteraction) + $doNotDisturbThreshold) {
+                                    $skippingReasons['donNotDisturb'][] = $email;
+
+                                    if (!$testMode && !$isTester){
+                                        continue;
+                                    }
                                 }
 
                                 Subscribers::sendingEmail($subscriber->id, $campaign->id);

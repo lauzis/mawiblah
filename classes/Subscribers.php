@@ -439,10 +439,4 @@ class Subscribers
         update_post_meta($subscriber->id, 'activity', $subscriber->activity);
         return $subscriber->activity;
     }
-
-    public static function dontDisturbThreshold()
-    {
-        return Settings::getOption('mawiblah-dont-disturb-threshold');
-    }
-
 }

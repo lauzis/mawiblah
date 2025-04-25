@@ -292,7 +292,7 @@ class Subscribers
         if (!empty($listOfTaxanomies)) {
             foreach ($listOfTaxanomies as $taxanomy) {
                 $gfId = get_term_meta($taxanomy->term_id, 'gravityFormsId', true);
-                if ($gfId === $gravityFormId) {
+                if ((int)$gfId === (int)$gravityFormId) {
                     return (object)$taxanomy;
                 }
             }
@@ -438,5 +438,20 @@ class Subscribers
         $subscriber->activity++;
         update_post_meta($subscriber->id, 'activity', $subscriber->activity);
         return $subscriber->activity;
+    }
+
+    public static function getLastSyncDate($audienceId, $date=null)
+    {
+        $lastSyncDate = get_term_meta($audienceId, 'lastSyncDate', true);
+        if (!$lastSyncDate && $date) {
+            $lastSyncDate = date("Y-m-d H:i:s");
+            add_term_meta($audienceId, 'lastSyncDate', $lastSyncDate);
+        }
+        return $lastSyncDate;
+    }
+
+    public static function updateLastSyncDate($audienceId, $date)
+    {
+        update_term_meta($audienceId, 'lastSyncDate', $date);
     }
 }

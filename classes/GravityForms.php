@@ -127,4 +127,47 @@ class GravityForms
         $form = \GFAPI::get_form($formId);
         return $form['title'];
     }
+
+    public static function isGravityPluginActive(): bool
+    {
+        return class_exists('GFForms');
+    }
+
+    public static function syncWithAudiencePostType(){
+        $forms = self::getArrayOfGravityForms();
+        foreach ($forms as $form) {
+
+            print("<pre>");
+
+            $formId = $form['id'];
+            $audienceName = GravityForms::getFormName($formId) . " (Gravity Forms)";
+            $lastModification = self::getDateOfLastEntrie($formId);
+
+
+            $mawiblahAudience = Subscribers::getGFAudience($formId, $audienceName);
+
+            $lastSyncDate = Subscribers::getLastSyncDate($mawiblahAudience->id);
+
+            if ($lastSyncDate < $lastModification) {
+                $emails = self::getAllEmailsForForm($formId);
+                foreach ($emails as $email) {
+                    $subscriber = Subscribers::getSubscriber($email);
+                    if ($subscriber) {
+                        Subscribers::updateLastInteraction($subscriber->id);
+                    } else {
+                        Subscribers::addSubscriber($email, $formId);
+                    }
+                }
+                Subscribers::updateLastSyncDate($mawiblahAudience->id, $lastModification);
+            }
+        }
+    }
+
+    public static function getDateOfLastEntrie($formId){
+        $paging = array('offset' => 0, 'page_size' => 1);
+        $entries = \GFAPI::get_entries($formId, paging: $paging);
+        $entryDate = $entries[0]['date_created'];
+
+        return $entryDate;
+    }
 }

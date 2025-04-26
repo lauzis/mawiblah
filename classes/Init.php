@@ -31,6 +31,7 @@ class Init
             self::MAWIBLAH_EMAIL_TEMPLATES,
             self::MAWIBLAH_TESTS,
             self::MAWIBLAH_SETTINGS,
+            self::MAWIBLAH_ACTIONS
         ];
     }
 

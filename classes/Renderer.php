@@ -100,7 +100,7 @@ class Renderer
                             $audience = Subscribers::getGFAudience($id, $audienceName);
                             $emails = GravityForms::getAllEmailsForForm($id);
 
-                            foreach ($emails as $email) {
+                            foreach ($emails as $email => $info) {
                                 $email = trim(strtolower($email));
 
                                 if (isset($uniqueEmails[$email])) {

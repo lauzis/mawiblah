@@ -100,7 +100,7 @@ class GravityForms
         return $emails;
     }
 
-    public static function getAllEmailsForForm($formId): array{
+    public static function getAllEmailsForForm(int $formId): array{
         $form = \GFAPI::get_form($formId);
         $emailFieldId = null;
         foreach($form['fields'] as $field){
@@ -116,8 +116,12 @@ class GravityForms
         $entries = \GFAPI::get_entries($formId, paging: $paging);
         $emails = [];
         foreach ($entries as $entry) {
+            $dateCreated = $entry['date_created'];
             $email = $entry[$emailFieldId];
-            $emails[$email] = $email;
+            $emails[$email] = [
+                'email'=>$email,
+                'dateCreated'=>$dateCreated
+            ];
         }
         return $emails;
     }
@@ -145,7 +149,7 @@ class GravityForms
 
             $formId = $form['id'];
             $audienceName = GravityForms::getFormName($formId) . " (Gravity Forms)";
-            $lastModification = self::getDateOfLastEntrie($formId);
+            $lastModification = self::getDateOfLastEntry($formId);
             $mawiblahAudience = Subscribers::getGFAudience($formId, $audienceName);
 
             if ($mawiblahAudience){
@@ -153,7 +157,8 @@ class GravityForms
 
                 if ($lastSyncDate < $lastModification) {
                     $emails = self::getAllEmailsForForm($formId);
-                    foreach ($emails as $email) {
+                    foreach ($emails as $email => $info) {
+                        $dateCreated = $info['dateCreated'];
                         $subscriber = Subscribers::getSubscriber($email);
                         if ($subscriber) {
                             Subscribers::updateLastInteraction($subscriber->id);
@@ -161,6 +166,14 @@ class GravityForms
                             $subscriber = Subscribers::addSubscriber($email, $formId);
                         }
                         Subscribers::addSubscriberToAudience($subscriber->id, $mawiblahAudience->id);
+
+                        if (!$subscriber->firstInteraction || $dateCreated < $subscriber->firstInteraction) {
+                            Subscribers::updateFirstInteraction($subscriber->id, $dateCreated);
+                        }
+
+                        if (!$subscriber->lastInteraction || $dateCreated > $subscriber->lastInteraction) {
+                            Subscribers::updateLastInteraction($subscriber->id, $dateCreated);
+                        }
                     }
                     Subscribers::updateLastSyncDate($mawiblahAudience->id, $lastModification);
                 } else {
@@ -172,7 +185,8 @@ class GravityForms
         return $syncStats;
     }
 
-    public static function getDateOfLastEntrie($formId){
+    public static function getDateOfLastEntry(int $formId):string
+    {
         $paging = array('offset' => 0, 'page_size' => 1);
         $entries = \GFAPI::get_entries($formId, paging: $paging);
         $entryDate = $entries[0]['date_created'];

@@ -146,6 +146,10 @@ class Subscribers
             'lastInteraction' => [
                 'key' => 'lastInteraction',
                 'default_value' => ''
+            ],
+            'firstInteraction' => [
+                'key' => 'firstInteraction',
+                'default_value' => null
             ]
         ];
     }
@@ -161,6 +165,7 @@ class Subscribers
         $post->activity = get_post_meta($post->id, 'activity', true) ?? 0;
         $post->activityTotal = get_post_meta($post->id, 'activityTotal', true) ?? 0;
         $post->lastInteraction = get_post_meta($post->id, 'lastInteraction', true) ?? date("Y-m-d H:i:s", 0);
+        $post->firstInteraction = get_post_meta($post->id, 'firstInteraction', true) ?? null;
 
         if (!$post->subscriberId) {
             update_post_meta($post->id, 'subscriberId', md5($post->id));
@@ -470,5 +475,10 @@ class Subscribers
     public static function updateLastSyncDate($audienceId, $date)
     {
         update_term_meta($audienceId, 'lastSyncDate', $date);
+    }
+
+    public static function updateFirstInteraction($subscriberId, $date)
+    {
+        update_post_meta($subscriberId, 'firstInteraction', $date);
     }
 }

@@ -7,7 +7,16 @@
         <?= _e('Clear logs', 'mawiblah') ?>
     </h2>
     <?php
-        if(isset($_POST['action']) && $_POST['action'] == 'clear_logs') {
+        if(
+                isset($_POST['action'])
+                && $_POST['action'] == 'clear_logs'
+                && isset($_POST['mawiblah_clear_logs_nonce'])
+                && wp_verify_nonce(
+                    $_POST['mawiblah_clear_logs_nonce'],
+                    'mawiblah_clear_logs'
+                )
+
+        ) {
             // Call the function to clear logs
             $result = \Mawiblah\Logs::clearLogs();
             if($result) {
@@ -23,9 +32,10 @@
     </p>
 
     <form method="post" action="" class="<?= MAWIBLAH_PLUGIN_DIRECTORY_NAME ?>" autocomplete="off">
+        <?php wp_nonce_field('mawiblah_clear_logs', 'mawiblah_clear_logs_nonce'); ?>
         <input type="hidden" name="action" value="clear_logs">
         <button type="submit" class="button button-primary">
-            <?= _e('Clear logs', 'mawiblah') ?>
+            <?= esc_html__('Clear logs', 'mawiblah') ?>
         </button>
     </form>
 
@@ -39,7 +49,15 @@
             <?= _e('Syncronize gravityforms with audiences', 'mawiblah') ?>
         </p>
         <?php
-            if(isset($_POST['action']) && $_POST['action'] === 'gravity_forms_sync'){
+            if(
+                    isset($_POST['action'])
+                    && $_POST['action'] === 'gravity_forms_sync'
+                    && isset($_POST['mawiblah_gravity_sync_nonce'])
+                    && wp_verify_nonce(
+                        $_POST['mawiblah_gravity_sync_nonce'],
+                        'mawiblah_gravity_sync'
+                    )
+            ){
                 $syncStats = \Mawiblah\GravityForms::syncWithAudiencePostType();
                 if($syncStats['checked'] > 0){
                     echo '<p>' . sprintf(__('Syncronized %s audiences', 'mawiblah'), $syncStats['checked']) . '</p>';
@@ -54,6 +72,7 @@
 
         <form method="post" action="" class="<?= MAWIBLAH_PLUGIN_DIRECTORY_NAME ?>" autocomplete="off">
             <input type="hidden" name="action" value="gravity_forms_sync">
+            <?php wp_nonce_field('mawiblah_gravity_sync', 'mawiblah_gravity_sync_nonce'); ?>
             <button type="submit" class="button button-primary">
                 <?= _e('Gravity forms audience sync', 'mawiblah') ?>
             </button>

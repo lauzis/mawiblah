@@ -135,32 +135,41 @@ class GravityForms
 
     public static function syncWithAudiencePostType(){
         $forms = self::getArrayOfGravityForms();
-        foreach ($forms as $form) {
+        $syncStats = [
+            'checked' => 0,
+            'skipped' => 0
+        ];
 
-            print("<pre>");
+        foreach ($forms as $form) {
+            $syncStats['checked']++;
 
             $formId = $form['id'];
             $audienceName = GravityForms::getFormName($formId) . " (Gravity Forms)";
             $lastModification = self::getDateOfLastEntrie($formId);
-
-
             $mawiblahAudience = Subscribers::getGFAudience($formId, $audienceName);
 
-            $lastSyncDate = Subscribers::getLastSyncDate($mawiblahAudience->id);
+            if ($mawiblahAudience){
+                $lastSyncDate = Subscribers::getLastSyncDate($mawiblahAudience->id);
 
-            if ($lastSyncDate < $lastModification) {
-                $emails = self::getAllEmailsForForm($formId);
-                foreach ($emails as $email) {
-                    $subscriber = Subscribers::getSubscriber($email);
-                    if ($subscriber) {
-                        Subscribers::updateLastInteraction($subscriber->id);
-                    } else {
-                        Subscribers::addSubscriber($email, $formId);
+                if ($lastSyncDate < $lastModification) {
+                    $emails = self::getAllEmailsForForm($formId);
+                    foreach ($emails as $email) {
+                        $subscriber = Subscribers::getSubscriber($email);
+                        if ($subscriber) {
+                            Subscribers::updateLastInteraction($subscriber->id);
+                        } else {
+                            $subscriber = Subscribers::addSubscriber($email, $formId);
+                        }
+                        Subscribers::addSubscriberToAudience($subscriber->id, $mawiblahAudience->id);
                     }
+                    Subscribers::updateLastSyncDate($mawiblahAudience->id, $lastModification);
+                } else {
+                    $syncStats['skipped']++;
                 }
-                Subscribers::updateLastSyncDate($mawiblahAudience->id, $lastModification);
             }
         }
+
+        return $syncStats;
     }
 
     public static function getDateOfLastEntrie($formId){

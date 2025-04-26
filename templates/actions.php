@@ -40,7 +40,15 @@
         </p>
         <?php
             if(isset($_POST['action']) && $_POST['action'] === 'gravity_forms_sync'){
-                \Mawiblah\GravityForms::syncWithAudiencePostType();
+                $syncStats = \Mawiblah\GravityForms::syncWithAudiencePostType();
+                if($syncStats['checked'] > 0){
+                    echo '<p>' . sprintf(__('Syncronized %s audiences', 'mawiblah'), $syncStats['checked']) . '</p>';
+                    if($syncStats['skipped'] > 0){
+                        echo '<p>' . sprintf(__('Skipped %s audiences', 'mawiblah'), $syncStats['skipped']) . '</p>';
+                    }
+                } else {
+                    echo '<p>' . _e('No audiences to sync', 'mawiblah') . '</p>';
+                }
             }
         ?>
 

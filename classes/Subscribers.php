@@ -201,6 +201,23 @@ class Subscribers
         return null;
     }
 
+    static function appendAudienceMeta($audience){
+        $audience->gravityFormsId = get_term_meta($audience->term_id, 'gravityFormsId', true);
+        $audience->lastSyncDate = get_term_meta($audience->term_id, 'lastSyncDate', true);
+        $audience->id = $audience->term_id;
+        return $audience;
+    }
+
+    public static function getAudience($audienceId){
+        $audience = get_term($audienceId, Subscribers::postType() . '_category');
+
+        if ($audience) {
+            $audience = self::appendAudienceMeta((object) $audience);
+            return $audience;
+        }
+        return null;
+    }
+
     public static function addSubscriber(string $email, string $subscriberId = ""): object
     {
 
@@ -293,7 +310,7 @@ class Subscribers
             foreach ($listOfTaxanomies as $taxanomy) {
                 $gfId = get_term_meta($taxanomy->term_id, 'gravityFormsId', true);
                 if ((int)$gfId === (int)$gravityFormId) {
-                    return (object)$taxanomy;
+                    return self::appendAudienceMeta((object)$taxanomy);
                 }
             }
         }
@@ -313,7 +330,7 @@ class Subscribers
         if (!is_wp_error($term)) {
             add_term_meta($term['term_id'], 'gravityFormsId', $gravityFormsId);
         }
-        return $term;
+        return self::appendAudienceMeta((object) $term);
     }
 
     public static function addSubscriberToAudience($subscriberId, $audienceId)
@@ -445,7 +462,7 @@ class Subscribers
         $lastSyncDate = get_term_meta($audienceId, 'lastSyncDate', true);
         if (!$lastSyncDate && $date) {
             $lastSyncDate = date("Y-m-d H:i:s");
-            add_term_meta($audienceId, 'lastSyncDate', $lastSyncDate);
+            update_term_meta($audienceId, 'lastSyncDate', $lastSyncDate);
         }
         return $lastSyncDate;
     }

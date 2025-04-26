@@ -206,18 +206,20 @@ class Subscribers
         return null;
     }
 
-    static function appendAudienceMeta($audience){
+    static function appendAudienceMeta($audience)
+    {
         $audience->gravityFormsId = get_term_meta($audience->term_id, 'gravityFormsId', true);
         $audience->lastSyncDate = get_term_meta($audience->term_id, 'lastSyncDate', true);
         $audience->id = $audience->term_id;
         return $audience;
     }
 
-    public static function getAudience($audienceId){
+    public static function getAudience($audienceId)
+    {
         $audience = get_term($audienceId, Subscribers::postType() . '_category');
 
         if ($audience) {
-            $audience = self::appendAudienceMeta((object) $audience);
+            $audience = self::appendAudienceMeta((object)$audience);
             return $audience;
         }
         return null;
@@ -335,7 +337,7 @@ class Subscribers
         if (!is_wp_error($term)) {
             add_term_meta($term['term_id'], 'gravityFormsId', $gravityFormsId);
         }
-        return self::appendAudienceMeta((object) $term);
+        return self::appendAudienceMeta((object)$term);
     }
 
     public static function addSubscriberToAudience($subscriberId, $audienceId)
@@ -462,7 +464,14 @@ class Subscribers
         return $subscriber->activity;
     }
 
-    public static function getLastSyncDate($audienceId, $date=null)
+    /**
+     * Get the last synchronization date for an audience
+     *
+     * @param int $audienceId The audience term ID
+     * @param string|null $date Optional date to set if no last sync date exists
+     * @return string|false The last sync date or false if not found and no date was provided
+     */
+    public static function getLastSyncDate(int $audienceId, $date = null): string|false
     {
         $lastSyncDate = get_term_meta($audienceId, 'lastSyncDate', true);
         if (!$lastSyncDate && $date) {

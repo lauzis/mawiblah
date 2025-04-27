@@ -146,6 +146,10 @@ class Subscribers
             'lastInteraction' => [
                 'key' => 'lastInteraction',
                 'default_value' => ''
+            ],
+            'firstInteraction' => [
+                'key' => 'firstInteraction',
+                'default_value' => null
             ]
         ];
     }
@@ -161,6 +165,7 @@ class Subscribers
         $post->activity = get_post_meta($post->id, 'activity', true) ?? 0;
         $post->activityTotal = get_post_meta($post->id, 'activityTotal', true) ?? 0;
         $post->lastInteraction = get_post_meta($post->id, 'lastInteraction', true) ?? date("Y-m-d H:i:s", 0);
+        $post->firstInteraction = get_post_meta($post->id, 'firstInteraction', true) ?? null;
 
         if (!$post->subscriberId) {
             update_post_meta($post->id, 'subscriberId', md5($post->id));
@@ -198,6 +203,25 @@ class Subscribers
             return self::appendMeta($subscriber[0]);
         }
 
+        return null;
+    }
+
+    static function appendAudienceMeta($audience)
+    {
+        $audience->gravityFormsId = get_term_meta($audience->term_id, 'gravityFormsId', true);
+        $audience->lastSyncDate = get_term_meta($audience->term_id, 'lastSyncDate', true);
+        $audience->id = $audience->term_id;
+        return $audience;
+    }
+
+    public static function getAudience($audienceId)
+    {
+        $audience = get_term($audienceId, Subscribers::postType() . '_category');
+
+        if ($audience) {
+            $audience = self::appendAudienceMeta((object)$audience);
+            return $audience;
+        }
         return null;
     }
 
@@ -292,8 +316,8 @@ class Subscribers
         if (!empty($listOfTaxanomies)) {
             foreach ($listOfTaxanomies as $taxanomy) {
                 $gfId = get_term_meta($taxanomy->term_id, 'gravityFormsId', true);
-                if ($gfId === $gravityFormId) {
-                    return (object)$taxanomy;
+                if ((int)$gfId === (int)$gravityFormId) {
+                    return self::appendAudienceMeta((object)$taxanomy);
                 }
             }
         }
@@ -313,7 +337,7 @@ class Subscribers
         if (!is_wp_error($term)) {
             add_term_meta($term['term_id'], 'gravityFormsId', $gravityFormsId);
         }
-        return $term;
+        return self::appendAudienceMeta((object)$term);
     }
 
     public static function addSubscriberToAudience($subscriberId, $audienceId)
@@ -440,9 +464,30 @@ class Subscribers
         return $subscriber->activity;
     }
 
-    public static function dontDisturbThreshold()
+    /**
+     * Get the last synchronization date for an audience
+     *
+     * @param int $audienceId The audience term ID
+     * @param string|null $date Optional date to set if no last sync date exists
+     * @return string|false The last sync date or false if not found and no date was provided
+     */
+    public static function getLastSyncDate(int $audienceId, $date = null): string|false
     {
-        return Settings::getOption('mawiblah-dont-disturb-threshold');
+        $lastSyncDate = get_term_meta($audienceId, 'lastSyncDate', true);
+        if (!$lastSyncDate && $date) {
+            $lastSyncDate = date("Y-m-d H:i:s");
+            update_term_meta($audienceId, 'lastSyncDate', $lastSyncDate);
+        }
+        return $lastSyncDate;
     }
 
+    public static function updateLastSyncDate($audienceId, $date)
+    {
+        update_term_meta($audienceId, 'lastSyncDate', $date);
+    }
+
+    public static function updateFirstInteraction($subscriberId, $date)
+    {
+        update_post_meta($subscriberId, 'firstInteraction', $date);
+    }
 }

@@ -1,7 +1,6 @@
 <?php
 
 namespace Mawiblah;
-use Gae_Logger;
 
 class Settings
 {
@@ -140,7 +139,7 @@ class Settings
     }
     public static function add_message($text, $type = "success")
     {
-        array_push(self::$messages, ["type" => $type, "message" => "GAE: " . $text]);
+        array_push(self::$messages, ["type" => $type, "message" => "MAWIBLAH: " . $text]);
     }
 
     private static function remove_sections_options()

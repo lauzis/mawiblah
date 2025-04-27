@@ -100,7 +100,7 @@ class Renderer
                             $audience = Subscribers::getGFAudience($id, $audienceName);
                             $emails = GravityForms::getAllEmailsForForm($id);
 
-                            foreach ($emails as $email) {
+                            foreach ($emails as $email => $info) {
                                 $email = trim(strtolower($email));
 
                                 if (isset($uniqueEmails[$email])) {
@@ -303,6 +303,12 @@ class Renderer
     public static function settings()
     {
         require MAWIBLAH_PLUGIN_DIR . "/templates/settings.php";
+        exit;
+    }
+
+    public static function actions()
+    {
+        require MAWIBLAH_PLUGIN_DIR . "/templates/actions.php";
         exit;
     }
 }

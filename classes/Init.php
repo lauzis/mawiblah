@@ -12,6 +12,8 @@ class Init
     const MAWIBLAH_TESTS = 'mawiblah-tests';
 
     const MAWIBLAH_SETTINGS = 'mawiblah-settings';
+
+    const MAWIBLAH_ACTIONS = 'mawiblah-actions';
     public function init(): void
     {
         if (is_admin()) {
@@ -29,6 +31,7 @@ class Init
             self::MAWIBLAH_EMAIL_TEMPLATES,
             self::MAWIBLAH_TESTS,
             self::MAWIBLAH_SETTINGS,
+            self::MAWIBLAH_ACTIONS
         ];
     }
 
@@ -155,13 +158,21 @@ class Init
 
         add_submenu_page(
             'mawiblah',
+            'Actions',
+            'Actions',
+            'manage_options',
+            self::MAWIBLAH_ACTIONS,
+            [$this, 'actions']
+        );
+
+        add_submenu_page(
+            'mawiblah',
             'Settings',
             'Settings',
             'manage_options',
             self::MAWIBLAH_SETTINGS,
             [$this, 'settings']
         );
-
     }
 
     public function emailTemplates() {
@@ -181,8 +192,11 @@ class Init
         Renderer::tests();
     }
 
-
     public function settings() {
         Renderer::settings();
+    }
+
+    public function actions() {
+        Renderer::actions();
     }
 }

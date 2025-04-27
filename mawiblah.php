@@ -85,6 +85,7 @@ require(MAWIBLAH_PLUGIN_DIR . '/classes/GravityForms.php');
 require(MAWIBLAH_PLUGIN_DIR . '/classes/Renderer.php');
 require(MAWIBLAH_PLUGIN_DIR . '/classes/Visits.php');
 require(MAWIBLAH_PLUGIN_DIR . '/classes/Logs.php');
+require(MAWIBLAH_PLUGIN_DIR . '/classes/Actions.php');
 
 function mawiblah_init(): void
 {
@@ -98,6 +99,7 @@ function mawiblah_init(): void
     \Mawiblah\Visits::init();
     \Mawiblah\Logs::init();
     \Mawiblah\GravityForms::init();
+    \Mawiblah\Actions::init();
 }
 
 add_action('init', 'mawiblah_init');

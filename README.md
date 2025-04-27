@@ -34,6 +34,10 @@ on all possible configurations and setups.
 
 ## Change log
 
+### --- 1.0.12 ---
+- Added action page, possibility to clear logs, and launch manual sync with gravity forms
+![Action page](readme-assets/action-page.png)
+
 ### --- 1.0.11 ---
 - Add meta field to the subscribers post type for last interaction, added update after email is sent
 - Added meta settings field to controll the time between emails to the same subscriber

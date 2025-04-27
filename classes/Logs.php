@@ -125,4 +125,42 @@ class Logs
 
         return false;
     }
+
+    public static function clearLogs(): bool
+    {
+        if (!self::enabled()) {
+            return false;
+        }
+
+        $args = [
+            'post_type' => self::postType(),
+            'posts_per_page' => -1,
+            'post_status' => 'any',
+        ];
+
+        $posts = get_posts($args);
+
+        foreach ($posts as $post) {
+            wp_delete_post($post->ID, true);
+        }
+
+        return true;
+    }
+
+    public static function getLogCount(): int
+    {
+        if (!self::enabled()) {
+            return 0;
+        }
+
+        $args = [
+            'post_type' => self::postType(),
+            'posts_per_page' => -1,
+            'post_status' => 'any',
+        ];
+
+        $posts = get_posts($args);
+
+        return count($posts);
+    }
 }

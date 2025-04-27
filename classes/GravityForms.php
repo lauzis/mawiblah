@@ -49,8 +49,7 @@ class GravityForms
         return $ids;
     }
 
-
-    public static function findEmail($email)
+    public static function findEmail(string $email):array
     {
 
         $formsWihtEmailField = self::getGravityFormWithEmailFieldIds();
@@ -129,7 +128,7 @@ class GravityForms
     }
 
 
-    public static function getFormName($formId)
+    public static function getFormName(int $formId):string
     {
         $form = \GFAPI::get_form($formId);
         return $form['title'];
@@ -164,6 +163,7 @@ class GravityForms
                 $lastSyncDate = Subscribers::getLastSyncDate($mawiblahAudience->id);
 
                 if ($lastSyncDate < $lastModification) {
+
                     $emails = self::getAllEmailsForForm($formId);
                     foreach ($emails as $email => $info) {
                         $dateCreated = $info['dateCreated'];

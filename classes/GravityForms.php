@@ -14,7 +14,7 @@ class GravityForms
                         $email = $entry[$emailFieldId];
                         // Perform your logic with the email
                         $subscriber = Subscribers::getSubscriber($email);
-                        if ($subscriber){
+                        if ($subscriber) {
                             Subscribers::updateLastInteraction($subscriber->id);
                         }
                     }
@@ -22,6 +22,7 @@ class GravityForms
             }
         }, 10, 2);
     }
+
     public static function getArrayOfGravityForms(): array
     {
         $GravityForms = \GFAPI::get_forms();
@@ -100,16 +101,17 @@ class GravityForms
         return $emails;
     }
 
-    public static function getAllEmailsForForm(int $formId): array{
+    public static function getAllEmailsForForm(int $formId): array
+    {
         $form = \GFAPI::get_form($formId);
         $emailFieldId = null;
-        foreach($form['fields'] as $field){
-            if($field->type == 'email'){
+        foreach ($form['fields'] as $field) {
+            if ($field->type == 'email') {
                 $emailFieldId = $field->id;
                 break;
             }
         }
-        if(!$emailFieldId){
+        if (!$emailFieldId) {
             return [];
         }
         $paging = array('offset' => 0, 'page_size' => PHP_INT_MAX);
@@ -119,15 +121,16 @@ class GravityForms
             $dateCreated = $entry['date_created'];
             $email = $entry[$emailFieldId];
             $emails[$email] = [
-                'email'=>$email,
-                'dateCreated'=>$dateCreated
+                'email' => $email,
+                'dateCreated' => $dateCreated
             ];
         }
         return $emails;
     }
 
 
-    public static function getFormName($formId) {
+    public static function getFormName($formId)
+    {
         $form = \GFAPI::get_form($formId);
         return $form['title'];
     }
@@ -137,7 +140,8 @@ class GravityForms
         return class_exists('GFForms');
     }
 
-    public static function syncWithAudiencePostType(){
+    public static function syncWithAudiencePostType()
+    {
         $forms = self::getArrayOfGravityForms();
         $syncStats = [
             'checked' => 0,
@@ -152,7 +156,7 @@ class GravityForms
             $lastModification = self::getDateOfLastEntry($formId);
             $mawiblahAudience = Subscribers::getGFAudience($formId, $audienceName);
 
-            if ($mawiblahAudience){
+            if ($mawiblahAudience) {
                 $lastSyncDate = Subscribers::getLastSyncDate($mawiblahAudience->id);
 
                 if ($lastSyncDate < $lastModification) {
@@ -195,6 +199,12 @@ class GravityForms
     {
         $paging = array('offset' => 0, 'page_size' => 1);
         $entries = \GFAPI::get_entries($formId, paging: $paging);
+
+        if (empty($entries)) {
+
+                return null;
+        }
+
         $entryDate = $entries[0]['date_created'];
 
         return $entryDate;

@@ -185,7 +185,13 @@ class GravityForms
         return $syncStats;
     }
 
-    public static function getDateOfLastEntry(int $formId):string
+    /**
+     * Gets the date of the last entry for a specific form
+     *
+     * @param int $formId The ID of the Gravity Form
+     * @return string|null The creation date of the last entry or null if no entries exist
+     */
+    public static function getDateOfLastEntry(int $formId): string|null
     {
         $paging = array('offset' => 0, 'page_size' => 1);
         $entries = \GFAPI::get_entries($formId, paging: $paging);

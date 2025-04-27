@@ -137,7 +137,7 @@ class GravityForms
 
     public static function isGravityPluginActive(): bool
     {
-        return class_exists('GFForms');
+        return class_exists('GFForms') && class_exists('GFAPI');;
     }
 
     public static function syncWithAudiencePostType()
@@ -145,7 +145,11 @@ class GravityForms
         $forms = self::getArrayOfGravityForms();
         $syncStats = [
             'checked' => 0,
-            'skipped' => 0
+            'skipped' => 0,
+            'forms_processed' => 0,
+            'subscribers_created' => 0,
+            'subscribers_updated' => 0,
+            'total_entries_processed' => 0
         ];
 
         foreach ($forms as $form) {
@@ -165,8 +169,10 @@ class GravityForms
                         $dateCreated = $info['dateCreated'];
                         $subscriber = Subscribers::getSubscriber($email);
                         if ($subscriber) {
+                            $syncStats['subscribers_updated']++;
                             Subscribers::updateLastInteraction($subscriber->id);
                         } else {
+                            $syncStats['subscribers_created']++;
                             $subscriber = Subscribers::addSubscriber($email, $formId);
                         }
                         Subscribers::addSubscriberToAudience($subscriber->id, $mawiblahAudience->id);
@@ -180,6 +186,8 @@ class GravityForms
                         }
                     }
                     Subscribers::updateLastSyncDate($mawiblahAudience->id, $lastModification);
+                    $syncStats['forms_processed']++;
+                    $syncStats['total_entries_processed'] += count($emails);
                 } else {
                     $syncStats['skipped']++;
                 }

@@ -66,6 +66,15 @@ class Init
                     return current_user_can('edit_others_posts');
                 }
             ));
+
+            register_rest_route('mawiblah/v1', '/send-email', array(
+                'methods' => 'POST',
+                'callback' => 'Mawiblah\RestRoutes::sendEmail',
+                'permission_callback' => function () {
+                    return current_user_can('edit_others_posts');
+                }
+            ));
+
         });
     }
 

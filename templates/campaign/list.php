@@ -47,9 +47,20 @@
             if ($status === 'sent') {
                 echo "";
             } else {
-                $finished = $campaign->status === 'finished' ? 'disabled' : '';
+                $finished =  'disabled';
+
+                $testButtonText = __('Test', 'mawiblah');
+                if ($campaign->testFinished) {
+                    $testButtonText = __('Test (finished)', 'mawiblah');
+                }
+
+                if ($campaign->testApproved) {
+                    $testButtonText = __('Test (approved)', 'mawiblah');
+                    $finished = '';
+                }
+
                 echo "<td>
-                    <a class='btn link-send campaign-actions' data-type='send' data-href='".Helpers::generatePluginUrl(['action'=>'test','campaignId'=>$campaign->id])."'>Test</a>
+                    <a class='btn link-send campaign-actions' data-type='send' data-href='".Helpers::generatePluginUrl(['action'=>'test','campaignId'=>$campaign->id])."'>".$testButtonText."</a>
                 </td>";
                 echo "<td>
                     <a class='btn btn-danger link-send campaign-actions $finished' data-type='send' data-href='".Helpers::generatePluginUrl(['action'=>'send','campaignId'=>$campaign->id])."'>Send</a>

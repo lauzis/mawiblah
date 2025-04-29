@@ -427,7 +427,17 @@ class Subscribers
         update_post_meta($subscriberId, 'sent_' . $campaignId, 'failed');
     }
 
-    public static function getSubscriberBySubscriberId($subscriberId)
+    public static function getSubscriberById(int $id): object|null
+    {
+
+        $postData = get_post($id);
+        if ($postData) {
+            return self::appendMeta($postData);
+        }
+        return null;
+    }
+
+    public static function getSubscriberBySubscriberId(string $subscriberId)
     {
 
         $postsByMeta = get_posts([

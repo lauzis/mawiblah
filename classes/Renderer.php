@@ -41,7 +41,22 @@ class Renderer
 
         switch ($action) {
             case 'test':
-                $testMode = true;
+                require MAWIBLAH_PLUGIN_DIR . "/templates/campaign/email-list.php";
+                die();
+            case 'campaign-test-reset':
+                if (isset($_GET['campaignId'])) {
+                    $campaignId = $_GET['campaignId'];
+                    $result = Campaigns::testReset($campaignId);
+                }
+                require MAWIBLAH_PLUGIN_DIR . "/templates/campaign/list.php";
+                exit;
+            case 'campaign-test-approve':
+                if (isset($_GET['campaignId'])) {
+                    $campaignId = $_GET['campaignId'];
+                    $result = Campaigns::testApprove($campaignId);
+                }
+                require MAWIBLAH_PLUGIN_DIR . "/templates/campaign/list.php";
+                exit;
             case 'send':
                 if (isset($_GET['campaignId'])) {
                     $startTime = time();

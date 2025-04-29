@@ -349,3 +349,15 @@ form.google-analytics-events{
 .mawiblah-settings-table td {
     width: 25%;
 }
+
+.flex {
+    display: flex;
+}
+
+.flex-row{
+    flex-direction: row;
+}
+
+.flex-row.space-between{
+    justify-content: space-between;
+}

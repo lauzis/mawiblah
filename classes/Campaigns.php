@@ -176,6 +176,13 @@ class Campaigns
         $post->emailsSkipped = get_post_meta($post->id, 'emailsSkipped', true);
         $post->emailsUnsubed = get_post_meta($post->id, 'emailsUnsubed', true);
 
+        $post->testStarted = get_post_meta($post->id, 'testStarted', true) ?? false;
+        $post->testFinished = get_post_meta($post->id, 'testFinished', true) ?? false;
+        $post->testApproved = get_post_meta($post->id, 'testApproved', true) ?? false;
+
+        $post->campaingStarted = get_post_meta($post->id, 'testStarted', true) ?? false;
+        $post->campaingFinished = get_post_meta($post->id, 'testFinished', true) ?? false;
+
         if (!$post->campaignId) {
             $post->campaignId = md5($post->id);
             update_post_meta($post->id, 'campaignId', $post->campaignId);
@@ -460,5 +467,27 @@ class Campaigns
         add_post_meta($campaign->id, 'click_time', time(),false);
 
         return (int) $campaign->linksClicked + 1;
+    }
+
+    public static function testStart(int $campaignId)
+    {
+        update_post_meta($campaignId, 'testStarted', time());
+    }
+
+    public static function testFinish( int $campaignId)
+    {
+        update_post_meta($campaignId, 'testFinished', time());
+    }
+
+    public static function testApprove(int $campaignId)
+    {
+        update_post_meta($campaignId, 'testApproved', time());
+    }
+
+    public static function testReset(int $campaignId)
+    {
+        update_post_meta($campaignId, 'testStarted', false);
+        update_post_meta($campaignId, 'testFinished', false);
+        update_post_meta($campaignId, 'testApproved', false);
     }
 }

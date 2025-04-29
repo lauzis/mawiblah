@@ -378,7 +378,7 @@ msgstr ""
 
     public static function sendEmails():bool
     {
-        return self::getOption("mawiblah-dont-send-email");
+        return self::getOption("mawiblah-dont-send-emails") === 'send-emails';
     }
 
     public static function dontDisturbThreshold(){

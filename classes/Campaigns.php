@@ -180,8 +180,8 @@ class Campaigns
         $post->testFinished = get_post_meta($post->id, 'testFinished', true) ?? false;
         $post->testApproved = get_post_meta($post->id, 'testApproved', true) ?? false;
 
-        $post->campaingStarted = get_post_meta($post->id, 'testStarted', true) ?? false;
-        $post->campaingFinished = get_post_meta($post->id, 'testFinished', true) ?? false;
+        $post->campaignStarted = get_post_meta($post->id, 'campaignStarted', true) ?? false;
+        $post->campaignFinished = get_post_meta($post->id, 'campaignFinished', true) ?? false;
 
         if (!$post->campaignId) {
             $post->campaignId = md5($post->id);
@@ -431,11 +431,9 @@ class Campaigns
         ];
     }
 
-    public static function finished($campaign)
+    public static function finished(int $campaignId)
     {
-        $campaignId = $campaign->id;
         update_post_meta($campaignId, 'status', 'finished');
-
     }
 
     public static function linkCLicked($campaignId, $url): int
@@ -489,5 +487,16 @@ class Campaigns
         update_post_meta($campaignId, 'testStarted', false);
         update_post_meta($campaignId, 'testFinished', false);
         update_post_meta($campaignId, 'testApproved', false);
+    }
+
+    public static function campaignStart(int $campaignId)
+    {
+        update_post_meta($campaignId, 'campaignStarted', time());
+    }
+
+    public static function campaignFinish(int $campaignId){
+        update_post_meta($campaignId, 'campaignFinished', time());
+
+        self::finished(self::getCampaignByCampaignId($campaignId));
     }
 }

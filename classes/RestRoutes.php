@@ -93,11 +93,21 @@ class RestRoutes
             ];
         }
 
+        $testMode = false;
         //-----------------------------------------------------
         // --------------- Test mode detection ----------------
         //----------------------------------------------------
         if (!$campaign->testApproved && $campaign->testStarted) {
             $testMode = true;
+        }
+
+        if ($lastItem) {
+            if ($testMode && $campaign->testStarted) {
+                Campaigns::testFinish($campaignId);;
+            }
+            if(!$testMode && $campaign->campaignStarted) {
+                Campaigns::campaignFinish($campaignId);;
+            }
         }
 
         //-----------------------------------------------------
@@ -143,11 +153,34 @@ class RestRoutes
 
         $isTester = Subscribers::isTester($subscriber);
         $sendEmails = Settings::sendEmails();
+
+        //-----------------------------------------------------
+        // --------------- Do not disturb treshold ------------
+        //----------------------------------------------------
         $doNotDisturbThreshold = Settings::dontDisturbThreshold();
         $lastInteraction = $subscriber->lastInteraction;
         $currentTime = time();
         $timeDiff = $currentTime - $lastInteraction;
         $subscriberDontDisturb = $timeDiff < $doNotDisturbThreshold;
+        if ($subscriberDontDisturb){
+            return [
+                'data' => [
+                    'campaignId' => $campaignId,
+                    'subscriberId' => $subscriberId,
+                    'email' => $email,
+                    'testMode' => $testMode,
+                    'isTester' => $isTester,
+                    'subscriberDontDisturb' => $subscriberDontDisturb,
+                    'campaign' => $campaign,
+                    'timeDiff' => $timeDiff,
+                    'doNotDisturbThreshold' => $doNotDisturbThreshold,
+                    'alreadySent' => $alreadySent,
+                    'lastItem' => $lastItem
+                ],
+                'status' => 'ok',
+                'message' => "Skip, subscriber is in do not disturb mode. Threshold between emails is not reached!"
+            ];
+        }
 
         if (!$sendEmails) {
 
@@ -155,14 +188,6 @@ class RestRoutes
 
             if ($testMode && $isTester) {
                 $message = "Email sending is off: Would send, Tester in test mode, but email sending is off in settings";
-            }
-
-            if (!$message && $subscriberDontDisturb) {
-                $message = "Email sending is off: Would not send, Skipping sending email, subscriber is in do not disturb mode. Threshold is not reached!";
-            }
-
-            if (!$message && $unsubscribed) {
-                $message = "Email sending is off: Would not send, Skipping sending email, subscriber is unsubscribed";
             }
 
             if (!$message && !$isTester && $testMode) {
@@ -192,10 +217,6 @@ class RestRoutes
             ];
         }
 
-        if ($lastItem) {
-            Campaigns::testFinish($campaignId);;
-        }
-
         if (!$isTester && $testMode) {
             return [
                 'data' => [
@@ -216,7 +237,62 @@ class RestRoutes
             ];
         }
 
+        $template = Campaigns::lockTemplate($campaign, $testMode);
+        $emailBody = Campaigns::fillTemplate($template, $campaign, $subscriber);
+
+        $email = 'lauzis@inbox.lv';
+        $emailSendingResult = wp_mail($email, $campaign->subject, $emailBody);
+
+        if ($emailSendingResult) {
+            Subscribers::sentEmail($subscriber->id, $campaign->id);
+            Logs::addLog("Email sent to {$email} successfully!", "Email sent to {$email} successfully!", [
+                'campaign' => $campaign,
+                'subscriber' => $subscriber,
+                'testMode' => $testMode,
+                'emailSendingResult' => $emailSendingResult
+            ]);
+
+            return [
+                'stats' => [
+                    'emailsSend' => 1,
+                    'emailsFailed' => 0,
+                    'emailsSkipped' => 0,
+                    'emailsUnsubscribed' => 0,
+                ],
+                'data' => [
+                    'testMode' => $testMode,
+                    'isTester' => $isTester,
+                    'campaignId' => $campaignId,
+                    'subscriberId' => $subscriberId,
+                    'email' => $email,
+                    'campaign' => $campaign,
+                    'subscriber' => $subscriber,
+                    'timeDiff' => $timeDiff,
+                    'doNotDisturbThreshold' => $doNotDisturbThreshold,
+                    'alreadySent' => $alreadySent,
+                    'lastItem' => $lastItem
+                ],
+                'status' => 'ok',
+                'message' => "Email sent to {$email} successfully!"
+            ];
+        }
+
+
+        Subscribers::sentEmailFailed($subscriber->id, $campaign->id);
+        Logs::addLog("Email sending to {$email} failed!", "Email sending to {$email} failed!", [
+            'campaign' => $campaign,
+            'subscriber' => $subscriber,
+            'testMode' => $testMode,
+            'emailSendingResult' => $emailSendingResult
+        ]);
+
         return [
+            'stats' => [
+                'emailsSend' => 0,
+                'emailsFailed' => 1,
+                'emailsSkipped' => 0,
+                'emailsUnsubscribed' => 0,
+            ],
             'data' => [
                 'testMode' => $testMode,
                 'isTester' => $isTester,
@@ -230,8 +306,8 @@ class RestRoutes
                 'alreadySent' => $alreadySent,
                 'lastItem' => $lastItem
             ],
-            'message' => 'We should not be here!',
-            'status' => 'ok'
+            'status' => 'error',
+            'message' => "Email sending to {$email} failed!"
         ];
     }
 }

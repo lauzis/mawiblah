@@ -42,7 +42,7 @@ class Renderer
         switch ($action) {
             case 'test':
                 require MAWIBLAH_PLUGIN_DIR . "/templates/campaign/email-list.php";
-                die();
+                exit;
             case 'campaign-test-reset':
                 if (isset($_GET['campaignId'])) {
                     $campaignId = $_GET['campaignId'];
@@ -57,7 +57,19 @@ class Renderer
                 }
                 require MAWIBLAH_PLUGIN_DIR . "/templates/campaign/list.php";
                 exit;
+
+            case 'campaign-send':
+                if (isset($_GET['campaignId'])) {
+                    $campaignId = $_GET['campaignId'];
+                    $result = Campaigns::campaignStart($campaignId);
+                    require MAWIBLAH_PLUGIN_DIR . "/templates/campaign/email-list.php";
+                }
+
+                require MAWIBLAH_PLUGIN_DIR . "/templates/campaign/list.php";
+                exit;
             case 'send':
+                print("this should be removed....");
+                die();
                 if (isset($_GET['campaignId'])) {
                     $startTime = time();
                     $maxTime = ini_get('max_execution_time');
@@ -207,55 +219,6 @@ class Renderer
                                     }
                                 }
 
-                                Subscribers::sendingEmail($subscriber->id, $campaign->id);
-
-                                $emailBody = Campaigns::fillTemplate($template, $campaign, $subscriber);
-                                sleep(1);
-
-                                Logs::addLog("Email sending to {$email}, from audience {$audienceName}", "Email sent to {$email}", [
-                                    'campaign' => $campaign,
-                                    'audience' => $audience,
-                                    'subscriber' => $subscriber,
-                                    'uniqueEmails' => $uniqueEmails,
-                                    'testMode' => $testMode,
-                                    'skippingReasons' => $skippingReasons
-                                ]);
-
-                                $emailSendingResult = false;
-                                if (Settings::sendEmails()) {
-                                    $emailSendingResult = wp_mail($email, $campaign->subject, $emailBody);
-                                } else {
-                                    $skippingReasons['emailSendingIsDisabled'][] = $email;
-                                    $emailsSkipped++;
-                                    continue;
-                                }
-
-                                if ($emailSendingResult) {
-                                    $emailsSent++;
-                                    Subscribers::sentEmail($subscriber->id, $campaign->id);
-                                    Logs::addLog("Email sent to {$email} successfully!", "Email sent to {$email} successfully!", [
-                                        'campaign' => $campaign,
-                                        'audience' => $audience,
-                                        'subscriber' => $subscriber,
-                                        'uniqueEmails' => $uniqueEmails,
-                                        'testMode' => $testMode,
-                                        'skippingReasons' => $skippingReasons,
-                                        'emailSendingResult' => $emailSendingResult
-                                    ]);
-                                } else {
-                                    $emailsFailed++;
-                                    Subscribers::sentEmailFailed($subscriber->id, $campaign->id);
-                                    Logs::addLog("Email sending to {$email} failed!", "Email sending to {$email} failed!", [
-                                        'campaign' => $campaign,
-                                        'audience' => $audience,
-                                        'subscriber' => $subscriber,
-                                        'uniqueEmails' => $uniqueEmails,
-                                        'testMode' => $testMode,
-                                        'skippingReasons' => $skippingReasons,
-                                        'emailSendingResult' => $emailSendingResult
-                                    ]);
-                                }
-
                                 Campaigns::updateCounters($campaign, $emailsSent, $emailsFailed, $emailsSkipped, $emailsUnsubed);
 
                                 update_post_meta($campaign->id, 'iteration', $index);
@@ -270,7 +233,7 @@ class Renderer
                     }
 
                     if (!$testMode) {
-                        Campaigns::finished($campaign);
+                        Campaigns::finished($campaign->id);
                     }
                     Logs::addLog("Campaign finished: {$campaign->post_title}", "Campaign {$campaign->post_title} finished", [
                         'campaign' => $campaign,

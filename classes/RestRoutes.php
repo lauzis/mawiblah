@@ -41,7 +41,7 @@ class RestRoutes
         $email = $post['email'];
         $lastItem = $post['lastItem'] ?? false;
 
-        if (is_nan($campaignId) || is_nan($subscriberId)) {
+        if (!is_numeric($campaignId) || !is_numeric($subscriberId)) {
             return [
                 'stats' => [
                     'emailsSend' => 0,

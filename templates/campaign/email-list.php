@@ -12,7 +12,10 @@ if (isset($_GET['campaignId'])) {
     $maxTime = ini_get('max_execution_time');
     $unsubedAudience = Subscribers::unsubedAudience();
 
-    $campaignId = $_GET['campaignId'];
+    $campaignId = intval($_GET['campaignId'] ?? 0);
+    if ($campaignId <= 0) {
+        wp_die(__('Invalid campaign ID', 'mawiblah'));
+    }
 
     $campaign = Campaigns::getCampaignById($campaignId);
 

@@ -104,11 +104,13 @@ class Helpers
 
     public static function campaignTestResetUrl(int $campaignId): string
     {
-        return self::getCurrentUrl() . '&action=campaign-test-reset&campaignId=' . $campaignId;
+-        return self::getCurrentUrl() . '&action=campaign-test-reset&campaignId=' . $campaignId;
++        return self::generatePluginUrl(['action' => 'campaign-test-reset', 'campaignId' => $campaignId]);
     }
 
     public static function campaignTestApproveUrl(int $campaignId): string
     {
-        return self::getCurrentUrl() . '&action=campaign-test-approve&campaignId=' . $campaignId;
+-        return self::getCurrentUrl() . '&action=campaign-test-approve&campaignId=' . $campaignId;
++        return self::generatePluginUrl(['action' => 'campaign-test-approve', 'campaignId' => $campaignId]);
     }
 }

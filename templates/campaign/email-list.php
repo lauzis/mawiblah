@@ -19,7 +19,7 @@ if (isset($_GET['campaignId'])) {
 
     $campaign = Campaigns::getCampaignById($campaignId);
 
-    if($campaign->testFinished){
+    if($campaign->testFinished && !$campaign->campaignStarted){
         ?>
         <div class="alert alert-danger">
             <strong>Test finished</strong>
@@ -30,6 +30,14 @@ if (isset($_GET['campaignId'])) {
                     <a class="btn btn-primary" href="<?= Helpers::campaignTestApproveUrl($campaignId) ?>" class="btn btn-primary">Approve</a>
                 <?php endif; ?>
             </div>
+        </div>
+        <?php
+        exit;
+    }
+    if($campaign->campaingFinished){
+        ?>
+        <div class="alert alert-danger">
+            <strong>Campaign finished</strong>
         </div>
         <?php
         exit;

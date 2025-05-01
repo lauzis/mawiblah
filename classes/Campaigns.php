@@ -467,34 +467,35 @@ class Campaigns
         return (int) $campaign->linksClicked + 1;
     }
 
-    public static function testStart(int $campaignId)
+    public static function testStart(int $campaignId): void
     {
         update_post_meta($campaignId, 'testStarted', time());
     }
 
-    public static function testFinish( int $campaignId)
+    public static function testFinish( int $campaignId): void
     {
         update_post_meta($campaignId, 'testFinished', time());
     }
 
-    public static function testApprove(int $campaignId)
+    public static function testApprove(int $campaignId): void
     {
         update_post_meta($campaignId, 'testApproved', time());
     }
 
-    public static function testReset(int $campaignId)
+    public static function testReset(int $campaignId): void
     {
         update_post_meta($campaignId, 'testStarted', false);
         update_post_meta($campaignId, 'testFinished', false);
         update_post_meta($campaignId, 'testApproved', false);
     }
 
-    public static function campaignStart(int $campaignId)
+    public static function campaignStart(int $campaignId): void
     {
         update_post_meta($campaignId, 'campaignStarted', time());
     }
 
-    public static function campaignFinish(int $campaignId){
+    public static function campaignFinish(int $campaignId): void
+    {
         update_post_meta($campaignId, 'campaignFinished', time());
 
         self::finished(self::getCampaignByCampaignId($campaignId));

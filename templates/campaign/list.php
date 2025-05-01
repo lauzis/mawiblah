@@ -63,7 +63,7 @@
                     <a class='btn link-send campaign-actions' data-type='send' data-href='".Helpers::generatePluginUrl(['action'=>'test','campaignId'=>$campaign->id])."'>".$testButtonText."</a>
                 </td>";
                 echo "<td>
-                    <a class='btn btn-danger link-send campaign-actions $finished' data-type='send' data-href='".Helpers::generatePluginUrl(['action'=>'send','campaignId'=>$campaign->id])."'>Send</a>
+                    <a class='btn btn-danger link-send campaign-actions $finished' data-type='send' data-href='".Helpers::generatePluginUrl(['action'=>'campaign-send','campaignId'=>$campaign->id])."'>Send</a>
                 </td>";
 
                 echo "<td>

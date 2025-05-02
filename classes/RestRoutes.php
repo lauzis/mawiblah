@@ -143,6 +143,7 @@ class RestRoutes
         $currentTime = time();
         $timeDiff = $currentTime - $lastInteraction;
         $subscriberDontDisturb = $timeDiff < $doNotDisturbThreshold;
+
         if ($subscriberDontDisturb){
             return [
                 'stats' => Helpers::emailSendingStats(doNotDisturb:1),
@@ -157,7 +158,7 @@ class RestRoutes
                     'timeDiff' => $timeDiff,
                     'doNotDisturbThreshold' => $doNotDisturbThreshold,
                     'alreadySent' => $alreadySent,
-                    'lastItem' => $lastItem
+                    'lastItem' => $lastItem,
                 ],
                 'status' => 'ok',
                 'message' => "Skip, subscriber is in do not disturb mode. Threshold between emails is not reached!"
@@ -228,7 +229,11 @@ class RestRoutes
         $emailSendingResult = wp_mail($email, $campaign->subject, $emailBody);
 
         if ($emailSendingResult) {
-            Subscribers::sentEmail($subscriber->id, $campaign->id);
+
+            if(!$testMode) {
+                Subscribers::sentEmail($subscriber->id, $campaign->id);
+            }
+
             Logs::addLog("Email sent to {$email} successfully!", "Email sent to {$email} successfully!", [
                 'campaign' => $campaign,
                 'subscriber' => $subscriber,

@@ -136,7 +136,7 @@ class RestRoutes
         $sendEmails = Settings::sendEmails();
 
         //-----------------------------------------------------
-        // --------------- Do not disturb treshold ------------
+        // --------------- Do not disturb threshold ------------
         //----------------------------------------------------
         $doNotDisturbThreshold = Settings::dontDisturbThreshold();
         $lastInteraction = $subscriber->lastInteraction;

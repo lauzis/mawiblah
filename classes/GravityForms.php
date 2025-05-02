@@ -179,7 +179,7 @@ class GravityForms
 
                         if (!$subscriber->firstInteraction || strtotime($dateCreated) < $subscriber->firstInteraction) {
 
-                            Subscribers::updateFirstInteraction($subscriber->id, strtottime($dateCreated));
+                            Subscribers::updateFirstInteraction($subscriber->id, strtotime($dateCreated));
                         }
 
                         if (!$subscriber->lastInteraction || $dateCreated > $subscriber->lastInteraction) {

@@ -177,12 +177,13 @@ class GravityForms
                         }
                         Subscribers::addSubscriberToAudience($subscriber->id, $mawiblahAudience->id);
 
-                        if (!$subscriber->firstInteraction || $dateCreated < $subscriber->firstInteraction) {
-                            Subscribers::updateFirstInteraction($subscriber->id, $dateCreated);
+                        if (!$subscriber->firstInteraction || strtotime($dateCreated) < $subscriber->firstInteraction) {
+
+                            Subscribers::updateFirstInteraction($subscriber->id, strtottime($dateCreated));
                         }
 
                         if (!$subscriber->lastInteraction || $dateCreated > $subscriber->lastInteraction) {
-                            Subscribers::updateLastInteraction($subscriber->id, $dateCreated);
+                            Subscribers::updateLastInteraction($subscriber->id, strtotime($dateCreated));
                         }
                     }
                     Subscribers::updateLastSyncDate($mawiblahAudience->id, $lastModification);
@@ -203,7 +204,7 @@ class GravityForms
      * @param int $formId The ID of the Gravity Form
      * @return string|null The creation date of the last entry or null if no entries exist
      */
-    public static function getDateOfLastEntry(int $formId): string|null
+    public static function getDateOfLastEntry(int $formId): int|null
     {
         $paging = array('offset' => 0, 'page_size' => 1);
         $entries = \GFAPI::get_entries($formId, paging: $paging);
@@ -213,7 +214,7 @@ class GravityForms
                 return null;
         }
 
-        $entryDate = $entries[0]['date_created'];
+        $entryDate = strtotime($entries[0]['date_created']);
 
         return $entryDate;
     }

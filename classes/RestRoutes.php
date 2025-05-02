@@ -143,6 +143,10 @@ class RestRoutes
         $currentTime = time();
         $timeDiff = $currentTime - $lastInteraction;
         $subscriberDontDisturb = $timeDiff < $doNotDisturbThreshold;
+        $timeLeftInSeconds = $doNotDisturbThreshold - $timeDiff;
+        $days = floor($timeLeftInSeconds / (60 * 60 * 24));
+        $timeLeftInSeconds = $timeLeftInSeconds - ($days * 60 * 60 * 24);
+        $daysHoursSecondsLeft = $days."d ".gmdate("H:i:s", $timeLeftInSeconds);
 
         if ($subscriberDontDisturb){
             return [
@@ -161,7 +165,7 @@ class RestRoutes
                     'lastItem' => $lastItem,
                 ],
                 'status' => 'ok',
-                'message' => "Skip, subscriber is in do not disturb mode. Threshold between emails is not reached!"
+                'message' => "Skip, subscriber is in do not disturb mode. Threshold between emails is not reached! Left time: {$daysHoursSecondsLeft}"
             ];
         }
 

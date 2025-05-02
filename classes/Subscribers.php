@@ -407,7 +407,18 @@ class Subscribers
 
     public static function updateLastInteraction(int $subscriberId, string|null $interactionDate = null): void
     {
-        $interactionDate = $interactionDate ?? date("Y-m-d H:i:s");
+        $interactionDate = $interactionDate ?? time();
+        $currentFirstInteraction = get_post_meta($subscriberId, 'firstInteraction', true);
+
+        if (!is_numeric($currentFirstInteraction)) {
+            $currentFirstInteraction = strtotime($currentFirstInteraction);
+            self::updateFirstInteraction($subscriberId, $currentFirstInteraction);
+        }
+
+        if(!$currentFirstInteraction){
+            self::updateFirstInteraction($subscriberId, $interactionDate);
+        }
+
         update_post_meta($subscriberId, 'lastInteraction', $interactionDate);
     }
 
@@ -481,23 +492,26 @@ class Subscribers
      * @param string|null $date Optional date to set if no last sync date exists
      * @return string|false The last sync date or false if not found and no date was provided
      */
-    public static function getLastSyncDate(int $audienceId, $date = null): string|false
+    public static function getLastSyncDate(int $audienceId): int|false
     {
         $lastSyncDate = get_term_meta($audienceId, 'lastSyncDate', true);
-        if (!$lastSyncDate && $date) {
-            $lastSyncDate = date("Y-m-d H:i:s");
+        if (!is_numeric($lastSyncDate) && $lastSyncDate!==false) {
+            $lastSyncDate = strtotime($lastSyncDate);
+        }
+        if ($lastSyncDate===false) {
+            $lastSyncDate = time();
             update_term_meta($audienceId, 'lastSyncDate', $lastSyncDate);
         }
         return $lastSyncDate;
     }
 
-    public static function updateLastSyncDate($audienceId, $date)
+    public static function updateLastSyncDate(int $audienceId, int $date):void
     {
         update_term_meta($audienceId, 'lastSyncDate', $date);
     }
 
-    public static function updateFirstInteraction($subscriberId, $date)
+    public static function updateFirstInteraction(int $subscriberId, int $time):void
     {
-        update_post_meta($subscriberId, 'firstInteraction', $date);
+        update_post_meta($subscriberId, 'firstInteraction', $time);
     }
 }

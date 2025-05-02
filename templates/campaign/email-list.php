@@ -34,7 +34,7 @@ if (isset($_GET['campaignId'])) {
         <?php
         exit;
     }
-    if($campaign->campaingFinished){
+    if($campaign->campaignFinished){
         ?>
         <div class="alert alert-danger">
             <strong>Campaign finished</strong>

@@ -431,11 +431,6 @@ class Campaigns
         ];
     }
 
-    public static function finished(int $campaignId)
-    {
-        update_post_meta($campaignId, 'status', 'finished');
-    }
-
     public static function linkCLicked($campaignId, $url): int
     {
         $campaign = self::getCampaignByCampaignId($campaignId);
@@ -497,7 +492,5 @@ class Campaigns
     public static function campaignFinish(int $campaignId): void
     {
         update_post_meta($campaignId, 'campaignFinished', time());
-
-        self::finished(self::getCampaignByCampaignId($campaignId));
     }
 }

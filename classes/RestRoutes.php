@@ -224,7 +224,6 @@ class RestRoutes
         $template = Campaigns::lockTemplate($campaign, $testMode);
         $emailBody = Campaigns::fillTemplate($template, $campaign, $subscriber);
 
-        $email = 'lauzis@inbox.lv';
         $emailSendingResult = wp_mail($email, $campaign->subject, $emailBody);
 
         if ($emailSendingResult) {

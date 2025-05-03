@@ -29,11 +29,6 @@ class RestRoutes
 
     public static function sendEmail(\WP_REST_Request $request)
     {
-        $sleepBeforeJob = Settings::getOption('mawiblah-time-between-emails');
-        if ($sleepBeforeJob > 0) {
-            sleep(Settings::getOption('mawiblah-time-between-emails'));
-        }
-
         $post = $request->get_json_params();
 
         $campaignId = $post['campaignId'];

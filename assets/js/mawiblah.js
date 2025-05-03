@@ -131,6 +131,17 @@ function MAWIBLAH_sendEmail(item, list, totalCount, startingTime) {
   var email = item.getAttribute('data-subscriber-email');
   var campaignId = item.getAttribute('data-campaign-id');
 
+  var sleepBeforeJob =0;
+  var progressBar = document.querySelector('.progress');
+  if (progressBar) {
+    sleepBeforeJob = parseInt(progressBar.getAttribute('data-sleep-before-job'));
+    if (isNaN(sleepBeforeJob)) {
+      sleepBeforeJob = 0;
+    }
+
+    console.log("sleepBeforeJob", sleepBeforeJob);
+  }
+
   var url = "/wp-json/mawiblah/v1/send-email";
   var lastItem = list.length === 0;
 
@@ -141,17 +152,18 @@ function MAWIBLAH_sendEmail(item, list, totalCount, startingTime) {
     lastItem: lastItem
   };
 
-  httpPost(url, null, data, function (data) {
-    console.log(data);
-    item.innerHTML = data.message;
-    if (!lastItem) {
-      item = list.shift()
-      MAWIBLAH_sendEmail(item, list, totalCount, startingTime);
-    }
-  }, function () {
-    alert("Critical error, will not continue");
-  });
-
+  setTimeout(function () {
+    httpPost(url, null, data, function (data) {
+      console.log(data);
+      item.innerHTML = data.message;
+      if (!lastItem) {
+        item = list.shift()
+        MAWIBLAH_sendEmail(item, list, totalCount, startingTime);
+      }
+    }, function () {
+      alert("Critical error, will not continue");
+    });
+  }, sleepBeforeJob*1000);
 }
 
 function MAWIBLAH_runCompaignAction() {

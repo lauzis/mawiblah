@@ -58,7 +58,12 @@
                         'mawiblah_gravity_sync'
                     )
             ){
-                $syncStats = \Mawiblah\GravityForms::syncWithAudiencePostType();
+                if (isset($_POST['force']) && $_POST['force'] === 'force'){
+                    $syncStats = \Mawiblah\GravityForms::syncWithAudiencePostType(force:true);
+                } else{
+                    $syncStats = \Mawiblah\GravityForms::syncWithAudiencePostType();
+                }
+
                 if($syncStats['checked'] > 0){
                     echo '<p>' . sprintf(__('Syncronized %s audiences', 'mawiblah'), $syncStats['checked']) . '</p>';
                     if($syncStats['skipped'] > 0){
@@ -75,6 +80,15 @@
             <?php wp_nonce_field('mawiblah_gravity_sync', 'mawiblah_gravity_sync_nonce'); ?>
             <button type="submit" class="button button-primary">
                 <?= _e('Gravity forms audience sync', 'mawiblah') ?>
+            </button>
+        </form>
+        <br/>
+        <form method="post" action="" class="<?= MAWIBLAH_PLUGIN_DIRECTORY_NAME ?>" autocomplete="off">
+            <input type="hidden" name="action" value="gravity_forms_sync">
+            <input type="hidden" name="force" value="force">
+            <?php wp_nonce_field('mawiblah_gravity_sync', 'mawiblah_gravity_sync_nonce'); ?>
+            <button type="submit" class="button button-primary">
+                <?= _e('Gravity forms audience sync (froce)', 'mawiblah') ?>
             </button>
         </form>
 

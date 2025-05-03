@@ -139,7 +139,7 @@ class GravityForms
         return class_exists('GFForms') && class_exists('GFAPI');;
     }
 
-    public static function syncWithAudiencePostType()
+    public static function syncWithAudiencePostType(bool $force = false):array
     {
         $forms = self::getArrayOfGravityForms();
         $syncStats = [
@@ -162,11 +162,12 @@ class GravityForms
             if ($mawiblahAudience) {
                 $lastSyncDate = Subscribers::getLastSyncDate($mawiblahAudience->id);
 
-                if ($lastSyncDate < $lastModification) {
+                if ($lastSyncDate < $lastModification || $force) {
 
                     $emails = self::getAllEmailsForForm($formId);
                     foreach ($emails as $email => $info) {
-                        $dateCreated = $info['dateCreated'];
+                        $dateCreated= strtotime($info['dateCreated']);
+
                         $subscriber = Subscribers::getSubscriber($email);
                         if ($subscriber) {
                             $syncStats['subscribers_updated']++;
@@ -177,13 +178,13 @@ class GravityForms
                         }
                         Subscribers::addSubscriberToAudience($subscriber->id, $mawiblahAudience->id);
 
-                        if (!$subscriber->firstInteraction || strtotime($dateCreated) < $subscriber->firstInteraction) {
+                        if (!$subscriber->firstInteraction || $dateCreated < $subscriber->firstInteraction) {
 
-                            Subscribers::updateFirstInteraction($subscriber->id, strtotime($dateCreated));
+                            Subscribers::updateFirstInteraction($subscriber->id, $dateCreated);
                         }
 
                         if (!$subscriber->lastInteraction || $dateCreated > $subscriber->lastInteraction) {
-                            Subscribers::updateLastInteraction($subscriber->id, strtotime($dateCreated));
+                            Subscribers::updateLastInteraction($subscriber->id, $dateCreated);
                         }
                     }
                     Subscribers::updateLastSyncDate($mawiblahAudience->id, $lastModification);

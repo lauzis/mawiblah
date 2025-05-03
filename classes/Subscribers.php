@@ -405,7 +405,7 @@ class Subscribers
         return $term;
     }
 
-    public static function updateLastInteraction(int $subscriberId, string|null $interactionDate = null): void
+    public static function updateLastInteraction(int $subscriberId, int|null $interactionDate = null): void
     {
         $interactionDate = $interactionDate ?? time();
         $currentFirstInteraction = get_post_meta($subscriberId, 'firstInteraction', true);

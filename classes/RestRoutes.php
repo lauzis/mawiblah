@@ -83,10 +83,10 @@ class RestRoutes
 
         if ($lastItem) {
             if ($testMode && $campaign->testStarted) {
-                Campaigns::testFinish($campaignId);;
+                Campaigns::testFinish($campaignId);
             }
             if(!$testMode && $campaign->campaignStarted) {
-                Campaigns::campaignFinish($campaignId);;
+                Campaigns::campaignFinish($campaignId);
             }
         }
 
@@ -269,7 +269,10 @@ class RestRoutes
         }
 
 
-        Subscribers::sentEmailFailed($subscriber->id, $campaign->id);
+        if (!$testMode) {
+            Subscribers::sentEmailFailed($subscriber->id, $campaign->id);
+        }
+
         Logs::addLog("Email sending to {$email} failed!", "Email sending to {$email} failed!", [
             'campaign' => $campaign,
             'subscriber' => $subscriber,

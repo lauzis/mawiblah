@@ -80,9 +80,6 @@ if (isset($_GET['campaignId'])) {
     $uniqueEmails = [];
 
     ?>
-    <pre>
-        <?php print_r($campaign); ?>
-    </pre>
     <div class="progress" style="margin:20px 0;width:100%" data-sleep-before-job="<?= $sleepBeforeJob ?>">
         <div class="progress-bar" style="background-color: #0a4b78; color:#FFF; text-align: center; padding:4px; text-wrap: nowrap">
         </div>

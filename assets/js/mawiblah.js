@@ -55,7 +55,6 @@ function httpGet(url, headers, callback, failCallBack) {
 
   xmlhttp.open("GET", url, true);
   xmlhttp.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
-  console.log(mawiblahNonce.mawiblahNonce);
   xmlhttp.setRequestHeader('X-WP-Nonce', mawiblahNonce.mawiblahNonce);
   if (headers && headers.headers) {
     for (const headersKey of Object.keys(headers.headers)) {
@@ -85,7 +84,6 @@ function MAWIBLAH_getHtmlTemplate(template, preview) {
     template: template
   }
   httpPost(url, null, data, function (data) {
-    console.log(data);
     preview.innerHTML = data.template;
 
   }, function () {
@@ -138,8 +136,6 @@ function MAWIBLAH_sendEmail(item, list, totalCount, startingTime) {
     if (isNaN(sleepBeforeJob)) {
       sleepBeforeJob = 0;
     }
-
-    console.log("sleepBeforeJob", sleepBeforeJob);
   }
 
   var url = "/wp-json/mawiblah/v1/send-email";
@@ -154,7 +150,6 @@ function MAWIBLAH_sendEmail(item, list, totalCount, startingTime) {
 
   setTimeout(function () {
     httpPost(url, null, data, function (data) {
-      console.log(data);
       item.innerHTML = data.message;
       if (!lastItem) {
         item = list.shift()
@@ -172,8 +167,6 @@ function MAWIBLAH_runCompaignAction() {
   var listItems = Array.from(document.querySelectorAll('.mawiblah-campaign-action'));
   var totalCount = listItems.length;
   var startingTime = new Date().getTime();
-  console.log(listItems);
-
   var item = listItems.shift();
 
   MAWIBLAH_sendEmail(item, listItems, totalCount, startingTime);

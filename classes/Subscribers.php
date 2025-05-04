@@ -410,11 +410,13 @@ class Subscribers
         $interactionDate = $interactionDate ?? time();
         $currentFirstInteraction = get_post_meta($subscriberId, 'firstInteraction', true);
 
-        if (!is_numeric($currentFirstInteraction)) {
+        //converting old value to timestamp, there could be old data in date format
+        if (!is_numeric($currentFirstInteraction) && $currentFirstInteraction!==false) {
             $currentFirstInteraction = strtotime($currentFirstInteraction);
             self::updateFirstInteraction($subscriberId, $currentFirstInteraction);
         }
 
+        // if there is no interaction, then current interaction is first interaction
         if(!$currentFirstInteraction){
             self::updateFirstInteraction($subscriberId, $interactionDate);
         }

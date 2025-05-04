@@ -81,10 +81,15 @@ class Templates
         $templateName = get_post_meta($campaignId, 'template', true);
         $templateArchived = get_post_meta($campaignId, 'email_template_copied', true);
 
-        $dir = MAWIBLAH_PLUGIN_DIR . '/email_templates/archieved';
+        $dir = MAWIBLAH_PLUGIN_DIR . '/email_templates/archived';
         $template = self::getTemplateByNameViaRest($templateName);
 
         if ($template=== false) {
+            return false;
+        }
+
+        if ( ! is_dir( $dir ) && ! wp_mkdir_p( $dir ) ) {
+            error_log( "Cannot create archive dir $dir" );
             return false;
         }
 

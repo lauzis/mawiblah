@@ -95,7 +95,7 @@ if (isset($_GET['campaignId'])) {
 
             ?>
 
-            <table>
+            <table id="mawiblah-email-list">
                 <thead>
                 <tr><th colspan="4">Audience: <?= $audienceName ?></th></tr>
 

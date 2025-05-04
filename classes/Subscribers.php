@@ -168,7 +168,7 @@ class Subscribers
         $post->firstInteraction = get_post_meta($post->id, 'firstInteraction', true) ?? null;
 
         if (!$post->subscriberId) {
-            update_post_meta($post->id, 'subscriberId', md5($post->id));
+            update_post_meta($post->id, 'subscriberId', Helpers::generateSubscriberId($post->id));
         }
 
         $post->audiences = get_the_terms($post->ID, Subscribers::postType() . '_category');
@@ -243,7 +243,7 @@ class Subscribers
             // Save the email as a meta field
             update_post_meta($post_id, 'email', $email);
             if (!empty($subscriberId)) {
-                update_post_meta($post_id, 'subscriberId', $subscriberId);
+                update_post_meta($post_id, 'subscriberId', Helpers::generateSubscriberId($post_id));
             }
         }
 
@@ -340,7 +340,7 @@ class Subscribers
         return self::appendAudienceMeta((object)$term);
     }
 
-    public static function addSubscriberToAudience($subscriberId, $audienceId)
+    public static function addSubscriberToAudience(int $subscriberId, int $audienceId): void
     {
         wp_set_post_terms($subscriberId, $audienceId, Subscribers::postType() . '_category', true);
     }

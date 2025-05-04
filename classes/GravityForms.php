@@ -166,7 +166,7 @@ class GravityForms
 
                     $emails = self::getAllEmailsForForm($formId);
                     foreach ($emails as $email => $info) {
-                        $dateCreated= strtotime($info['dateCreated']);
+                        $dateCreated = strtotime($info['dateCreated']);
 
                         $subscriber = Subscribers::getSubscriber($email);
                         if ($subscriber) {

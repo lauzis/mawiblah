@@ -128,4 +128,8 @@ class Helpers
             'notTesterInTestMode' => $notTester,
         ];
     }
+
+    public static function generateSubscriberId(int $id): string{
+        return md5($id);
+    }
 }

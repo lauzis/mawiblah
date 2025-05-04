@@ -180,43 +180,6 @@ class Settings
         return $sections;
     }
 
-    public static function is_settings_page()
-    {
-        //// TODO: check if we are on settings page to load addtional css
-        return true;
-    }
-
-    public static function add_css()
-    {
-        echo '<link id="' . MAWIBLAH_PLUGIN_DIR . '" rel="stylesheet" href="' . mawiblah_CSS_URL . '/gae-admin.css' . '" type="text/css" media="all" />';
-    }
-
-    public static function add_scripts()
-    {
-        if (is_admin()) {
-            if (self::is_settings_page()) {
-                add_action('admin_head', 'Settings::add_css');
-            }
-        }
-        wp_enqueue_script('Settings_script', mawiblah_JS_URL . '/gae-admin.js');
-    }
-
-    public static function add_settings_link_to_plugin_list($links)
-    {
-        if (ģae_DONATION_SHOW_LINKS) {
-            $links[] = '<a target="_blank" href="' . mawiblah_DONATION_URL . '">Donate</a>';
-        }
-        $links[] = '<a href="' . self::get_settings_page_url() . '">Settings</a>';
-        return $links;
-    }
-
-    public static function show_donation_block()
-    {
-        //todo check the last interaction ignore for a while
-        return true;
-    }
-
-
     public static function print_message($id, $message, $type)
     {
         ?>

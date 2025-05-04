@@ -10,7 +10,7 @@
  */
 
 if (!defined('MAWIBLAH_VERSION')) {
-    define('MAWIBLAH_VERSION', '1.0.11.' . time());
+    define('MAWIBLAH_VERSION', '1.0.13.' . time());
 }
 
 define('MAWIBLAH_PLUGIN_NAME', 'Mawiblah');

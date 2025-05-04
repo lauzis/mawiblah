@@ -228,7 +228,6 @@ class RestRoutes
                 'campaign' => $campaign,
                 'subscriber' => $subscriber,
                 'testMode' => $testMode,
-                'emailSendingResult' => $emailSendingResult,
                 'isTester' => $isTester,
                 'campaignId' => $campaignId,
                 'subscriberId' => $subscriberId,

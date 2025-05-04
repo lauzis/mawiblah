@@ -42,6 +42,7 @@ on all possible configurations and setups.
 ### --- 1.0.13 ---
 - Test and approval implemented
 - Moved email sending to an ajax async process
+- Implemented force import from gravity forms
 
 ### --- 1.0.12 ---
 - Added an action page with the ability to clear logs and manually sync entries/emails with Gravity Forms.

@@ -163,8 +163,11 @@ function MAWIBLAH_sendEmail(item, list, totalCount, startingTime) {
 
 function MAWIBLAH_runCompaignAction() {
 
-
   var listItems = Array.from(document.querySelectorAll('.mawiblah-campaign-action'));
+  if (!listItems || listItems.length === 0) {
+    return;
+  }
+
   var totalCount = listItems.length;
   var startingTime = new Date().getTime();
   var item = listItems.shift();
@@ -215,9 +218,10 @@ function init() {
     templateElement.addEventListener('change', MAWIBLAH_loadPreview);
   }
 
-  //MAWIBLAH_test();
-
-  MAWIBLAH_runCompaignAction();
+  //Run campaign - send emails
+  if(document.getElementById('mawiblah-email-list')){
+    MAWIBLAH_runCompaignAction();
+  }
 }
 
 

@@ -383,6 +383,10 @@ class Campaigns
 
         $templateHTML = Templates::copyTemplate($campaignId, $testMode);
 
+        if ($templateHTML=== false) {
+            return false;
+        }
+
         $templateHTML = do_shortcode($templateHTML);
         $templateHTML = str_replace('[gdlnks_newsletter_title]', $campaign->contentTitle ?? $campaign->post_title, $templateHTML);
         $templateHTML = str_replace('[gdlnks_newsletter_content]', $campaign->post_content, $templateHTML);
@@ -398,7 +402,7 @@ class Campaigns
         $campaignId = $campaign->id;
         $templateHTML = do_shortcode($template);
         $templateHTML = str_replace('[gdlnks_newsletter_title]', $campaign->post_title, $templateHTML);
-        $templateHTML = str_replace('[gdlnks_newsletter_content]', "---->".get_the_content($campaign->id)."<-----", $templateHTML);
+        $templateHTML = str_replace('[gdlnks_newsletter_content]', get_the_content($campaign->id), $templateHTML);
 
         $templateHTML = str_replace('{campaignId}', $campaign->campaignId, $templateHTML);
         $templateHTML = str_replace('{subscriberId}', $subscriber->subscriberId, $templateHTML);

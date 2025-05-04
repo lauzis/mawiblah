@@ -222,6 +222,42 @@ class RestRoutes
         }
 
         $template = Campaigns::lockTemplate($campaign, $testMode);
+        if ($template===false){
+
+            Logs::addLog("Email sending failed. Template could not be retrieved.", "Email sending failed. Template could not be retrieved.", [
+                'campaign' => $campaign,
+                'subscriber' => $subscriber,
+                'testMode' => $testMode,
+                'emailSendingResult' => $emailSendingResult,
+                'isTester' => $isTester,
+                'campaignId' => $campaignId,
+                'subscriberId' => $subscriberId,
+                'email' => $email,
+                'timeDiff' => $timeDiff,
+                'doNotDisturbThreshold' => $doNotDisturbThreshold,
+                'alreadySent' => $alreadySent,
+                'lastItem' => $lastItem
+            ]);
+
+            return [
+                'stats' => Helpers::emailSendingStats(failed:1),
+                'data' => [
+                    'testMode' => $testMode,
+                    'isTester' => $isTester,
+                    'campaignId' => $campaignId,
+                    'subscriberId' => $subscriberId,
+                    'email' => $email,
+                    'campaign' => $campaign,
+                    'subscriber' => $subscriber,
+                    'timeDiff' => $timeDiff,
+                    'doNotDisturbThreshold' => $doNotDisturbThreshold,
+                    'alreadySent' => $alreadySent,
+                    'lastItem' => $lastItem
+                ],
+                'status' => 'error',
+                'message' => "Problem with recieving template! Template is not locked."
+            ];
+        }
         $emailBody = Campaigns::fillTemplate($template, $campaign, $subscriber);
 
         $emailSendingResult = wp_mail($email, $campaign->subject, $emailBody);

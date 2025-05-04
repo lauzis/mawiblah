@@ -55,7 +55,6 @@ function httpGet(url, headers, callback, failCallBack) {
 
   xmlhttp.open("GET", url, true);
   xmlhttp.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
-  console.log(mawiblahNonce.mawiblahNonce);
   xmlhttp.setRequestHeader('X-WP-Nonce', mawiblahNonce.mawiblahNonce);
   if (headers && headers.headers) {
     for (const headersKey of Object.keys(headers.headers)) {
@@ -85,12 +84,96 @@ function MAWIBLAH_getHtmlTemplate(template, preview) {
     template: template
   }
   httpPost(url, null, data, function (data) {
-    console.log(data);
     preview.innerHTML = data.template;
 
   }, function () {
 
   });
+}
+
+
+function MAWIBLAH_updateProgressBar(count, totalCount, startingTime) {
+  var progressBar = document.querySelector('.progress');
+  var progressText = document.querySelector('.progress-bar');
+
+  var time = new Date().getTime();
+  var timeDiff = time - startingTime;
+  var timeDiffInSeconds = Math.round(timeDiff / 1000);
+  var timeEstimated = Math.round((timeDiffInSeconds / count) * (totalCount - count));
+  var minutes = Math.floor(timeEstimated / 60);
+  var seconds = MAWIBLAH_prefixWithZeor(timeEstimated - (minutes * 60));;
+
+  if (count > totalCount) {
+    count = totalCount;
+  }
+
+  var percent = Math.round((count / totalCount) * 100);
+  progressBar.style.width = percent + "%";
+  progressText.innerHTML = percent + "%" + " " + count + "/" + totalCount + " " + minutes + ":" + seconds;
+}
+
+function MAWIBLAH_prefixWithZeor(number) {
+  if (number < 10) {
+    return "0" + number;
+  }
+  return number;
+}
+
+function MAWIBLAH_sendEmail(item, list, totalCount, startingTime) {
+
+  MAWIBLAH_updateProgressBar(totalCount - list.length, totalCount, startingTime);
+
+  item.innerHTML = "Sending...";
+
+  var subscriberId = item.getAttribute('data-subscriber-id');
+  var email = item.getAttribute('data-subscriber-email');
+  var campaignId = item.getAttribute('data-campaign-id');
+
+  var sleepBeforeJob =0;
+  var progressBar = document.querySelector('.progress');
+  if (progressBar) {
+    sleepBeforeJob = parseInt(progressBar.getAttribute('data-sleep-before-job'));
+    if (isNaN(sleepBeforeJob)) {
+      sleepBeforeJob = 0;
+    }
+  }
+
+  var url = "/wp-json/mawiblah/v1/send-email";
+  var lastItem = list.length === 0;
+
+  var data = {
+    subscriberId: subscriberId,
+    campaignId: campaignId,
+    email: email,
+    lastItem: lastItem
+  };
+
+  setTimeout(function () {
+    httpPost(url, null, data, function (data) {
+      item.innerHTML = data.message;
+      if (!lastItem) {
+        item = list.shift()
+        MAWIBLAH_sendEmail(item, list, totalCount, startingTime);
+      }
+    }, function () {
+      alert("Critical error, will not continue");
+    });
+  }, sleepBeforeJob*1000);
+}
+
+function MAWIBLAH_runCompaignAction() {
+
+  var listItems = Array.from(document.querySelectorAll('.mawiblah-campaign-action'));
+  if (!listItems || listItems.length === 0) {
+    return;
+  }
+
+  var totalCount = listItems.length;
+  var startingTime = new Date().getTime();
+  var item = listItems.shift();
+
+  MAWIBLAH_sendEmail(item, listItems, totalCount, startingTime);
+
 }
 
 
@@ -135,7 +218,10 @@ function init() {
     templateElement.addEventListener('change', MAWIBLAH_loadPreview);
   }
 
-  //MAWIBLAH_test();
+  //Run campaign - send emails
+  if(document.getElementById('mawiblah-email-list')){
+    MAWIBLAH_runCompaignAction();
+  }
 }
 
 

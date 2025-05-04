@@ -44,25 +44,45 @@
             echo "<td>" . $campaign->emailsUnsubed . "</td>";
             echo "<td>" . $campaign->linksClicked . "</td>";
             $status = $campaign->post_status;
-            if ($status === 'sent') {
-                echo "";
-            } else {
-                $finished = $campaign->status === 'finished' ? 'disabled' : '';
-                echo "<td>
-                    <a class='btn link-send campaign-actions' data-type='send' data-href='".Helpers::generatePluginUrl(['action'=>'test','campaignId'=>$campaign->id])."'>Test</a>
-                </td>";
-                echo "<td>
-                    <a class='btn btn-danger link-send campaign-actions $finished' data-type='send' data-href='".Helpers::generatePluginUrl(['action'=>'send','campaignId'=>$campaign->id])."'>Send</a>
-                </td>";
 
-                echo "<td>
+                $campaignFinished  = false;
+                $finished =  'disabled';
+
+                $testButtonText = __('Test', 'mawiblah');
+                if ($campaign->testFinished) {
+                    $testButtonText = __('Test (finished)', 'mawiblah');
+                }
+
+                if ($campaign->testApproved) {
+                    $testButtonText = __('Test (approved)', 'mawiblah');
+                    $finished = '';
+                }
+
+                if ($campaign->campaignFinished) {
+                    $campaignButtonText = __('Test (finished)', 'mawiblah');
+                    $campaignFinished  =  true;
+                }
+
+
+                if ($campaignFinished) {
+                    echo "<td colspan='4'>
+                    Campaign is completed
+                    </td>";
+                } else {
+                    echo "<td>
+                    <a class='btn link-send campaign-actions' data-type='send' data-href='".Helpers::generatePluginUrl(['action'=>'test','campaignId'=>$campaign->id])."'>".$testButtonText."</a>
+                </td>";
+                    echo "<td>
+                        <a class='btn btn-danger link-send campaign-actions $finished' data-type='send' data-href='".Helpers::generatePluginUrl(['action'=>'campaign-send','campaignId'=>$campaign->id])."'>Send</a>
+                    </td>";
+                    echo "<td>
                     <a class='btn btn-warning link-delete campaign-actions $finished' data-type='delete' data-href='".Helpers::generatePluginUrl(['action'=>'delete','campaignId'=>$campaign->id])."'>Delete</a>
-                </td>";
-
-                echo "<td>
+                    </td>";
+                    echo "<td>
                     <a class='btn link-edit campaign-actions $finished' data-type='edit' data-href='".Helpers::generatePluginUrl(['action'=>'edit','campaignId'=>$campaign->id])."'>Edit</a>
                 </td>";
-            }
+                }
+
 
             echo "</tr>";
         }

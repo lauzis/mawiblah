@@ -4,7 +4,7 @@ namespace Mawiblah;
 class Templates
 {
 
-    public static function getTemplateByNameViaRest($templateName): string
+    public static function getTemplateByNameViaRest($templateName): string | bool
     {
         $cookies = [];
         foreach ($_COOKIE as $name => $value) {
@@ -27,9 +27,14 @@ class Templates
              'timeout'=> 15,
          ]);
 
+        if (is_wp_error($response)) {
+            return false;
+        }
+
         $body = wp_remote_retrieve_body($response);
         $data = json_decode($body);
-        return $data->template;
+
+        return $data->template ?? false;
     }
 
     public static function getEmailTemplateByName($templateName)
@@ -76,19 +81,24 @@ class Templates
         $templateName = get_post_meta($campaignId, 'template', true);
         $templateArchived = get_post_meta($campaignId, 'email_template_copied', true);
 
-        $dir = MAWIBLAH_PLUGIN_DIR . '/email_templates/archieved';
+        $dir = MAWIBLAH_PLUGIN_DIR . '/email_templates/archived';
         $template = self::getTemplateByNameViaRest($templateName);
 
-        if ($template) {
-            if (!$templateArchived || $testMode) {
-                $filename = $campaignId . '_' . $templateName . '.html';
-                file_put_contents($dir . '/' . $filename, $template);
-                update_post_meta($campaignId, 'email_template_copied', true);
-            }
-
-            return $template;
+        if ($template=== false) {
+            return false;
         }
 
-        return false;
+        if ( ! is_dir( $dir ) && ! wp_mkdir_p( $dir ) ) {
+            error_log( "Cannot create archive dir $dir" );
+            return false;
+        }
+
+        if (!$templateArchived || $testMode) {
+            $filename = $campaignId . '_' . $templateName . '.html';
+            file_put_contents($dir . '/' . $filename, $template);
+            update_post_meta($campaignId, 'email_template_copied', true);
+        }
+
+        return $template;
     }
 }

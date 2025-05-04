@@ -41,233 +41,44 @@ class Renderer
 
         switch ($action) {
             case 'test':
-                $testMode = true;
-            case 'send':
+                require MAWIBLAH_PLUGIN_DIR . "/templates/campaign/email-list.php";
+                exit;
+            case 'campaign-test-reset':
                 if (isset($_GET['campaignId'])) {
-                    $startTime = time();
-                    $maxTime = ini_get('max_execution_time');
-                    $unsubedAudience = Subscribers::unsubedAudience();
-
                     $campaignId = $_GET['campaignId'];
-
-                    $campaign = Campaigns::getCampaignById($campaignId);
-
-                    if ($testMode) {
-                        Logs::addLog("TEST MODE campaign started: {$campaign->post_title}", "Test campaign {$campaign->post_title} started", [
-                                'campaign' => $campaign
-                            ]
-                        );
-                    } else {
-                        Logs::addLog("Campaign started: {$campaign->post_title}", "Campaign {$campaign->post_title} started",
-                            [
-                                'campaign' => $campaign
-                            ]
-                        );
-                    }
-
-                    $audiences = $campaign->audiences;
-
-                    $template = Campaigns::lockTemplate($campaign, $testMode);
-
-                    $counters = Campaigns::getCounters($campaign);
-                    $emailsSent = $counters->emailsSend ?? 0;
-                    $emailsFailed = $counters->emailsFailed ?? 0;
-                    $emailsSkipped = $counters->emailsSkipped ?? 0;
-                    $emailsUnsubed = $counters->emailsUnsubed ?? 0;
-
-                    $skippingReasons = [
-                        'unsubed' => [],
-                        'notATester' => [],
-                        'alreadySent' => [],
-                        'notUniqueEmail' => [],
-                        'skippingToPlaceWeLeftOf' => [],
-                        'emailSendingIsDisabled' => [],
-                        'donNotDisturb' => [],
-                    ];
-
-                    $iteration = get_post_meta($campaign->id, 'iteration', true);
-                    $index = 0;
-                    if (!$iteration) {
-                        $iteration = 0;
-                    }
-
-                    $uniqueEmails = [];
-
-                    foreach ($audiences as $id) {
-                        if (substr_count($id, "GF__") > 0) {
-                            $id = str_replace("GF__", "", $id);
-                            $audienceName = GravityForms::getFormName($id) . " (Gravity Forms)";
-                            $audience = Subscribers::getGFAudience($id, $audienceName);
-                            $emails = GravityForms::getAllEmailsForForm($id);
-
-                            foreach ($emails as $email => $info) {
-                                $email = trim(strtolower($email));
-
-                                if (isset($uniqueEmails[$email])) {
-                                    $skippingReasons['notUniqueEmail'][] = $email;
-                                    continue;
-                                }
-                                $uniqueEmails[$email] = true;
-
-                                $index++;
-                                //skipp to the place where we left off
-                                if ($index < $iteration) {
-                                    $skippingReasons['skippingToPlaceWeLeftOf'][] = $email;
-                                    continue;
-                                }
-                                $subscriber = Subscribers::getSubscriber($email);
-                                if (!$subscriber) {
-                                    $subscriber = Subscribers::addSubscriber($email);
-                                }
-
-                                $currentTIme = time();
-                                if ($currentTIme - $startTime > $maxTime - 2) {
-                                    Logs::addLog("Campaign stopped {$campaign->post_title} as we are running out of time", "Campaign {$campaign->post_title} stopped",
-                                        [
-                                            'campaign' => $campaign,
-                                            'audience' => $audience,
-                                            'subscriber' => $subscriber,
-                                            'uniqueEmails' => $uniqueEmails,
-                                            'testMode' => $testMode,
-                                            'skippingReasons' => $skippingReasons,
-                                        ]
-                                    );
-                                    wp_redirect(Helpers::generatePluginUrl(['action' => 'list']));
-                                    die();
-                                }
-
-                                if (is_array($subscriber->audiences) && count($subscriber->audiences) > 0) {
-                                    $found = false;
-                                    foreach ($subscriber->audiences as $audienceId) {
-                                        if ($audienceId === $audience->term_id) {
-                                            $found = true;
-                                            continue;
-                                        }
-                                    }
-
-                                    if (!$found) {
-                                        Subscribers::addSubscriberToAudience($subscriber->ID, $audience->term_id);
-                                    }
-                                } else {
-                                    Subscribers::addSubscriberToAudience($subscriber->ID, $audience->term_id);
-                                }
-
-                                if ($subscriber->unsubed) {
-                                    $emailsUnsubed++;
-                                    $skippingReasons['unsubed'][] = $email;
-                                    continue;
-                                }
-
-                                if (Subscribers::checkMailchimpUnsubedAudience($email)) {
-                                    Subscribers::unsub($email, false, 'In mailchimp audience was unsubed already');
-                                    Subscribers::addSubscriberToAudience($subscriber->id, $unsubedAudience->term_id);
-                                    $skippingReasons['unsubed'][] = $email;
-                                    $emailsUnsubed++;
-                                    continue;
-                                }
-
-                                $emailIsSent = Subscribers::isEmailSent($subscriber->id, $campaign->id);
-                                $isTester = Subscribers::isTester($subscriber);
-
-                                if ($testMode && !$isTester) {
-                                    $skippingReasons['notATester'][] = $email;
-                                    $emailsSkipped++;
-                                    continue;
-                                }
-
-                                if ($emailIsSent && !$testMode && !$isTester) {
-                                    $skippingReasons['alreadySent'][] = $email;
-                                    $emailsSkipped++;
-                                    continue;
-                                }
-
-                                $lastInteraction = $subscriber->lastInteraction;
-                                $doNotDisturbThreshold = Settings::dontDisturbThreshold();
-                                // current tiem did not go over the reshold
-                                if (time() < strtotime($lastInteraction) + $doNotDisturbThreshold) {
-                                    $skippingReasons['donNotDisturb'][] = $email;
-
-                                    if (!$testMode && !$isTester){
-                                        continue;
-                                    }
-                                }
-
-                                Subscribers::sendingEmail($subscriber->id, $campaign->id);
-
-                                $emailBody = Campaigns::fillTemplate($template, $campaign, $subscriber);
-                                sleep(1);
-
-                                Logs::addLog("Email sending to {$email}, from audience {$audienceName}", "Email sent to {$email}", [
-                                    'campaign' => $campaign,
-                                    'audience' => $audience,
-                                    'subscriber' => $subscriber,
-                                    'uniqueEmails' => $uniqueEmails,
-                                    'testMode' => $testMode,
-                                    'skippingReasons' => $skippingReasons
-                                ]);
-
-                                $emailSendingResult = false;
-                                if (Settings::sendEmails()) {
-                                    $emailSendingResult = wp_mail($email, $campaign->subject, $emailBody);
-                                } else {
-                                    $skippingReasons['emailSendingIsDisabled'][] = $email;
-                                    $emailsSkipped++;
-                                    continue;
-                                }
-
-                                if ($emailSendingResult) {
-                                    $emailsSent++;
-                                    Subscribers::sentEmail($subscriber->id, $campaign->id);
-                                    Logs::addLog("Email sent to {$email} successfully!", "Email sent to {$email} successfully!", [
-                                        'campaign' => $campaign,
-                                        'audience' => $audience,
-                                        'subscriber' => $subscriber,
-                                        'uniqueEmails' => $uniqueEmails,
-                                        'testMode' => $testMode,
-                                        'skippingReasons' => $skippingReasons,
-                                        'emailSendingResult' => $emailSendingResult
-                                    ]);
-                                } else {
-                                    $emailsFailed++;
-                                    Subscribers::sentEmailFailed($subscriber->id, $campaign->id);
-                                    Logs::addLog("Email sending to {$email} failed!", "Email sending to {$email} failed!", [
-                                        'campaign' => $campaign,
-                                        'audience' => $audience,
-                                        'subscriber' => $subscriber,
-                                        'uniqueEmails' => $uniqueEmails,
-                                        'testMode' => $testMode,
-                                        'skippingReasons' => $skippingReasons,
-                                        'emailSendingResult' => $emailSendingResult
-                                    ]);
-                                }
-
-                                Campaigns::updateCounters($campaign, $emailsSent, $emailsFailed, $emailsSkipped, $emailsUnsubed);
-
-                                update_post_meta($campaign->id, 'iteration', $index);
-
-                            }
-                        }
-                    }
-
-                    if ($testMode) {
-                        update_post_meta($campaign->id, 'iteration', 0);
-                        Campaigns::updateCounters($campaign, 0, 0, 0, 0);
-                    }
-
-                    if (!$testMode) {
-                        Campaigns::finished($campaign);
-                    }
-                    Logs::addLog("Campaign finished: {$campaign->post_title}", "Campaign {$campaign->post_title} finished", [
-                        'campaign' => $campaign,
-                        'audience' => $audience,
-                        'subscriber' => $subscriber,
-                        'uniqueEmails' => $uniqueEmails,
-                        'testMode' => $testMode,
-                        'skippingReasons' => $skippingReasons
-                    ]);
+                    $result = Campaigns::testReset($campaignId);
                 }
                 require MAWIBLAH_PLUGIN_DIR . "/templates/campaign/list.php";
                 exit;
+            case 'campaign-test-approve':
+                if (isset($_GET['campaignId'])) {
+                    $campaignId = intval( $_GET['campaignId'] ?? 0 );
+
+                    if ($campaignId > 0 && ! current_user_can( 'edit_post', $campaignId ) ) {
+                        wp_die( __( 'You are not allowed to do this.', 'mawiblah' ), 403 );
+                    }
+                    check_admin_referer( 'mawiblah_campaign_action_' . $campaignId );
+
+                    $result = Campaigns::testApprove($campaignId);
+                }
+                require MAWIBLAH_PLUGIN_DIR . "/templates/campaign/list.php";
+                exit;
+
+            case 'campaign-send':
+                if (isset($_GET['campaignId'])) {
+                    $campaignId = intval( $_GET['campaignId'] ?? 0 );
+
+                    if ($campaignId > 0 && ! current_user_can( 'edit_post', $campaignId ) ) {
+                        wp_die( __( 'You are not allowed to do this.', 'mawiblah' ), 403 );
+                    }
+                    check_admin_referer( 'mawiblah_campaign_action_' . $campaignId );
+
+                    $result = Campaigns::campaignStart($campaignId);
+
+                    require MAWIBLAH_PLUGIN_DIR . "/templates/campaign/email-list.php";
+                }
+                exit;
+
             case 'create':
                 require MAWIBLAH_PLUGIN_DIR . "/templates/campaign/add-campaign.php";
                 break;

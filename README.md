@@ -1,15 +1,20 @@
 # MAWIBLAH - Mailch!mp viz blek džek end hūkers
-  
+
 ## What is it?
 - It is a WordPress plugin that sends out emails to the list of subscribers.
+
+## Who's it for?
+Generally, it's for me; it's a "weekend project" that is both useful and interesting to me.  
+It could be useful for small projects with tight budgets or no income streams.  
+It is not suited for sending out 100k emails. It's possible, but it will take a long time as, for now, the plugin sends "individual" emails, which is necessary in my case.
 
 ## Why?
 - Good news - we have reached 2k newsletter subscribers.
 - Bad news - we reached 2k newsletter subscribers.
 
-Free tear of mailchimp is until 2k subscribers, but next tier is pretty expensive.
-I thought maybe 5$ per month or something, but no... we should spend about 50$ per month. Per month Karl.
-Kind of steep increase as our projects budget  is about 100$ yearly at the moment.
+The free tier of Mailchimp is until 2k subscribers, but the next tier is pretty expensive.
+I thought maybe $5 per month or something, but no... we should spend about $50 per month. Per month, Karl.
+Kind of a steep increase as our project's budget is about $100 yearly at the moment.
 
 So... "Fine... will do my own Mailchimp... with blackjack and hookers"
 
@@ -17,113 +22,81 @@ So... "Fine... will do my own Mailchimp... with blackjack and hookers"
 
 ## What it does
 - Sends out emails to the email list.
-- Email list is collected via Gravity Forms entries. But one could add the mailing list manually.
-- Email template that is sent out is generated via shortcodes.
-- Unsubscribe functionality
-- Importing list of unsubscribed from mailchimp
-- Imports audience from Gravity Form entries
-- Tracking clicks for the campaigns
-- Tracking click timing for the campaigns
-- Logging of the actions 
+- The email list is collected via Gravity Forms entries, but one can add the mailing list manually.
+- The email template that is sent out is generated via shortcodes.
+- Includes unsubscribe functionality.
+- Imports a list of unsubscribed users from Mailchimp.
+- Imports the audience from Gravity Form entries.
+- Tracks clicks for the campaigns.
+- Tracks the timing of clicks for the campaigns.
+- Logs the actions. 
 
 ## Support
 This is a free plugin, so support is limited.
 
-Main idea is to create functionality that is needed for the particular project, there is no intention to make it work
+The main idea is to create functionality that is needed for the particular project. There is no intention to make it work
 on all possible configurations and setups.
 
 ## Change log
 
+### --- 1.0.13 ---
+- Test and approval implemented
+- Moved email sending to an ajax async process
+- Implemented force import from gravity forms
+
 ### --- 1.0.12 ---
-- Added action page, possibility to clear logs, and launch manual sync with gravity forms
+- Added an action page with the ability to clear logs and manually sync entries/emails with Gravity Forms.
 ![Action page](readme-assets/action-page.png)
 
 ### --- 1.0.11 ---
-- Add meta field to the subscribers post type for last interaction, added update after email is sent
-- Added meta settings field to controll the time between emails to the same subscriber
+- Added a meta-field to the subscribers' post-type for the last interaction and updated it after an email is sent.
+- Added a meta-settings field to control the time between emails to the same subscriber.
   
 ![dont disturb settings](readme-assets/dont-disturb-threshold.png)
 
 ### --- 1.0.10 ---
-- Implemented setting to skip actual email sending for testing/debugging purposes.
-- Settings output in test page
+- Implemented a setting to skip actual email sending for testing/debugging purposes.
+- Displayed settings output on the test page.
 
 ![Settings output in the test page](readme-assets/settings-output-in-test.jpg)
 
 ### --- 1.0.9 ---
-- Introduced a dedicated settings page in the admin interface, providing a centralized location for configuration.
+- Introduced a dedicated settings page in the admin interface to provide a centralized location for configuration.
 - Added options to control email intervals and enable debugging with IP restrictions.
-- Ability to toggle database logging via the settings page.
+- Added the ability to toggle database logging via the settings page.
 - Testing/Shout-out to [coderabit.ai](https://coderabit.ai) for the help with the code. Will see how it goes, but for now it seems helpful.
   
 ![Settings page](readme-assets/settings.jpg)
 
 ### --- 1.0.8 ---
-- saving click time for stats, and so one could check what is most "active" time for opening emails
-- fixed logical issue, all subscribers got flag that have already sent email tot hat address
+- Saved click time for statistics, allowing analysis of the most "active" times for opening emails.
+- Fixed a logical issue where all subscribers were flagged as having already been sent an email to that address.
 
 ### --- 1.0.7 ---
--- some logging mechanisms updated, added skipped emails logging
+- Updated some logging mechanisms and added logging for skipped emails.
 
 ### --- 1.0.6 ---
--- nonce fixes for ajax requests
+- Fixed nonce issues for AJAX requests.
 
 ### --- 1.0.5 ---
--- fix for two messages at the same time at the unsub
+- Fixed an issue where two messages were sent simultaneously during the unsubscribed process.
 
 ### --- 1.0.4 ---
-- fixed issue with the registering visit from link stats
+- Fixed an issue with registering visits from link statistics.
 
 ### --- 1.0.3 ---
-- removed some debug code 
-- fixed issue with wpml translations, probably this was due to the order of plugin registration or something. And at time
-when email template was read the wpml was not initialized. Rewrote that request for template would go through rest request. 
+- Removed some debug code.
+- Fixed an issue with WPML translations, likely caused by the plugin registration order. Adjusted the email template request to go through a REST request to ensure WPML initialization. 
 
 ### --- 1.0.2 ---
-- added to log function that it adds extra data to the content of the log
-- fixed issue that in some cases was sending twice to same email, issue was that in the source there was same address 
-used  with some of the letters capitalized
+- added to the log function that it adds extra data to the content of the log
+- fixed issue that in some cases was sending twice to the same email, issue was that in the source there was the same address  
+used with some letters capitalized
 
 ### --- 1.0.1 ---
-- added some minimal action logger, for debugging to see why flow of sending out campaign.
+- Added a minimal action logger for debugging purposes to trace the flow of sending out campaigns.
 
 ### --- initial MVP ---
-Minimal functionality only to achieve my needs. Maybe will make it more universal at later point in time.
+- Implemented minimal functionality to meet specific needs. Potential for making it more universal in the future.
 ![Mvp version](readme-assets/mvp.jpg)
-
-## Known issues
-- Texts in unsubscribe scenario is not translated
-
-## Todo
-- Bugfixes
-  - Todo scenario Sent campaing -> Test -> Send again - Testing resets counter and status, so its possible same campaign to be sent out twice.
-- New Features
-  - Dublicate the campaing, so dont need to reset it.
-  - Sand out by time (reacurance), once per month.
-  - Import via files
-  - Ajax email send out / cron job
-  - Count email send out failures if some email has some x times failed, then mark it as failed and dont send out anymore
-  - We have click time, but we need to check how the "open" email is detected and implement
-  - Overall stats / welcome panel
-    - Email sent stats
-    - Email opened stats
-    - Link clicked stats
-    - Open timings stats
-    - Conversion stats
-- Refactoring
-  - GF sync separate from audiences, so audiences would come only from "Mawiblah audiences", 
-  and there would be some syncing mechanism. checking last entry. if last entry is newer than last sync, then sync. Probably best would be to have seperate import section, where users could import subscribers.
-  - In test mode  get emails beforehand loop
-  - more detailed wp_mail error messages, maybe have to switch to smtp mailer
-  - move edit/create to the WordPress default functions, add  additional fields via hooks
-- Imporvememts
-  - Hide default menus or move them to the submenu
-  - Default template - create default template that would work out of the box for some one that makes mistake and sets up this plugin in his wordpres project
-  - Overwrite the template via hooks or templates stored in theme
-- Update self tests
-  - Check if there is email templates
-  - Check if theme has email templates
-
-
-  
 

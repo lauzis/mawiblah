@@ -176,6 +176,13 @@ class Campaigns
         $post->emailsSkipped = get_post_meta($post->id, 'emailsSkipped', true);
         $post->emailsUnsubed = get_post_meta($post->id, 'emailsUnsubed', true);
 
+        $post->testStarted = get_post_meta($post->id, 'testStarted', true) ?? false;
+        $post->testFinished = get_post_meta($post->id, 'testFinished', true) ?? false;
+        $post->testApproved = get_post_meta($post->id, 'testApproved', true) ?? false;
+
+        $post->campaignStarted = get_post_meta($post->id, 'campaignStarted', true) ?? false;
+        $post->campaignFinished = get_post_meta($post->id, 'campaignFinished', true) ?? false;
+
         if (!$post->campaignId) {
             $post->campaignId = md5($post->id);
             update_post_meta($post->id, 'campaignId', $post->campaignId);
@@ -376,6 +383,10 @@ class Campaigns
 
         $templateHTML = Templates::copyTemplate($campaignId, $testMode);
 
+        if ($templateHTML=== false) {
+            return false;
+        }
+
         $templateHTML = do_shortcode($templateHTML);
         $templateHTML = str_replace('[gdlnks_newsletter_title]', $campaign->contentTitle ?? $campaign->post_title, $templateHTML);
         $templateHTML = str_replace('[gdlnks_newsletter_content]', $campaign->post_content, $templateHTML);
@@ -391,7 +402,7 @@ class Campaigns
         $campaignId = $campaign->id;
         $templateHTML = do_shortcode($template);
         $templateHTML = str_replace('[gdlnks_newsletter_title]', $campaign->post_title, $templateHTML);
-        $templateHTML = str_replace('[gdlnks_newsletter_content]', "---->".get_the_content($campaign->id)."<-----", $templateHTML);
+        $templateHTML = str_replace('[gdlnks_newsletter_content]', get_the_content($campaign->id), $templateHTML);
 
         $templateHTML = str_replace('{campaignId}', $campaign->campaignId, $templateHTML);
         $templateHTML = str_replace('{subscriberId}', $subscriber->subscriberId, $templateHTML);
@@ -424,13 +435,6 @@ class Campaigns
         ];
     }
 
-    public static function finished($campaign)
-    {
-        $campaignId = $campaign->id;
-        update_post_meta($campaignId, 'status', 'finished');
-
-    }
-
     public static function linkCLicked($campaignId, $url): int
     {
         $campaign = self::getCampaignByCampaignId($campaignId);
@@ -460,5 +464,37 @@ class Campaigns
         add_post_meta($campaign->id, 'click_time', time(),false);
 
         return (int) $campaign->linksClicked + 1;
+    }
+
+    public static function testStart(int $campaignId): void
+    {
+        update_post_meta($campaignId, 'testStarted', time());
+    }
+
+    public static function testFinish( int $campaignId): void
+    {
+        update_post_meta($campaignId, 'testFinished', time());
+    }
+
+    public static function testApprove(int $campaignId): void
+    {
+        update_post_meta($campaignId, 'testApproved', time());
+    }
+
+    public static function testReset(int $campaignId): void
+    {
+        update_post_meta($campaignId, 'testStarted', false);
+        update_post_meta($campaignId, 'testFinished', false);
+        update_post_meta($campaignId, 'testApproved', false);
+    }
+
+    public static function campaignStart(int $campaignId): void
+    {
+        update_post_meta($campaignId, 'campaignStarted', time());
+    }
+
+    public static function campaignFinish(int $campaignId): void
+    {
+        update_post_meta($campaignId, 'campaignFinished', time());
     }
 }

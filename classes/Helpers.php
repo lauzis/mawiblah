@@ -101,4 +101,35 @@ class Helpers
 
         return self::getCurrentUrl();
     }
+
+    public static function campaignTestResetUrl(int $campaignId): string
+    {
+        return self::generatePluginUrl(['action' => 'campaign-test-reset', 'campaignId' => $campaignId]);
+    }
+
+    public static function campaignTestApproveUrl(int $campaignId): string
+    {
+        return self::generatePluginUrl(['action' => 'campaign-test-approve', 'campaignId' => $campaignId]);
+    }
+
+    public static function emailSendingStats(int $sent=0,int $skipped=0,int $failed=0,int $unsubscribed=0, int $alreadySent=-0, int $doNotDisturb=0, int $emailsDisabled=0, int $notTester=0 ): array{
+        if ($alreadySent || $doNotDisturb || $unsubscribed || $emailsDisabled || $notTester) {
+            $skipped = 1;
+        }
+
+        return [
+            'emailsSent' => $sent,
+            'emailsFailed' => $failed,
+            'emailsSkipped' => $skipped,
+            'emailsUnsubscribed' => $unsubscribed,
+            'alreadySent' => $alreadySent,
+            'doNotDisturb' => $doNotDisturb,
+            'emailsDisabled' => $emailsDisabled,
+            'notTesterInTestMode' => $notTester,
+        ];
+    }
+
+    public static function generateSubscriberId(int $id): string{
+        return md5($id);
+    }
 }

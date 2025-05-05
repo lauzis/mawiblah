@@ -219,7 +219,7 @@ function init() {
   }
 
   //Run campaign - send emails
-  if(document.getElementById('mawiblah-email-list')){
+  if(document.querySelector('.mawiblah-email-list')){
     MAWIBLAH_runCompaignAction();
   }
 }

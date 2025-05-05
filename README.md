@@ -39,6 +39,10 @@ on all possible configurations and setups.
 
 ## Change log
 
+### --- 1.0.14 ---
+- minor styling fixes
+- date format update
+
 ### --- 1.0.13 ---
 - Test and approval implemented
 - Moved email sending to an ajax async process

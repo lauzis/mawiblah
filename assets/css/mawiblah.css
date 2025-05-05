@@ -376,3 +376,10 @@ form.google-analytics-events {
 .mawiblah-campaign-list th, .mawiblah-email-list th {
     font-weight: bold;
 }
+
+.progress-wrap {
+    margin:20px 0;
+    background-color: rgba(0, 0, 0, 0.05);
+    border-style: solid;
+    border-width: 1px;
+}

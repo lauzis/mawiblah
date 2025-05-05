@@ -82,11 +82,14 @@
         $uniqueEmails = [];
 
         ?>
-        <div class="progress" style="margin:20px 0;width:100%" data-sleep-before-job="<?= $sleepBeforeJob ?>">
-            <div class="progress-bar"
-                 style="background-color: #0a4b78; color:#FFF; text-align: center; padding:4px; text-wrap: nowrap">
+            <div class="progress-wrap">
+                <div class="progress" style="width:100%" data-sleep-before-job="<?= $sleepBeforeJob ?>">
+                    <div class="progress-bar"
+                         style="background-color: #0a4b78; color:#FFF; text-align: center; padding:4px; text-wrap: nowrap">
+                    </div>
+                </div>
             </div>
-        </div>
+
         <?php
 
         foreach ($audiences as $id) {

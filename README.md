@@ -41,7 +41,9 @@ on all possible configurations and setups.
 
 ### --- 1.0.14 ---
 - minor styling fixes
-- date format update
+- date format update 
+
+![Testing newsletter email](readme-assets/testing-list.jpg)
 
 ### --- 1.0.13 ---
 - Test and approval implemented
@@ -50,6 +52,7 @@ on all possible configurations and setups.
 
 ### --- 1.0.12 ---
 - Added an action page with the ability to clear logs and manually sync entries/emails with Gravity Forms.
+
 ![Action page](readme-assets/action-page.png)
 
 ### --- 1.0.11 ---

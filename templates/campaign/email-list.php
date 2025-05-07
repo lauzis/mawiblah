@@ -136,8 +136,8 @@
                         ?>
                         <tr>
                             <td><?= $subscriber->email; ?></td>
-                            <td><?= date("Y-m-d H:i:s", $subscriber->firstInteraction); ?></td>
-                            <td><?= date("Y-m-d H:i:s", $subscriber->lastInteraction); ?></td>
+                            <td><?= esc_html( date_i18n( 'Y-m-d H:i:s', $subscriber->firstInteraction ) ); ?></td>
+                            <td><?= esc_html( date_i18n( 'Y-m-d H:i:s', $subscriber->lastInteraction ) ); ?></td>
                             <td>
                                 <div id="<?= $campaignId ?>-<?= $subscriberId ?>"
                                      class="mawiblah-campaign-action test"

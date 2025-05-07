@@ -2,7 +2,7 @@
 
 <div class="flex ">
     <div class="flex-column">
-        <form action="<?= \Mawiblah\Helpers::getCurrentUrl(); ?>&create-compaign" method="POST" class="create-campaign-form">
+        <form action="<?= \Mawiblah\Helpers::generatePluginUrl(['action' => 'save-campaign']); ?>" method="POST" class="create-campaign-form">
             <label for="title">Title</label>
             <input type="text" name="title" id="title" value="<?= isset($campaign) ? $campaign->post_title : ''; ?>">
 

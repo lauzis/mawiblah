@@ -9,45 +9,6 @@ class Campaigns
     public static function init()
     {
         self::registerPostType();
-
-        $debug = [];
-        $debug['post'] = $_POST;
-        $debug['valid'] = false;
-        $debug['unique'] = false;
-        $debug['campaignId'] = null;
-        $debug['existingCampaign'] = null;
-
-        if (Helpers::canEdit()) {
-            if (isset($_GET['create-compaign'])) {
-
-                $title = $_POST['title'] ?? "";
-                $subject = $_POST['subject'] ?? "";
-                $contentTitle = $_POST['contentTitle'] ?? "";
-                $content = $_POST['content'] ?? "";
-                $audiences = $_POST['audiences'] ?? [];
-                $template = $_POST['template'] ?? "";
-
-                if (self::validateCampaign($title, $subject, $audiences, $template)) {
-                    $debug['valid'] = true;
-                    if (self::isUnique($title)) {
-                        $debug['unique'] = true;
-                        $campaignId = self::addCampaign(title: $title, subject: $subject, contentTitle: $contentTitle, content:$content, audiences:$audiences, template:$template);
-
-                        $debug['campaignId'] = $campaignId;
-                        if ($campaignId) {
-                            Renderer::campaign_created($debug);
-                        } else {
-                            Renderer::campaign_could_not_create($debug);
-                        }
-                    } else {
-                        $debug['existingCampaign'] = self::getCampaign($title);
-                        Renderer::campaign_already_exists($debug);
-                    }
-                } else {
-                    Renderer::campaign_invalid($debug);
-                }
-            }
-        }
     }
 
     public static function deleteCampaign($campaignId)

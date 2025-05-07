@@ -2,8 +2,8 @@ body {
     background-color: #e2e2e2; /* Different color for the body */
 }
 
-.mawiblah{
-    padding-inline-end:15px;
+.mawiblah {
+    padding-inline-end: 15px;
 }
 
 .create-campaign-form {
@@ -55,7 +55,6 @@ body {
 .create-campaign-form input[type="submit"]:hover {
     background-color: #005177; /* Darker blue on hover */
 }
-
 
 #mawiblah-preview {
     width: 100%;
@@ -126,6 +125,11 @@ body {
     background-color: #005177; /* Darker blue on hover */
 }
 
+.btn-row {
+    margin-top: 15px;
+    margin-bottom: 15px;
+}
+
 .btn {
     background-color: #0073aa; /* WordPress blue */
     color: #fff;
@@ -134,10 +138,17 @@ body {
     border-radius: 3px;
     cursor: pointer;
     font-size: 16px;
-    display: block;
     margin: 0 auto; /* Center the button */
     text-align: center;
     width: auto;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.btn:hover {
+    text-decoration: none;
+    color: #fff;
+    background-color: #005177; /* Darker blue on hover */
 }
 
 .btn-danger {
@@ -154,10 +165,11 @@ body {
 }
 
 .mawiblah-error {
-    color:red;
+    color: red;
 }
+
 .mawiblah-success {
-    color:green;
+    color: green;
 }
 
 .message div {
@@ -169,7 +181,7 @@ body {
 
 .wrap.mawiblah h2 {
     padding-bottom: 20px;
-    border-bottom:1px solid #0073aa;
+    border-bottom: 1px solid #0073aa;
     font-size: 16px;
 }
 
@@ -178,125 +190,120 @@ body {
 }
 
 .wrap.mawiblah table {
-    width:100%
+    width: 100%
 }
-
-.wrap.mawiblah table td {
-    padding: 10px 20px;
-}
-
-.wrap.mawiblah table tr:nth-child(odd) {
-    background-color: #f1f1f1;
-}
-
 
 .mawiblah-form-field > label {
     display: block;
-    font-weight:bold;
-    width:100%;
+    font-weight: bold;
+    width: 100%;
     white-space: normal;
     max-width: 500px;
-    margin-top:20px;
+    margin-top: 20px;
 }
 
-.mawiblah-form-field > .mawiblah-form-field-select-wrap{
-    height:auto;
-    padding:0;
-    text-align:left;
-    margin-top:5px;
-    width:100%;
-    border-style:solid;
-    border-width:1px;
+.mawiblah-form-field > .mawiblah-form-field-select-wrap {
+    height: auto;
+    padding: 0;
+    text-align: left;
+    margin-top: 5px;
+    width: 100%;
+    border-style: solid;
+    border-width: 1px;
     max-width: 500px;
-    overflow:hidden;
+    overflow: hidden;
 }
+
 .mawiblah-form-field > .mawiblah-form-field-select-wrap > select {
-    height:auto;
-    padding:5px 0 5px 5px;
-    text-align:left;
-    margin-top:0;
-    width:100%;
-    border-style:solid;
-    border-width:0;
+    height: auto;
+    padding: 5px 0 5px 5px;
+    text-align: left;
+    margin-top: 0;
+    width: 100%;
+    border-style: solid;
+    border-width: 0;
 }
+
 .mawiblah-form-field > input,
 .mawiblah-form-field > textarea {
-    height:auto;
-    padding:5px 5px;
-    text-align:left;
-    margin-top:5px;
-    width:100%;
-    border-style:solid;
-    border-width:1px;
+    height: auto;
+    padding: 5px 5px;
+    text-align: left;
+    margin-top: 5px;
+    width: 100%;
+    border-style: solid;
+    border-width: 1px;
     max-width: 500px;
-    border-color:#000;
+    border-color: #000;
 }
+
 .mawiblah-form-field > textarea {
-    min-height:200px;
+    min-height: 200px;
 }
 
 .mawiblah-form-field > p {
-    font-style:italic;
-    padding:0px;
-    margin:0px;
+    font-style: italic;
+    padding: 0px;
+    margin: 0px;
     max-width: 500px;
 }
 
-
-.mawiblah-message{
-    margin:20px 20px 20px 0;
+.mawiblah-message {
+    margin: 20px 20px 20px 0;
 }
 
-.section-disabled h2{
-    color:darkred;
+.section-disabled h2 {
+    color: darkred;
 }
-.section-enabled h2{
-    color:darkgreen;
+
+.section-enabled h2 {
+    color: darkgreen;
 }
 
 .section-disabled h2:after {
-    padding-right:10px;
+    padding-right: 10px;
     position: relative;
-    top:3px;
+    top: 3px;
     font-family: dashicons;
-    color:darkred;
-    content:"\f335";
+    color: darkred;
+    content: "\f335";
 }
-.section-enabled h2:after{
-    padding-right:10px;
+
+.section-enabled h2:after {
+    padding-right: 10px;
     position: relative;
-    top:4px;
+    top: 4px;
     font-family: dashicons;
-    color:darkgreen;
-    content:"\f147";
+    color: darkgreen;
+    content: "\f147";
 }
 
 
-form.google-analytics-events{
-    padding-left:30px;
-    padding-right:30px;
+form.google-analytics-events {
+    padding-left: 30px;
+    padding-right: 30px;
 }
 
-.google-analytics-events > h1{
-    padding:30px 30px 30px 30px;
+.google-analytics-events > h1 {
+    padding: 30px 30px 30px 30px;
 
 }
 
 .google-analytics-events > p {
-    padding:0 30px 30px 30px;
-    max-width:560px;
+    padding: 0 30px 30px 30px;
+    max-width: 560px;
 }
 
 .mawiblah-submit {
-    padding:30px 30px 30px 0;
-    overflow:hidden;
-    height:40px;
+    padding: 30px 30px 30px 0;
+    overflow: hidden;
+    height: 40px;
 }
+
 .mawiblah-section {
-    position:relative;
-    width:100%;
+    position: relative;
+    width: 100%;
     margin-inline-end: 30px;
-    backgroud-color:red;
 }
 
 .mawiblah-section > h1 {
@@ -304,33 +311,32 @@ form.google-analytics-events{
 }
 
 .mawiblah-section h2.section-title {
-    font-size:18px;
-    padding:0 0 0 20px;
-    margin:0;
-    cursor:pointer;
+    font-size: 18px;
+    padding: 0 0 0 20px;
+    margin: 0;
+    cursor: pointer;
     line-height: 40px;
 }
 
 .closed .toggle-indicator::before {
-    content:"\f140" !important;
+    content: "\f140" !important;
 }
 
 .mawiblah-section code {
-    padding:10px;
+    padding: 10px;
     font-family: monospace;
-    display:block;
+    display: block;
 }
 
-.mawiblah-section .inside
-{
-    padding-left:30px;
-    padding-right:30px;
+.mawiblah-section .inside {
+    padding-left: 30px;
+    padding-right: 30px;
 }
 
 .mawiblah-description {
-    padding:0 30px;
-    border-style:solid;
-    border-width:0 0 0 1px;
+    padding: 0 30px;
+    border-style: solid;
+    border-width: 0 0 0 1px;
     max-width: 500px;
 }
 
@@ -340,21 +346,37 @@ form.google-analytics-events{
 
 
 .mawiblah-section-last {
-    border-bottom-width:1px;
+    border-bottom-width: 1px;
 }
+
 .mawiblah-settings-table th {
-    padding:20px;
+    padding: 20px;
     width: 25%;
 }
+
 .mawiblah-settings-table td {
     width: 25%;
 }
 
-
-.flex-row{
+.flex-row {
     flex-direction: row;
 }
 
-.flex-row.space-between{
+.flex-row.space-between {
     justify-content: space-between;
+}
+
+.mawiblah-campaign-list, .mawiblah-email-list {
+    margin-bottom: 15px;
+}
+
+.mawiblah-campaign-list th, .mawiblah-email-list th {
+    font-weight: bold;
+}
+
+.progress-wrap {
+    margin: 20px 0;
+    background-color: rgba(0, 0, 0, 0.05);
+    border-style: solid;
+    border-width: 1px;
 }

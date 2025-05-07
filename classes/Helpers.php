@@ -93,23 +93,29 @@ class Helpers
         return $protocol . $host . $uri;
     }
 
-    public static function generatePluginUrl(array|null $params): string
+    public static function generatePluginUrl(array|null $params, string $nonceIdField=""): string
     {
-        if ($params) {
-            return self::getCurrentUrl() . '&' . http_build_query($params);
+        if (!$params){
+            $params = [];
+        }
+        $nonceChangingPart ="";
+        if ($nonceIdField && isset($params[$nonceIdField])) {
+            $nonceChangingPart = "_".$params[$nonceIdField];
         }
 
-        return self::getCurrentUrl();
+        $params['_wpnonce'] = wp_create_nonce($params['action'] ? $params['action'].$nonceChangingPart : 'mawiblah_action');
+
+        return self::getCurrentUrl() . '&' . http_build_query($params);
     }
 
     public static function campaignTestResetUrl(int $campaignId): string
     {
-        return self::generatePluginUrl(['action' => 'campaign-test-reset', 'campaignId' => $campaignId]);
+        return self::generatePluginUrl(['action' => 'campaign-test-reset', 'campaignId' => $campaignId], 'campaignId');
     }
 
     public static function campaignTestApproveUrl(int $campaignId): string
     {
-        return self::generatePluginUrl(['action' => 'campaign-test-approve', 'campaignId' => $campaignId]);
+        return self::generatePluginUrl(['action' => 'campaign-test-approve', 'campaignId' => $campaignId], 'campaignId');
     }
 
     public static function emailSendingStats(int $sent=0,int $skipped=0,int $failed=0,int $unsubscribed=0, int $alreadySent=-0, int $doNotDisturb=0, int $emailsDisabled=0, int $notTester=0 ): array{

@@ -40,8 +40,10 @@ on all possible configurations and setups.
 ## Change log
 
 ### --- 1.0.14 ---
-- minor styling fixes
+- styling fixes
 - date format update 
+- back to list after creating campaign
+- routing and layout updates
 
 ![Testing newsletter email](readme-assets/testing-list.jpg)
 

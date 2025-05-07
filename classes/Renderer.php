@@ -84,7 +84,7 @@ class Renderer
                 $debug['existingCampaign'] = null;
 
                 if (Helpers::canEdit()) {
-
+                    check_admin_referer('save-campaign');
 
                     $title = $_POST['title'] ?? "";
                     $subject = $_POST['subject'] ?? "";
@@ -106,7 +106,7 @@ class Renderer
                                 Renderer::campaign_could_not_create($debug);
                             }
                         } else {
-                            $debug['existingCampaign'] = self::getCampaign($title);
+                            $debug['existingCampaign'] = Campaigns::getCampaign($title);
                             Renderer::campaign_already_exists($debug);
                         }
                     } else {

@@ -10,11 +10,9 @@ use Mawiblah\Helpers;
         List of campaigns
     </p>
 
-
     <div class="btn-row">
-        <a class="btn" href="<?= Helpers::generatePluginUrl(['action' => 'create']); ?>">Create new campaign</a>
+        <a class="btn" href="<?= Helpers::generatePluginUrl(['action' => 'create-campaign']); ?>">Create new campaign</a>
     </div>
-
 
     <table class="mawiblah-campaign-list wp-list-table widefat striped table-view-list">
         <thead>
@@ -53,7 +51,9 @@ use Mawiblah\Helpers;
             $status = $campaign->post_status;
 
             $campaignFinished = false;
-            $finished = 'disabled';
+            $editDisabled = '';
+            $sendDisabled = 'disabled';
+            $deleteDisabled='';
 
             $testButtonText = __('Test', 'mawiblah');
             if ($campaign->testFinished) {
@@ -62,14 +62,15 @@ use Mawiblah\Helpers;
 
             if ($campaign->testApproved) {
                 $testButtonText = __('Test (approved)', 'mawiblah');
-                $finished = '';
+                $deleteDisabled = 'disabled';
+                $editDisabled= 'disabled';
+                $sendDisabled = '';
             }
 
             if ($campaign->campaignFinished) {
                 $campaignButtonText = __('Test (finished)', 'mawiblah');
                 $campaignFinished = true;
             }
-
 
             if ($campaignFinished) {
                 echo "<td colspan='4'>
@@ -80,13 +81,13 @@ use Mawiblah\Helpers;
                     <a class='btn link-send campaign-actions' data-type='send' data-href='" . Helpers::generatePluginUrl(['action' => 'test', 'campaignId' => $campaign->id]) . "'>" . $testButtonText . "</a>
                 </td>";
                 echo "<td>
-                        <a class='btn btn-danger link-send campaign-actions $finished' data-type='send' data-href='" . Helpers::generatePluginUrl(['action' => 'campaign-send', 'campaignId' => $campaign->id]) . "'>Send</a>
+                        <a class='btn btn-danger link-send campaign-actions $sendDisabled' data-type='send' data-href='" . Helpers::generatePluginUrl(['action' => 'campaign-send', 'campaignId' => $campaign->id], 'campaignId') . "'>Send</a>
                     </td>";
                 echo "<td>
-                    <a class='btn btn-warning link-delete campaign-actions $finished' data-type='delete' data-href='" . Helpers::generatePluginUrl(['action' => 'delete', 'campaignId' => $campaign->id]) . "'>Delete</a>
+                    <a class='btn btn-warning link-delete campaign-actions $deleteDisabled' data-type='delete' data-href='" . Helpers::generatePluginUrl(['action' => 'campaign-delete', 'campaignId' => $campaign->id], 'campaignId') . "'>Delete</a>
                     </td>";
                 echo "<td>
-                    <a class='btn link-edit campaign-actions $finished' data-type='edit' data-href='" . Helpers::generatePluginUrl(['action' => 'edit', 'campaignId' => $campaign->id]) . "'>Edit</a>
+                    <a class='btn link-edit campaign-actions $editDisabled' data-type='edit' data-href='" . Helpers::generatePluginUrl(['action' => 'campaign-edit', 'campaignId' => $campaign->id], 'campaignId') . "'>Edit</a>
                 </td>";
             }
 

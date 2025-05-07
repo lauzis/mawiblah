@@ -29,7 +29,7 @@
             ?>
             <div class="alert alert-danger">
                 <strong>Test finished</strong>
-                <p>Test was already finished. You can not test it again.</p>
+                <p>Test was already finished. You cannot test it again.</p>
                 <div class="flex flex-row space-between">
                     <a class="btn btn-secondary" href="<?= Helpers::campaignTestResetUrl($campaignId) ?>"
                        class="btn btn-primary">Retest</a>

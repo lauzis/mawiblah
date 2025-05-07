@@ -136,7 +136,7 @@ class RestRoutes
         $doNotDisturbThreshold = Settings::dontDisturbThreshold();
         $lastInteraction = $subscriber->lastInteraction;
         $currentTime = time();
-        $timeDiff = $currentTime - $lastInteraction;
+        $timeDiff = $currentTime - (int) $lastInteraction;
         $subscriberDontDisturb = $timeDiff < $doNotDisturbThreshold;
         $timeLeftInSeconds = $doNotDisturbThreshold - $timeDiff;
         $days = floor($timeLeftInSeconds / (60 * 60 * 24));

@@ -37,6 +37,30 @@ This is a free plugin, so support is limited.
 The main idea is to create functionality that is needed for the particular project. There is no intention to make it work
 on all possible configurations and setups.
 
+## 📊 MAWIBLAH vs Mailchimp
+
+| Feature                          | MAWIBLAH                                         | Mailchimp (Free Tier)                      | Mailchimp (Essentials / Paid)          |
+|----------------------------------|--------------------------------------------------|--------------------------------------------|----------------------------------------|
+| **Price**                        | Free                                             | Free (up to 500 subs, 1k emails/month)      | Starts at ~$13/month (scales by size)  |
+| **Subscriber Limit**            | Unlimited (practical limits apply)               | 500 (Free), 2,500 (Essentials base)         | Scales with plan                       |
+| **Email Sending**               | One-by-one (slower, lower server load)           | Batch sending via Mailchimp servers         | Batch sending, faster delivery         |
+| **SMTP / Delivery Backend**     | Uses WordPress mail system (SMTP or `wp_mail`)   | Mailchimp’s dedicated infrastructure        | Same                                   |
+| **Form Integration**            | Gravity Forms                                    | Native signup forms                         | Advanced forms, popups                 |
+| **Email Templates**             | Shortcode-based + HTML                           | Drag-and-drop editor                        | Advanced email builder                 |
+| **Automation**                  | ❌ Not available at current version              | ✅ Basic (welcome emails)                   | ✅ Multi-step automation               |
+| **Click Tracking**              | ✅ Basic (clicks & timing logged)                | ✅ Basic reports                             | ✅ Advanced click stats                |
+| **Open Tracking**               | ❌ No tracking at current version                | ✅                                           | ✅                                      |
+| **Unsubscribe Support**         | ✅ Simple unsubscribe                            | ✅ Compliant unsubscribe handling            | ✅                                      |
+| **Import/Export Subscribers**   | ✅ Manual + Gravity Forms                        | ✅                                           | ✅                                      |
+| **List Segmentation**           | ✅ Basic segmentation                            | ✅ Basic segmentation                        | ✅ Advanced targeting                   |
+| **Analytics & Reports**         | ✅ Basic logging                                  | ✅ Basic dashboard                           | ✅ Detailed analytics                   |
+| **Support & Reliability**       | ⚠️ DIY, limited support                          | ✅ Knowledge base, community                 | ✅ Priority email/chat support         |
+| **Customization**               | ✅ Full access to plugin code                    | ❌ Closed-source                             | ❌ Limited customization                |
+
+> 💡 **MAWIBLAH** is ideal for technical users or small projects with limited budgets who need full control and no recurring cost.
+
+
+
 ## Change log
 
 ### --- 1.0.14 ---

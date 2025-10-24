@@ -36,6 +36,13 @@ class RestRoutes
         $email = $post['email'];
         $lastItem = $post['lastItem'] ?? false;
 
+        // Initialize or retrieve current counters
+        $currentCounters = Campaigns::getCounters((object)['id' => $campaignId]);
+        $emailsSent = (int)($currentCounters->emailsSend ?? 0);
+        $emailsFailed = (int)($currentCounters->emailsFailed ?? 0);
+        $emailsSkipped = (int)($currentCounters->emailsSkipped ?? 0);
+        $emailsUnsubed = (int)($currentCounters->emailsUnsubed ?? 0);
+
         if (!is_numeric($campaignId) || !is_numeric($subscriberId)) {
             return [
                 'stats' => Helpers::emailSendingStats(skipped:1),
@@ -95,6 +102,11 @@ class RestRoutes
         //----------------------------------------------------
         $unsubscribed = $subscriber->unsubed;
         if ($unsubscribed) {
+            if (!$testMode) {
+                $emailsUnsubed++;
+                Campaigns::updateCounters($campaign, $emailsSent, $emailsFailed, $emailsSkipped, $emailsUnsubed);
+            }
+            
             return [
                 'stats' => Helpers::emailSendingStats(unsubscribed:1),
                 'data' => [
@@ -144,6 +156,11 @@ class RestRoutes
         $daysHoursSecondsLeft = $days."d ".gmdate("H:i:s", $timeLeftInSeconds);
 
         if ($subscriberDontDisturb){
+            if (!$testMode) {
+                $emailsSkipped++;
+                Campaigns::updateCounters($campaign, $emailsSent, $emailsFailed, $emailsSkipped, $emailsUnsubed);
+            }
+            
             return [
                 'stats' => Helpers::emailSendingStats(doNotDisturb:1),
                 'data' => [
@@ -265,6 +282,8 @@ class RestRoutes
 
             if(!$testMode) {
                 Subscribers::sentEmail($subscriber->id, $campaign->id);
+                $emailsSent++;
+                Campaigns::updateCounters($campaign, $emailsSent, $emailsFailed, $emailsSkipped, $emailsUnsubed);
             }
 
             Logs::addLog("Email sent to {$email} successfully!", "Email sent to {$email} successfully!", [
@@ -305,6 +324,8 @@ class RestRoutes
 
         if (!$testMode) {
             Subscribers::sentEmailFailed($subscriber->id, $campaign->id);
+            $emailsFailed++;
+            Campaigns::updateCounters($campaign, $emailsSent, $emailsFailed, $emailsSkipped, $emailsUnsubed);
         }
 
         Logs::addLog("Email sending to {$email} failed!", "Email sending to {$email} failed!", [

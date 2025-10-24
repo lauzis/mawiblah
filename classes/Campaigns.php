@@ -237,6 +237,35 @@ class Campaigns
         return $campaigns;
     }
 
+    public static function getLastCampaigns(int $limit = 5): array
+    {
+        $wpQuery = new \WP_Query([
+            'post_type' => self::postType(),
+            'posts_per_page' => $limit,
+            'orderby' => 'date',
+            'order' => 'DESC',
+        ]);
+
+        $campaigns = [];
+        if ($wpQuery->have_posts()) {
+            while ($wpQuery->have_posts()) {
+                $wpQuery->the_post();
+
+                $campaign = (object)[
+                    'id' => get_the_ID(),
+                    'post_title' => get_the_title(),
+                    'post_content' => get_the_content(),
+                    'post_status' => get_post_status(),
+                ];
+                $campaign = self::appendMeta($campaign);
+                $campaigns[] = $campaign;
+            }
+            wp_reset_postdata();
+        }
+
+        return $campaigns;
+    }
+
     public static function addCampaign(string $title, string $subject, string $contentTitle, string $content, array $audiences, string $template): int
     {
 

@@ -470,6 +470,7 @@ class Campaigns
     public static function testStart(int $campaignId): void
     {
         update_post_meta($campaignId, 'testStarted', time());
+        self::resetCounters($campaignId);
     }
 
     public static function testFinish( int $campaignId): void
@@ -491,11 +492,23 @@ class Campaigns
 
     public static function campaignStart(int $campaignId): void
     {
+        $campaign = self::getCampaignById($campaignId);
+        if (!$campaign->campaignStarted) {
+            self::resetCounters($campaignId);
+        }
         update_post_meta($campaignId, 'campaignStarted', time());
     }
 
     public static function campaignFinish(int $campaignId): void
     {
         update_post_meta($campaignId, 'campaignFinished', time());
+    }
+
+    public static function resetCounters(int $campaignId): void
+    {
+        update_post_meta($campaignId, 'emailsSend', 0);
+        update_post_meta($campaignId, 'emailsFailed', 0);
+        update_post_meta($campaignId, 'emailsSkipped', 0);
+        update_post_meta($campaignId, 'emailsUnsubed', 0);
     }
 }

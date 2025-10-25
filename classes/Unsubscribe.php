@@ -7,15 +7,16 @@ class Unsubscribe
     public static function init()
     {
         if (isset($_GET['subscriberId']) && isset($_GET['unsubscribe'])) {
+            $campaignId = isset($_GET['campaignId']) ? sanitize_text_field($_GET['campaignId']) : null;
             if (!isset($_GET['unsubToken'])) {
-                self::unsubscribe($_GET['unsubscribe'], $_GET['subscriberId']);
+                self::unsubscribe($_GET['unsubscribe'], $_GET['subscriberId'], $campaignId);
             } else {
-                self::unsubscribeAprooved($_GET['subscriberId'],$_GET['unsubscribe'], $_GET['unsubToken']);
+                self::unsubscribeAprooved($_GET['subscriberId'],$_GET['unsubscribe'], $_GET['unsubToken'], $campaignId);
             }
         }
     }
 
-    public static function unsubscribe(string $email, string $subscriberId): array
+    public static function unsubscribe(string $email, string $subscriberId, ?string $campaignId = null): array
     {
         $subscriber = Subscribers::getSubscriber($email);
 
@@ -64,12 +65,13 @@ class Unsubscribe
         ]);
     }
 
-    public static function unsubscribeAprooved($subscriberId, $email, $unsubToken)
+    public static function unsubscribeAprooved($subscriberId, $email, $unsubToken, ?string $campaignId = null)
     {
         $debug = [
             'subscriberId' => $subscriberId,
             'email' => $email,
-            'unsubToken' => $unsubToken
+            'unsubToken' => $unsubToken,
+            'campaignId' => $campaignId
         ];
         $subscriber = Subscribers::getSubscriber($email);
         $debug['subscriber'] = $subscriber;
@@ -90,6 +92,15 @@ class Unsubscribe
                     if (!empty($feedback)) {
                         add_post_meta($subscriber->id, 'unsubed_feedback', $feedback, false);
                     }
+                    
+                    // Increment newly unsubscribed counter for the campaign
+                    if ($campaignId) {
+                        $campaign = Campaigns::getCampaignByCampaignId($campaignId);
+                        if ($campaign) {
+                            Campaigns::incrementNewlyUnsubed($campaign->id);
+                        }
+                    }
+                    
                     include(MAWIBLAH_TEMPLATE_DIR . '/unsubscribe/unsubed.php');
                     exit;
                 } else {

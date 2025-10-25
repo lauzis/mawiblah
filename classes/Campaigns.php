@@ -136,6 +136,7 @@ class Campaigns
         $post->emailsFailed = get_post_meta($post->id, 'emailsFailed', true);
         $post->emailsSkipped = get_post_meta($post->id, 'emailsSkipped', true);
         $post->emailsUnsubed = get_post_meta($post->id, 'emailsUnsubed', true);
+        $post->emailsNewlyUnsubed = get_post_meta($post->id, 'emailsNewlyUnsubed', true) ?? 0;
 
         $post->testStarted = get_post_meta($post->id, 'testStarted', true) ?? false;
         $post->testFinished = get_post_meta($post->id, 'testFinished', true) ?? false;
@@ -422,7 +423,17 @@ class Campaigns
             'emailsFailed' => get_post_meta($capmaign->id, 'emailsFailed', true),
             'emailsSkipped' => get_post_meta($capmaign->id, 'emailsSkipped', true),
             'emailsUnsubed' => get_post_meta($capmaign->id, 'emailsUnsubed', true),
+            'emailsNewlyUnsubed' => get_post_meta($capmaign->id, 'emailsNewlyUnsubed', true) ?? 0,
         ];
+    }
+
+    public static function incrementNewlyUnsubed($campaignId): void
+    {
+        $campaign = self::getCampaignById($campaignId);
+        if ($campaign) {
+            $current = (int)($campaign->emailsNewlyUnsubed ?? 0);
+            update_post_meta($campaignId, 'emailsNewlyUnsubed', $current + 1);
+        }
     }
 
     public static function linkCLicked($campaignId, $url): int

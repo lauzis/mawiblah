@@ -99,10 +99,12 @@ function mawiblah_init(): void
     \Mawiblah\Visits::init();
     \Mawiblah\Logs::init();
     \Mawiblah\GravityForms::init();
-    \Mawiblah\Actions::init();
 }
 
 add_action('init', 'mawiblah_init');
+
+// Dashboard widget needs to be registered earlier
+\Mawiblah\Actions::init();
 
 function mawiblah_load_textdomain()
 {

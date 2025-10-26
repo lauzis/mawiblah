@@ -287,6 +287,7 @@ class Campaigns
             update_post_meta($post_id, 'audiences', $audiences);
             update_post_meta($post_id, 'subject', $subject);
             update_post_meta($post_id, 'contentTitle', $contentTitle);
+            update_post_meta($post_id, 'emailsNewlyUnsubed', 0);
 
         }
 
@@ -510,5 +511,6 @@ class Campaigns
         update_post_meta($campaignId, 'emailsFailed', 0);
         update_post_meta($campaignId, 'emailsSkipped', 0);
         update_post_meta($campaignId, 'emailsUnsubed', 0);
+        update_post_meta($campaignId, 'emailsNewlyUnsubed', 0);
     }
 }

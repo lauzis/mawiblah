@@ -27,9 +27,11 @@ So... "Fine... will do my own Mailchimp... with blackjack and hookers"
 - Includes unsubscribe functionality.
 - Imports a list of unsubscribed users from Mailchimp.
 - Imports the audience from Gravity Form entries.
-- Tracks clicks for the campaigns.
+- Tracks clicks for the campaigns (both total and unique per session).
 - Tracks the timing of clicks for the campaigns.
-- Logs the actions. 
+- Logs the actions.
+
+📖 **[View detailed documentation](DOCUMENTATION.md)** for feature detailed explanations.
 
 ## Support
 This is a free plugin, so support is limited.

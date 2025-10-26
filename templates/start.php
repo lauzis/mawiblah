@@ -1,40 +1,12 @@
 <div class="wrap mawiblah">
 
-    <h1>FU M Mail</h1>
-    <p>
-        Fine. I will do it myself. I will make my own mailchinp with blackjack and hookers.
-    </p>
+    <h1>Mawiblah</h1>
+
+    <section>
+        <h2>Campaign stats</h2>
 
 
-
-
-
-
-
-    <h2>Gravity forms (Audiences)</h2>
-    <table>
-        <thead>
-        <tr>
-            <th>Id</th>
-            <th>Name</th>
-            <th>Actions</th>
-        </tr>
-        </thead>
-        <tbody>
-        <?php
-        $forms = \Mawiblah\GravityForms::getArrayOfGravityForms();
-        foreach ($forms as $form) {
-            echo "<tr>";
-            echo "<td>" . $form['id'] . "</td>";
-            echo "<td>" . $form['title'] . "</td>";
-            echo "<td><a href=''>Edit</a> | <a href=''>Delete</a></td>";
-            echo "</tr>";
-        }
-        ?>
-        </tbody>
-    </table>
-
-
+    </section>
 
     <h2>List of email templates</h2>
     <table>

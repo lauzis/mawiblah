@@ -101,4 +101,24 @@ class Templates
 
         return $template;
     }
+
+    public static function getTemplatePath( string $templatePath ):string {
+        $theme_template_paths = array(
+            trailingslashit( get_stylesheet_directory() ) .'mawiblah/'. $templatePath , // Child/Active Theme
+            trailingslashit( get_template_directory('mawiblah') ) .'mawiblah/'. $templatePath ,    // Parent Theme
+            MAWIBLAH_TEMPLATES_PATH .'/'. $templatePath ,
+        );
+
+        foreach ($theme_template_paths as $template_path) {
+            if (file_exists($template_path)) {
+                return $template_path;
+            }
+        }
+
+        return MAWIBLAH_TEMPLATES_PATH. 'missingTemplate.php';
+    }
+
+    public static function loadTemplate(string $templatePath, mixed $data){
+        include self::getTemplatePath($templatePath);
+    }
 }

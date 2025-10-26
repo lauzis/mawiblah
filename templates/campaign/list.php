@@ -27,6 +27,7 @@ use Mawiblah\Helpers;
             <th>Emails failed</th>
             <th>Emails skipped</th>
             <th>Emails unsubed</th>
+            <th>Unique visitors</th>
             <th>Links clicked</th>
             <th colspan="4">Actions</th>
         </tr>
@@ -47,6 +48,7 @@ use Mawiblah\Helpers;
             echo "<td>" . $campaign->emailsFailed . "</td>";
             echo "<td>" . $campaign->emailsSkipped . "</td>";
             echo "<td>" . $campaign->emailsUnsubed . "</td>";
+            echo "<td>" . $campaign->uniqueUserClicks . "</td>";
             echo "<td>" . $campaign->linksClicked . "</td>";
             $status = $campaign->post_status;
 

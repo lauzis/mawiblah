@@ -65,6 +65,14 @@ on all possible configurations and setups.
 
 ## Change log
 
+### --- 1.0.15 ---
+- Added comprehensive campaign statistics tracking with new counters
+- Implemented tracking for newly unsubscribed users per campaign (`emailsNewlyUnsubed`)
+- Enhanced click tracking with dual metrics (total clicks vs unique session clicks)
+- Added detailed documentation (DOCUMENTATION.md) explaining all campaign fields and counters
+- Campaign statistics now update correctly during test runs
+- Improved counter initialization and update mechanisms
+
 ### --- 1.0.14 ---
 - styling fixes
 - date format update 

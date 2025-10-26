@@ -129,6 +129,7 @@ class Campaigns
         $post->status = get_post_meta($post->id, 'status', true);
         $post->linksClicked = get_post_meta($post->id, 'linksClicked', true) ?? 0;
         $post->linksClickedTotal = get_post_meta($post->id, 'linksClickedTotal', true) ?? 0;
+        $post->uniqueUserClicks = get_post_meta($post->id, 'uniqueUserClicks', true) ?? 0;
         $post->links = json_decode(get_post_meta($post->id, 'links', true) ?? '[]', true);
         $post->campaignId = get_post_meta($post->id, 'campaignId', true);
 
@@ -448,6 +449,14 @@ class Campaigns
         if (!session_id()) {
             session_start();
         }
+        
+        // Track unique user clicks (once per subscriber per campaign)
+        $isNewUser = !isset($_SESSION['campaignId']) || !isset($_SESSION['subscriberId']);
+        if ($isNewUser) {
+            $currentUniqueUsers = ( int ) $campaign->uniqueUserClicks ?? 0;
+            update_post_meta($campaign->id, 'uniqueUserClicks', $currentUniqueUsers + 1);
+        }
+        
         if (isset($_SESSION['campaignId']) && isset($_SESSION['subscriberId']) &&  isset($_SESSION[$url])) {
             return $campaign->linksClicked;
         }
@@ -512,5 +521,8 @@ class Campaigns
         update_post_meta($campaignId, 'emailsSkipped', 0);
         update_post_meta($campaignId, 'emailsUnsubed', 0);
         update_post_meta($campaignId, 'emailsNewlyUnsubed', 0);
+        update_post_meta($campaignId, 'linksClicked', 0);
+        update_post_meta($campaignId, 'linksClickedTotal', 0);
+        update_post_meta($campaignId, 'uniqueUserClicks', 0);
     }
 }

@@ -34,6 +34,7 @@ Each campaign in MAWIBLAH tracks various metrics and metadata stored as WordPres
 ### Click Tracking Counters
 - **`linksClickedTotal`** - Total number of all link clicks (includes duplicates from same user/session)
 - **`linksClicked`** - Unique link clicks per session (duplicate clicks from same session don't count)
+- **`uniqueUserClicks`** - Number of unique users/subscribers who clicked any link in the campaign (counted once per subscriber)
 - **`links`** - JSON object tracking individual URL click counts: `{"https://example.com": 5, "https://example.com/page": 3}`
 - **`click_time`** - Timestamps of when links were clicked (stored as multiple meta entries for timing analysis)
 
@@ -46,14 +47,24 @@ Each campaign in MAWIBLAH tracks various metrics and metadata stored as WordPres
 
 ### Counter Usage Examples
 
-**Calculating engagement rate:**
+**Calculating unique user engagement rate:**
 ```
-Engagement Rate = (linksClicked / emailsSend) * 100
+User Engagement Rate = (uniqueUserClicks / emailsSend) * 100
+```
+
+**Calculating engagement rate (unique link clicks):**
+```
+Link Engagement Rate = (linksClicked / emailsSend) * 100
 ```
 
 **Calculating total interactions:**
 ```
 Total Interactions = linksClickedTotal
+```
+
+**Calculating average clicks per engaged user:**
+```
+Avg Clicks Per User = linksClickedTotal / uniqueUserClicks
 ```
 
 **Calculating campaign effectiveness:**
@@ -68,7 +79,7 @@ Unsubscribe Rate = (emailsNewlyUnsubed / emailsSend) * 100
 
 ## Click Tracking
 
-MAWIBLAH tracks link clicks in two different ways to provide both total engagement metrics and unique visitor insights:
+MAWIBLAH tracks link clicks in three different ways to provide comprehensive engagement metrics:
 
 ### linksClickedTotal
 **Total clicks including duplicates**
@@ -88,20 +99,33 @@ This metric counts only unique clicks per user session. If a subscriber clicks t
 - Incremented only once per URL per session
 - Duplicate clicks from same subscriber/session are ignored
 - Session is tracked using PHP sessions with `campaignId`, `subscriberId`, and URL
-- Useful for measuring unique visitor engagement
-- Example: If one person clicks a link 5 times, this counts as 1
+- Useful for measuring unique link engagement
+- Example: If one person clicks 3 different links, this counts as 3
+
+### uniqueUserClicks
+**Unique visitors/users**
+
+This metric counts the number of unique subscribers who clicked any link in the campaign. Each subscriber is counted only once, regardless of how many links they click.
+
+- Incremented only once per subscriber per campaign
+- Tracks unique visitors who engaged with the campaign
+- Session is tracked using PHP sessions with `campaignId` and `subscriberId`
+- Useful for measuring reach and user-level engagement
+- Example: If one person clicks 5 different links multiple times, this counts as 1
 
 ### Implementation Details
 
 When a link is clicked:
-1. `linksClickedTotal` is always incremented
-2. Session is checked for existing visit (`$_SESSION['campaignId']`, `$_SESSION['subscriberId']`, `$_SESSION[$url]`)
-3. If session already exists, `linksClicked` is NOT incremented
-4. If new session, `linksClicked` IS incremented and session variables are set
+1. `linksClickedTotal` is always incremented (every click)
+2. Session is checked for existing campaign/subscriber visit
+3. If new subscriber (no `campaignId` or `subscriberId` in session), `uniqueUserClicks` IS incremented
+4. If URL was not clicked in this session (`$_SESSION[$url]` not set), `linksClicked` IS incremented
+5. If session already exists for that URL, only `linksClickedTotal` is updated
 
-This dual-tracking approach gives you both:
-- **Total engagement** (how many times content was accessed)
-- **Unique reach** (how many different visits/sessions engaged)
+This triple-tracking approach gives you:
+- **Total engagement** (linksClickedTotal: how many times content was accessed)
+- **Unique link engagement** (linksClicked: how many different links were clicked across sessions)
+- **Unique user reach** (uniqueUserClicks: how many different subscribers engaged)
 
 ## Email Templates
 

@@ -525,4 +525,37 @@ class Campaigns
         update_post_meta($campaignId, 'linksClickedTotal', 0);
         update_post_meta($campaignId, 'uniqueUserClicks', 0);
     }
+
+    public static function getDataForDashBoard($limit)
+    {
+        $lastCampaigns = Campaigns::getLastCampaigns($limit);
+
+        $skipped = [];
+        $sent = [];
+        $unsubscribed = [];
+        $newlyUnsubscribed = [];
+        $failed = [];
+        $uniqueUsers = [];
+        $linksClicked = [];
+
+        foreach ($lastCampaigns as $lastCampaign) {
+            $skipped[] = is_numeric($lastCampaign->emailsSkipped) ? $lastCampaign->emailsSkipped : 0;
+            $sent[] = is_numeric($lastCampaign->emailsSend) ? $lastCampaign->emailsSend : 0;
+            $unsubscribed[] = is_numeric($lastCampaign->emailsUnsubed) ? $lastCampaign->emailsUnsubed : 0;
+            $newlyUnsubscribed[] = is_numeric($lastCampaign->emailsNewlyUnsubed) ? $lastCampaign->emailsNewlyUnsubed : 0;
+            $failed[] = is_numeric($lastCampaign->emailsFailed) ? $lastCampaign->emailsFailed : 0;
+            $uniqueUsers[] = is_numeric($lastCampaign->uniqueUserClicks) ? $lastCampaign->uniqueUserClicks : 0;
+            $linksClicked[] = is_numeric($lastCampaign->linksClicked) ? $lastCampaign->linksClicked : 0;
+        }
+
+        return [
+            'skipped' => $skipped,
+            'sent' => $sent,
+            'unsubscribed' => $unsubscribed,
+            'newlyUnsubscribed' => $newlyUnsubscribed,
+            'failed' => $failed,
+            'uniqueUsers' => $uniqueUsers,
+            'linksClicked' => $linksClicked,
+        ];
+    }
 }

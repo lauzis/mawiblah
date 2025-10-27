@@ -23,6 +23,18 @@ $maxSentEmails = max($data['sent']) ?: 1;
             </div>
         <?php endforeach; ?>
     </div>
+    <div class="stats-box-email-sent-labels">
+        <div>
+            <span class="mawiblah-stats-square green"></span>Sent emails
+        </div>
+        <div>
+            <span class="mawiblah-stats-square yellow"></span>Unique user visits
+        </div>
+        <div>
+            <span class="mawiblah-stats-square"></span>Unique clicks
+        </div>
+    </div>
+
 </div>
 
 <style>
@@ -85,6 +97,41 @@ $maxSentEmails = max($data['sent']) ?: 1;
     .mawiblah-stats-bar.yellow {
         background-color: #fff7bf;
         border-color: #ddc200;
+    }
+
+    .mawiblah-stats-square {
+        background-color: #bfe5f6;
+        border-width: 2px;
+        border-style: solid;
+        border-color: #0096dd;
+        border-radius: 6px;
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        overflow: hidden;
+        margin-right: 5px;
+    }
+
+    .mawiblah-stats-square.green {
+        background-color: #bff6e0;
+        border-color: #00b871;
+    }
+
+    .mawiblah-stats-square.yellow {
+        background-color: #fff7bf;
+        border-color: #ddc200;
+    }
+
+    .stats-box-email-sent-labels{
+        margin-top:20px;
+
+    }
+    .stats-box-email-sent-labels div {
+        padding:10px 0;
+        line-height: 20px;
+        height:20px;
+        display:flex;
+        flex-direction: row;
     }
 
     .mawiblah-stats-bar div {

@@ -115,7 +115,7 @@ class Templates
             }
         }
 
-        return MAWIBLAH_TEMPLATES_PATH. 'missingTemplate.php';
+        return MAWIBLAH_TEMPLATES_PATH. '/missingTemplate.php';
     }
 
     public static function loadTemplate(string $templatePath, mixed $data){

@@ -1,38 +1,76 @@
 <?php
-$maxLinksClicked = max($data['linksClicked']) ?: 1;
-$maxUniqueUsers = max($data['uniqueUsers']) ?: 1;
-$maxSentEmails = max($data['sent']) ?: 1;
+
+$colors = [
+        'green',
+        'yellow',
+        'blue',
+        'red',
+        'purple',
+        'cyan',
+        'magenta',
+];
+$keys = array_keys($data);
+
+$maxArray = [];
+$avgArray = [];
+
+$arrayItemCount = 0;
+$maxOfMax = 0;
+foreach ($keys as $key) {
+    $arrayItemCount = max($arrayItemCount, count($data[$key]));
+    $maxArray[$key] = max($data[$key]) ?: 1;
+    $avgArray[$key] = array_sum($data[$key]) / (count($data[$key]) ?: 1);
+}
+$maxOfMax = max($maxArray);
+$oneItem = $arrayItemCount === 1;
 ?>
 <div class="stats-box-email-container">
     <div class="stats-box-email-sent">
-        <?php foreach ($data['linksClicked'] as $index => $clicks): ?>
-            <?php
-            $uniqueUsers = $data['uniqueUsers'][$index];
-            $sentEmails = $data['sent'][$index];
-            ?>
+        <?php foreach ($data[$keys[0]] as $index => $clicks): ?>
             <div class="stats-box-bar-group">
-                <div class="mawiblah-stats-bar green" style="height:<?= floor($sentEmails / $maxSentEmails * 100); ?>%">
-                    <div><?= $sentEmails ?></div>
-                </div>
-                <div class="mawiblah-stats-bar yellow" style="height:<?= floor($uniqueUsers / $maxUniqueUsers * 100); ?>%">
-                    <div><?= $uniqueUsers ?></div>
-                </div>
-                <div class="mawiblah-stats-bar" style="height:<?= floor($clicks / $maxLinksClicked * 100); ?>%">
-                    <div><?= $clicks ?></div>
-                </div>
+                <?php foreach ($keys as $colorIndex => $k2): ?>
+                    <?php
+                    $count = $data[$k2][$index];
+                    $max = $oneItem ? $maxOfMax : $maxArray[$k2];
+                    $color = $colors[$colorIndex];
+                    ?>
+                    <div class="mawiblah-stats-bar <?= $color; ?>" style="height:<?= floor($count / $max * 100); ?>%">
+                        <div><?= $count ?></div>
+                    </div>
+                <?php endforeach; ?>
             </div>
         <?php endforeach; ?>
     </div>
     <div class="stats-box-email-sent-labels">
-        <div>
-            <span class="mawiblah-stats-square green"></span>Sent emails
-        </div>
-        <div>
-            <span class="mawiblah-stats-square yellow"></span>Unique user visits
-        </div>
-        <div>
-            <span class="mawiblah-stats-square"></span>Unique clicks
-        </div>
+        <table>
+            <thead>
+            <tr>
+                <th></th>
+                <th>Max</th>
+                <th>Avg</th>
+            </tr>
+            </thead>
+            <tbody>
+            <?php foreach ($keys as $colorIndex => $k2): ?>
+                <tr>
+                    <td>
+                        <div>
+                            <?php $color = $colors[$colorIndex]; ?>
+                            <span class="mawiblah-stats-square <?= $color ?>"></span><?= $k2; ?>
+                        </div>
+                    </td>
+                    <td align="right">
+                        <?= $maxArray[$k2] ?>
+                    </td>
+                    <td align="right">
+                        <?= $avgArray[$k2] ?>
+                    </td>
+                </tr>
+
+            <?php endforeach; ?>
+            </tbody>
+        </table>
+
     </div>
 
 </div>
@@ -49,7 +87,7 @@ $maxSentEmails = max($data['sent']) ?: 1;
     .stats-box-email-sent {
         position: relative;
         bottom: 0;
-        height: 200px;
+        height: 300px;
         width: 100%;
         background-color: #F0F0F0;
         display: flex;
@@ -99,6 +137,26 @@ $maxSentEmails = max($data['sent']) ?: 1;
         border-color: #ddc200;
     }
 
+    .mawiblah-stats-bar.red {
+        background-color: #ff9999; /* A medium-light red */
+        border-color: #990000; /* A deep, dark red */
+    }
+
+    .mawiblah-stats-bar.purple {
+        background-color: #c990ff; /* A medium-light purple */
+        border-color: #4d0099; /* A very deep purple */
+    }
+
+    .mawiblah-stats-bar.purple {
+        background-color: #80ffff; /* A bright, light cyan */
+        border-color: #00bfff; /* A deep sky blue/azure that complements the cyan */
+    }
+
+    .mawiblah-stats-bar.magenta {
+        background-color: #ff99ff; /* A medium-light magenta/fuchsia */
+        border-color: #990099; /* A deep, slightly darker purple-magenta */
+    }
+
     .mawiblah-stats-square {
         background-color: #bfe5f6;
         border-width: 2px;
@@ -122,15 +180,53 @@ $maxSentEmails = max($data['sent']) ?: 1;
         border-color: #ddc200;
     }
 
-    .stats-box-email-sent-labels{
-        margin-top:20px;
-
+    .mawiblah-stats-square.red {
+        background-color: #ff9999; /* A medium-light red */
+        border-color: #990000; /* A deep, dark red */
     }
+
+    .mawiblah-stats-square.purple {
+        background-color: #c990ff; /* A medium-light purple */
+        border-color: #4d0099; /* A very deep purple */
+    }
+
+    .mawiblah-stats-square.purple {
+        background-color: #80ffff; /* A bright, light cyan */
+        border-color: #00bfff; /* A deep sky blue/azure that complements the cyan */
+    }
+
+    .mawiblah-stats-square.magenta {
+        background-color: #ff99ff; /* A medium-light magenta/fuchsia */
+        border-color: #990099; /* A deep, slightly darker purple-magenta */
+    }
+
+
+    .stats-box-email-sent-labels {
+        margin-top: 20px;
+    }
+
+    .stats-box-email-sent-labels table,
+    .stats-box-email-sent-labels table tr td {
+        border-width: 1px;
+        border-style: solid;
+        border-color: gray;
+        border-collapse: collapse;
+    }
+
+    .stats-box-email-sent-labels table tr th {
+        padding: 20px;
+        font-size: 18px;
+    }
+
+    .stats-box-email-sent-labels table tr td {
+        padding: 5px 20px;
+    }
+
     .stats-box-email-sent-labels div {
-        padding:10px 0;
+        padding: 10px 0;
         line-height: 20px;
-        height:20px;
-        display:flex;
+        height: 20px;
+        display: flex;
         flex-direction: row;
     }
 

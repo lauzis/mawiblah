@@ -16,7 +16,7 @@ class Actions
     public static function registerDashboardWidget()
     {
         wp_add_dashboard_widget(
-            'gudlnenieks_stats_sent_out_emails_widget',
+            'mawiblah_dashboard_widget',
             esc_html__('Mawiblah - Campaign stats', 'mawiblah'),
             [self::class, 'renderDashboardWidget']
         );
@@ -24,7 +24,11 @@ class Actions
 
     public static function renderDashboardWidget()
     {
-        $data = Campaigns::getDataForDashBoard(5);
+        $data = Campaigns::getDataForDashBoard(3);
+        unset($data['unsubscribed']);
+        unset($data['skipped']);
+        unset($data['newlyUnsubscribed']);
+        unset($data['failed']);
         Templates::loadTemplate('campaign/bar-graph.php', $data);
     }
 }

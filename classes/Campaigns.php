@@ -558,4 +558,48 @@ class Campaigns
             'linksClicked' => $linksClicked,
         ];
     }
+
+    public static function getDataForDashBoardConversionRate($limit)
+    {
+        $lastCampaigns = Campaigns::getLastCampaigns($limit);
+
+        $skipped = [];
+        $sent = [];
+        $unsubscribed = [];
+        $newlyUnsubscribed = [];
+        $failed = [];
+        $uniqueUsers = [];
+        $linksClicked = [];
+
+        foreach ($lastCampaigns as $lastCampaign) {
+
+            $totalLinksCount = $lastCampaign->links ? count($lastCampaign->links) : 1;
+            $skip = is_numeric($lastCampaign->emailsSkipped) ? $lastCampaign->emailsSkipped : 0;
+            $sentCount = is_numeric($lastCampaign->emailsSend) ? $lastCampaign->emailsSend : 0;
+            $newlyUnsubscribedCount = is_numeric($lastCampaign->emailsNewlyUnsubed) ? $lastCampaign->emailsNewlyUnsubed : 0;
+            $failedCount = is_numeric($lastCampaign->emailsFailed) ? $lastCampaign->emailsFailed : 0;
+            $uniqueUsersCount = is_numeric($lastCampaign->uniqueUserClicks) ? $lastCampaign->uniqueUserClicks : 0;
+            $linksClickedCount = is_numeric($lastCampaign->linksClicked) ? $lastCampaign->linksClicked : 0;
+            $total = $skip + $sentCount + $failedCount;
+            $total = $total === 0 ? 1 : $total;
+            $unsubed = is_numeric($lastCampaign->emailsUnsubed) ? $lastCampaign->emailsUnsubed : 0;
+            $skipped[] = round($skip/$total*100,2);
+            $sent[] = round($sentCount/$total*100,2);
+            $unsubscribed[] = round($unsubed/($total+$unsubed)*100,2);
+            $newlyUnsubscribed[] = round($newlyUnsubscribedCount/$total*100, 2);
+            $failed[] = round($failedCount/$total*100,2);
+            $uniqueUsers[] = round($uniqueUsersCount/$total*100,2);
+            $linksClicked[] = round($linksClickedCount/($totalLinksCount*$total),2);
+        }
+
+        return [
+            'skipped' => $skipped,
+            'sent' => $sent,
+            'unsubscribed' => $unsubscribed,
+            'newlyUnsubscribed' => $newlyUnsubscribed,
+            'failed' => $failed,
+            'uniqueUsers' => $uniqueUsers,
+            'linksClicked' => $linksClicked,
+        ];
+    }
 }

@@ -1,3 +1,9 @@
+<?php if (!isset($data) || !is_array($data) || count($data) === 0): ?>
+    <div class="stats-box-email-container">
+        <?= _e('No data to display.', 'maiblah'); ?>
+    </div>
+<?php endif; ?>
+
 <?php
 
 $colors = [

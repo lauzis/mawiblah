@@ -5,13 +5,14 @@ use Mawiblah\Templates;
 
 ?>
 <style>
-    .graph-wrap{
+    .graph-wrap {
         background-color: #FFF;
-        padding:20px;
+        padding: 20px;
     }
+
     .wrap.mawiblah section h2 {
-        font-size:24px;
-        margin-top:48px;
+        font-size: 24px;
+        margin-top: 48px;
     }
 </style>
 <div class="wrap mawiblah">
@@ -23,11 +24,11 @@ use Mawiblah\Templates;
         <div class="graph-wrap">
             <?php
             $data = Campaigns::getDataForDashBoard(12);
-            $dataForDisplay['Sent emails'] = $data['sent'];
-            $dataForDisplay['Sending failed'] = $data['failed'];
-            $dataForDisplay['Links clicked'] = $data['linksClicked'];
-
-
+            $dataForDisplay = [
+                    'Sent emails' => $data['sent'],
+                    'Sending failed' => $data['failed'],
+                    'Links clicked' => $data['linksClicked'],
+            ];
             Templates::loadTemplate('campaign/bar-graph.php', $dataForDisplay);
             ?>
         </div>
@@ -38,8 +39,10 @@ use Mawiblah\Templates;
         <div class="graph-wrap">
             <?php
             $data = Campaigns::getDataForDashBoardConversionRate(12);
-            $dataForDisplay['Sent emails'] = $data['sent'];
-            $dataForDisplay['Sending failed'] = $data['failed'];
+            $dataForDisplay = [
+                    'Sent emails' => $data['sent'],
+                    'Sending failed' => $data['failed']
+            ];
             Templates::loadTemplate('campaign/bar-graph.php', $dataForDisplay);
             ?>
         </div>
@@ -59,13 +62,13 @@ use Mawiblah\Templates;
             $data = Campaigns::getDataForDashBoard(1);
 
             $dataForDisplay = [
-                    'Email sending failed'=> $data['failed'],
-                    'Email sending skipped'=> $data['skipped'],
-                    'Unsubscribed'=> $data['unsubscribed'],
-                    'Newly unsubscribed'=> $data['newlyUnsubscribed'],
-                    'Sent emails'=> $data['sent'],
-                    'User opened'=> $data['uniqueUsers'],
-                    'Links clicked'=> $data['linksClicked']
+                    'Email sending failed' => $data['failed'],
+                    'Email sending skipped' => $data['skipped'],
+                    'Unsubscribed' => $data['unsubscribed'],
+                    'Newly unsubscribed' => $data['newlyUnsubscribed'],
+                    'Sent emails' => $data['sent'],
+                    'User opened' => $data['uniqueUsers'],
+                    'Links clicked' => $data['linksClicked']
             ];
             Templates::loadTemplate('campaign/bar-graph.php', $dataForDisplay);
             ?>
@@ -76,25 +79,25 @@ use Mawiblah\Templates;
 
 
         <?php if ($campaignTitle): ?>
-        <h2><?=$campaignTitle ?> - latest campaign conversion rate</h2>
-        <div class="graph-wrap">
-            <?php
+            <h2><?= $campaignTitle ?> - latest campaign conversion rate</h2>
+            <div class="graph-wrap">
+                <?php
 
-            $data = Campaigns::getDataForDashBoardConversionRate(1);
+                $data = Campaigns::getDataForDashBoardConversionRate(1);
 
-            $dataForDisplay = [
-                    'Email sending failed'=> $data['failed'],
-                    'Email sending skipped'=> $data['skipped'],
-                    'Unsubscribed'=> $data['unsubscribed'],
-                    'Newly unsubscribed'=> $data['newlyUnsubscribed'],
-                    'Sent emails'=> $data['sent'],
-                    'User opened'=> $data['uniqueUsers'],
-                    'Links clicked'=> $data['linksClicked']
-            ];
+                $dataForDisplay = [
+                        'Email sending failed' => $data['failed'],
+                        'Email sending skipped' => $data['skipped'],
+                        'Unsubscribed' => $data['unsubscribed'],
+                        'Newly unsubscribed' => $data['newlyUnsubscribed'],
+                        'Sent emails' => $data['sent'],
+                        'User opened' => $data['uniqueUsers'],
+                        'Links clicked' => $data['linksClicked']
+                ];
 
-            Templates::loadTemplate('campaign/bar-graph.php', $dataForDisplay);
-            ?>
-        </div>
+                Templates::loadTemplate('campaign/bar-graph.php', $dataForDisplay);
+                ?>
+            </div>
         <?php endif; ?>
     </section>
 

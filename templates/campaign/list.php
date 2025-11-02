@@ -42,7 +42,16 @@ use Mawiblah\Helpers;
             echo "<td>" . $campaign->post_title . "</td>";
             echo "<td>" . $campaign->subject . "</td>";
             echo "<td>" . $campaign->template . "</td>";
-            echo "<td>" . implode(",", $campaign->audiences) . "</td>";
+            $audienceNames = [];
+            if (is_array($campaign->audiences)) {
+                foreach ($campaign->audiences as $audienceId) {
+                    $audience = \Mawiblah\Subscribers::getAudience($audienceId);
+                    if ($audience) {
+                        $audienceNames[] = $audience->name;
+                    }
+                }
+            }
+            echo "<td>" . implode(", ", $audienceNames) . "</td>";
             echo "<td>" . $campaign->status . "</td>";
             echo "<td>" . $campaign->emailsSend . "</td>";
             echo "<td>" . $campaign->emailsFailed . "</td>";

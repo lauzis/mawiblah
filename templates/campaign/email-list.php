@@ -2,7 +2,6 @@
     <?php
 
     use Mawiblah\Campaigns;
-    use Mawiblah\GravityForms;
     use Mawiblah\Helpers;
     use Mawiblah\Subscribers;
     use Mawiblah\Settings;
@@ -92,20 +91,22 @@
 
         <?php
 
-        foreach ($audiences as $id) {
-            if (substr_count($id, "GF__") > 0) {
-                $id = str_replace("GF__", "", $id);
-                $audienceName = GravityForms::getFormName($id) . " (Gravity Forms)";
-                $audience = Subscribers::getGFAudience($id, $audienceName);
-                $emails = GravityForms::getAllEmailsForForm($id);
+        foreach ($audiences as $audienceId) {
+            $audience = Subscribers::getAudience($audienceId);
+            if (!$audience) {
+                continue;
+            }
 
-                ?>
+            $audienceName = $audience->name;
+            $subscribers = Subscribers::getSubscribersByAudience($audienceId);
 
-                <table class="mawiblah-email-list wp-list-table widefat striped table-view-list">
-                    <thead>
-                    <tr>
-                        <th colspan="4">Audience: <?= $audienceName ?></th>
-                    </tr>
+            ?>
+
+            <table class="mawiblah-email-list wp-list-table widefat striped table-view-list">
+                <thead>
+                <tr>
+                    <th colspan="4">Audience: <?= $audienceName ?></th>
+                </tr>
 
                     <tr>
                         <th>Email</th>
@@ -114,24 +115,18 @@
                         <th>Status</th>
                     </tr>
 
-                    <?php
-                    foreach ($emails as $email => $info) {
-                        $email = trim(strtolower($email));
+                <?php
+                foreach ($subscribers as $subscriber) {
+                    $email = trim(strtolower($subscriber->email));
 
-                        if (isset($uniqueEmails[$email])) {
-                            $skippingReasons['notUniqueEmail'][] = $email;
-                            continue;
-                        }
-                        $uniqueEmails[$email] = true;
+                    if (isset($uniqueEmails[$email])) {
+                        $skippingReasons['notUniqueEmail'][] = $email;
+                        continue;
+                    }
+                    $uniqueEmails[$email] = true;
 
-                        $index++;
-
-                        $subscriber = Subscribers::getSubscriber($email);
-                        if (!$subscriber) {
-                            $subscriber = Subscribers::addSubscriber($email);
-                        }
-
-                        $subscriberId = $subscriber->id;
+                    $index++;
+                    $subscriberId = $subscriber->id;
 
                         ?>
                         <tr>

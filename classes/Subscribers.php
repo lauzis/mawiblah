@@ -156,8 +156,7 @@ class Subscribers
 
     public static function appendMeta($post)
     {
-
-        $post->id = $post->ID;
+        $post->id = $post->ID ?? $post->id;
         $post->email = get_post_meta($post->id, 'email', true);
         $post->subscriberId = get_post_meta($post->id, 'subscriberId', true);
         $post->unsubToken = get_post_meta($post->id, 'unsubToken', true);
@@ -171,7 +170,7 @@ class Subscribers
             update_post_meta($post->id, 'subscriberId', Helpers::generateSubscriberId($post->id));
         }
 
-        $post->audiences = get_the_terms($post->ID, Subscribers::postType() . '_category');
+        $post->audiences = get_the_terms($post->id, Subscribers::postType() . '_category');
 
         return $post;
     }
@@ -223,6 +222,57 @@ class Subscribers
             return $audience;
         }
         return null;
+    }
+
+    public static function getAllAudiences(): array
+    {
+        $audiences = get_terms([
+            'taxonomy' => Subscribers::postType() . '_category',
+            'hide_empty' => false,
+        ]);
+
+        if (is_wp_error($audiences) || empty($audiences)) {
+            return [];
+        }
+
+        $result = [];
+        foreach ($audiences as $audience) {
+            $result[] = self::appendAudienceMeta((object)$audience);
+        }
+
+        return $result;
+    }
+
+    public static function getSubscribersByAudience(int $audienceId): array
+    {
+        $args = [
+            'post_type' => self::postType(),
+            'posts_per_page' => -1,
+            'tax_query' => [
+                [
+                    'taxonomy' => self::postType() . '_category',
+                    'field' => 'term_id',
+                    'terms' => $audienceId,
+                ],
+            ],
+        ];
+
+        $query = new \WP_Query($args);
+        $subscribers = [];
+
+        if ($query->have_posts()) {
+            while ($query->have_posts()) {
+                $query->the_post();
+                $subscriber = (object)[
+                    'id' => get_the_ID(),
+                    'post_title' => get_the_title(),
+                ];
+                $subscribers[] = self::appendMeta($subscriber);
+            }
+            wp_reset_postdata();
+        }
+
+        return $subscribers;
     }
 
     public static function addSubscriber(string $email, string $subscriberId = ""): object
@@ -282,28 +332,22 @@ class Subscribers
 
     public static function validateAudiences(array $audiences): bool
     {
-        $gravityForms = GravityForms::getArrayOfGravityForms();
-        $validAudiences = [];
+        if (empty($audiences)) {
+            return false;
+        }
 
-        foreach ($audiences as $key => $audience) {
+        $allAudiences = self::getAllAudiences();
+        $validAudienceIds = array_map(function($aud) {
+            return $aud->term_id;
+        }, $allAudiences);
 
-            if (substr_count($audience, "GF__")) {
-                $audience = str_replace("GF__", "", $audience);
-                foreach ($gravityForms as $gravityForm) {
-                    $gravityFormId = $gravityForm['id'];
-
-                    if (intval($audience) === $gravityFormId) {
-                        $validAudiences[] = $audience;
-                    }
-                }
+        foreach ($audiences as $audienceId) {
+            if (!in_array((int)$audienceId, $validAudienceIds)) {
+                return false;
             }
         }
 
-        if (count($validAudiences) === count($audiences)) {
-            return true;
-        }
-
-        return false;
+        return true;
     }
 
     public static function getGFAudience($gravityFormId, $title = "", $description = ""): object|null

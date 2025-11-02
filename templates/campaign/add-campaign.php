@@ -31,18 +31,17 @@
 
             <label for="audiences">Audiences</label>
             <?php
-                $audiences = \Mawiblah\GravityForms::getArrayOfGravityForms();
+                $audiences = \Mawiblah\Subscribers::getAllAudiences();
             ?>
             <select name="audiences[]" id="audiences" multiple>
-
                 <?php foreach ($audiences as $audience): ?>
                     <?php $selected = ''; ?>
-                    <?php if (isset($campaign) && in_array("GF__{$audience['id']}" ,$campaign->audiences)) {
+                    <?php if (isset($campaign) && is_array($campaign->audiences) && in_array($audience->term_id, $campaign->audiences)) {
                         $selected = 'selected';
                     } ?>
-                    <option <?= $selected ?> value="GF__<?= $audience['id'] ?>">
-                        <?= $audience['title'] ?>
-                    </option>;
+                    <option <?= $selected ?> value="<?= $audience->term_id ?>">
+                        <?= $audience->name ?>
+                    </option>
                 <?php endforeach; ?>
             </select>
 

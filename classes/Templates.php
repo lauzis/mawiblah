@@ -121,4 +121,9 @@ class Templates
     public static function loadTemplate(string $templatePath, mixed $data){
         include self::getTemplatePath($templatePath);
     }
+
+    public static function renderTable(array $headers, array $data): void
+    {
+        self::loadTemplate('campaign/table-stats.php', compact('headers', 'data'));
+    }
 }

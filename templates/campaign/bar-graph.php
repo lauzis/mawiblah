@@ -215,7 +215,7 @@ $oneItem = $arrayItemCount === 1;
     .stats-box-email-sent-labels table tr td {
         border-width: 1px;
         border-style: solid;
-        border-color: gray;
+        border-color: #0003;
         border-collapse: collapse;
     }
 
@@ -226,6 +226,10 @@ $oneItem = $arrayItemCount === 1;
 
     .stats-box-email-sent-labels table tr td {
         padding: 5px 20px;
+    }
+
+    .stats-box-email-sent-labels table tr:nth-child(2n) td {
+        background-color:#F6F7F7;
     }
 
     .stats-box-email-sent-labels div {

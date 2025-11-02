@@ -25,10 +25,12 @@ class Actions
     public static function renderDashboardWidget()
     {
         $data = Campaigns::getDataForDashBoard(3);
-        unset($data['unsubscribed']);
-        unset($data['skipped']);
-        unset($data['newlyUnsubscribed']);
-        unset($data['failed']);
-        Templates::loadTemplate('campaign/bar-graph.php', $data);
+
+        $dataForDisplay = [
+            __('Emails sent', 'mawiblah') => $data['sent'],
+            __('Unique visitors', 'mawiblah') => $data['uniqueUsers'],
+            __('Links opened', 'mawiblah') => $data['linksClicked'],
+        ];
+        Templates::loadTemplate('campaign/bar-graph.php', $dataForDisplay);
     }
 }

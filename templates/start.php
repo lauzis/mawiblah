@@ -20,14 +20,14 @@ use Mawiblah\Templates;
     <h1>Mawiblah</h1>
 
     <section>
-        <h2>Campaigns raw numbers</h2>
+        <h2><?= __('Campaigns raw numbers', 'mawiblah'); ?></h2>
         <div class="graph-wrap">
             <?php
             $data = Campaigns::getDataForDashBoard(12);
             $dataForDisplay = [
-                    'Sent emails' => $data['sent'],
-                    'Sending failed' => $data['failed'],
-                    'Links clicked' => $data['linksClicked'],
+                    __('Sent emails','mawiblah') => $data['sent'],
+                    __('Sending failed','mawiblah') => $data['failed'],
+                    __('Links clicked','mawiblah') => $data['linksClicked'],
             ];
             Templates::loadTemplate('campaign/bar-graph.php', $dataForDisplay);
             ?>
@@ -35,13 +35,13 @@ use Mawiblah\Templates;
     </section>
 
     <section>
-        <h2>Campaigns conversion rates</h2>
+        <h2><?= __('Campaigns conversion rates', 'mawiblah'); ?></h2>
         <div class="graph-wrap">
             <?php
             $data = Campaigns::getDataForDashBoardConversionRate(12);
             $dataForDisplay = [
-                    'Sent emails' => $data['sent'],
-                    'Sending failed' => $data['failed']
+                    __('Sent emails','mawiblah') => $data['sent'],
+                    __('Sending failed','mawiblah') => $data['failed']
             ];
             Templates::loadTemplate('campaign/bar-graph.php', $dataForDisplay);
             ?>
@@ -49,14 +49,21 @@ use Mawiblah\Templates;
     </section>
 
     <?php
-    $campaing = Campaigns::getLastCampaigns(1);
+    $campaings = Campaigns::getLastCampaigns(1);
     $campaignTitle = false;
-    if (is_array($campaing)) {
-        $campaignTitle = $campaing[0]->post_title ?? false;
+    $lastCampaing = false;
+    if (is_array($campaings)) {
+        $lastCampaing = $campaings[0];
+        $campaignTitle = $lastCampaing->post_title ?? false;
     }
+
+    if (!$lastCampaing){
+        return;
+    }
+
     ?>
     <section>
-        <h2><?= $campaignTitle ?> - Latest campaign raw</h2>
+        <h2><?= $campaignTitle ?> - <?= __('Latest campaign raw', 'mawiblah'); ?></h2>
         <div class="graph-wrap">
             <?php
             $data = Campaigns::getDataForDashBoard(1);
@@ -76,10 +83,8 @@ use Mawiblah\Templates;
     </section>
 
     <section>
-
-
         <?php if ($campaignTitle): ?>
-            <h2><?= $campaignTitle ?> - latest campaign conversion rate</h2>
+            <h2><?= $campaignTitle ?> - <?= __('Latest campaign conversion rate', 'mawiblah'); ?></h2>
             <div class="graph-wrap">
                 <?php
 

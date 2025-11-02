@@ -21,7 +21,7 @@ Each campaign in MAWIBLAH tracks various metrics and metadata stored as WordPres
 - **`contentTitle`** - Internal title/name for the campaign
 - **`subject`** - Email subject line
 - **`template`** - Email template to use
-- **`audiences`** - Target audience/subscriber groups
+- **`audiences`** - Array of WordPress taxonomy term IDs representing subscriber audiences (uses `mawiblah_subscriber_category` taxonomy)
 - **`status`** - Current campaign status (draft, sending-in-progress, completed, etc.)
 
 ### Email Delivery Counters
@@ -133,16 +133,24 @@ Email templates are created using shortcodes and can include HTML content. Templ
 
 ## Subscriber Management
 
+### Audience/Category Management
+Subscribers are organized using WordPress taxonomy (`mawiblah_subscriber_category`). This provides:
+- **Native WordPress integration** - Uses standard WordPress taxonomy system
+- **Flexible categorization** - Create unlimited audience segments
+- **Easy management** - Manage audiences through WordPress admin interface
+- **Campaign targeting** - Select multiple audiences when creating campaigns
+
 ### Import Sources
-- **Gravity Forms**: Automatically imports from form entries
+- **Gravity Forms**: Automatically imports from form entries (legacy support maintained)
 - **Manual Import**: Add subscribers directly
 - **Mailchimp Import**: Import unsubscribed users from Mailchimp
 
 ### Subscriber Features
 - Unsubscribe functionality with confirmation
-- Last interaction tracking
+- Last interaction tracking (first and last interaction timestamps)
 - Email throttling (configurable time between emails to same subscriber)
 - Duplicate detection (case-insensitive email matching)
+- Taxonomy-based audience assignment
 
 ## Settings
 
@@ -156,3 +164,43 @@ Control the minimum time between emails sent to the same subscriber to avoid ove
 
 ### Click Timing
 Campaign click times are logged to analyze when subscribers are most active, helping optimize send times.
+
+## API Functions
+
+### Audience Management
+**`Subscribers::getAllAudiences(): array`**
+
+Retrieves all available taxonomy audiences:
+```php
+$audiences = Subscribers::getAllAudiences();
+// Returns array of audience objects with term_id, name, description
+```
+
+**`Subscribers::getSubscribersByAudience(int $audienceId): array`**
+
+Gets all subscribers for a specific audience using WordPress tax_query:
+```php
+$subscribers = Subscribers::getSubscribersByAudience($audienceId);
+// Returns array of subscriber objects
+```
+
+**`Subscribers::validateAudiences(array $audiences): bool`**
+
+Validates that audience IDs exist in the taxonomy:
+```php
+$isValid = Subscribers::validateAudiences([1, 2, 3]);
+// Returns true if all audience IDs are valid taxonomy terms
+```
+
+### Table Rendering
+**`Templates::renderTable(array $headers, array $data): void`**
+
+Renders a styled data table using the `campaign/table-stats.php` template:
+```php
+$headers = ['Campaign', 'Sent', 'Failed', 'Opened'];
+$data = [
+    ['Summer Sale', '1000', '5', '750'],
+    ['Winter Newsletter', '850', '3', '620']
+];
+Templates::renderTable($headers, $data);
+```

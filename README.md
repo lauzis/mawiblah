@@ -72,6 +72,17 @@ on all possible configurations and setups.
 - Added detailed documentation (DOCUMENTATION.md) explaining all campaign fields and counters
 - Campaign statistics now update correctly during test runs
 - Improved counter initialization and update mechanisms
+- **Major:** Migrated audience system from Gravity Forms to WordPress native taxonomy
+  - Campaigns now use `mawiblah_subscriber_category` taxonomy for audience management
+  - Removed hardcoded Gravity Forms dependencies from campaign creation and email sending
+  - Added `Subscribers::getAllAudiences()` to retrieve all taxonomy audiences
+  - Added `Subscribers::getSubscribersByAudience()` for efficient subscriber querying via tax_query
+  - Updated `Subscribers::validateAudiences()` to validate taxonomy term IDs
+- **New:** Added `Campaigns::updateCampaignStats()` function to calculate and update campaign statistics from subscriber meta data
+- **New:** Added `Templates::renderTable()` for rendering styled data tables using template files
+- **Improved:** Campaign list now displays human-readable audience names instead of IDs
+- **Fixed:** Resolved undefined property error in `Subscribers::appendMeta()` for better compatibility with both ID and id properties
+- **Documentation:** Updated DOCUMENTATION.md with new API functions and taxonomy audience system explanation
 
 ### --- 1.0.14 ---
 - styling fixes

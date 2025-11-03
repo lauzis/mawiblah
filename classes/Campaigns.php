@@ -477,6 +477,79 @@ class Campaigns
         return (int) $campaign->linksClicked + 1;
     }
 
+    public static function getClickTimesByDayOfWeek($campaignId): array
+    {
+        $campaign = self::getCampaignByCampaignId($campaignId);
+        if (!$campaign) {
+            return [];
+        }
+
+        $clickTimes = get_post_meta($campaign->id, 'click_time', false);
+        
+        if (empty($clickTimes)) {
+            return [
+                'Monday' => 0,
+                'Tuesday' => 0,
+                'Wednesday' => 0,
+                'Thursday' => 0,
+                'Friday' => 0,
+                'Saturday' => 0,
+                'Sunday' => 0
+            ];
+        }
+
+        $dayStats = [
+            'Monday' => 0,
+            'Tuesday' => 0,
+            'Wednesday' => 0,
+            'Thursday' => 0,
+            'Friday' => 0,
+            'Saturday' => 0,
+            'Sunday' => 0
+        ];
+
+        foreach ($clickTimes as $timestamp) {
+            $dayOfWeek = date('l', (int)$timestamp);
+            if (isset($dayStats[$dayOfWeek])) {
+                $dayStats[$dayOfWeek]++;
+            }
+        }
+
+        return $dayStats;
+    }
+
+    public static function getClickTimesByHourOfDay($campaignId): array
+    {
+        $campaign = self::getCampaignByCampaignId($campaignId);
+        if (!$campaign) {
+            return [];
+        }
+
+        $clickTimes = get_post_meta($campaign->id, 'click_time', false);
+        
+        if (empty($clickTimes)) {
+            $hourStats = [];
+            for ($i = 0; $i < 24; $i++) {
+                $hourStats[$i] = 0;
+            }
+            return $hourStats;
+        }
+
+        $hourStats = [];
+        for ($i = 0; $i < 24; $i++) {
+            $hourStats[$i] = 0;
+        }
+
+        foreach ($clickTimes as $timestamp) {
+            $hour = (int)date('G', (int)$timestamp);
+            if (isset($hourStats[$hour])) {
+                $hourStats[$hour]++;
+            }
+        }
+
+        return $hourStats;
+    }
+
     public static function testStart(int $campaignId): void
     {
         update_post_meta($campaignId, 'testStarted', time());

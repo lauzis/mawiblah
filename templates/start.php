@@ -106,6 +106,24 @@ use Mawiblah\Templates;
         <?php endif; ?>
     </section>
 
+    <?php if ($campaignTitle): ?>
+        <section>
+            <h2><?= $campaignTitle ?> - <?= __('Links clicked', 'mawiblah'); ?></h2>
+            <?php
+            $headers = [__('Links'), __('Click count')];
+            $data = [];
+
+            asort($lastCampaing->links);
+            $lastCampaing->links  = array_reverse($lastCampaing->links) ;
+            foreach ($lastCampaing->links as $link => $clickCount) {
+                $data[] = [$link, $clickCount];
+            }
+
+
+            Templates::renderTable($headers, $data);
+            ?>
+        </section>
+    <?php endif; ?>
 
 </div>
 

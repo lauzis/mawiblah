@@ -122,8 +122,9 @@ class Templates
         include self::getTemplatePath($templatePath);
     }
 
-    public static function renderTable(array $headers, array $data): void
+    public static function renderTable(array $headers, array $rows): void
     {
-        self::loadTemplate('campaign/table-stats.php', compact('headers', 'data'));
+        $data = ['headers' => $headers, 'rows' => $rows];
+        self::loadTemplate('campaign/table-stats.php',$data);
     }
 }

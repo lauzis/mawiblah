@@ -25,9 +25,9 @@ use Mawiblah\Templates;
             <?php
             $data = Campaigns::getDataForDashBoard(12);
             $dataForDisplay = [
-                    __('Sent emails','mawiblah') => $data['sent'],
-                    __('Sending failed','mawiblah') => $data['failed'],
-                    __('Links clicked','mawiblah') => $data['linksClicked'],
+                    __('Sent emails', 'mawiblah') => $data['sent'],
+                    __('Sending failed', 'mawiblah') => $data['failed'],
+                    __('Links clicked', 'mawiblah') => $data['linksClicked'],
             ];
             Templates::loadTemplate('campaign/bar-graph.php', $dataForDisplay);
             ?>
@@ -40,8 +40,8 @@ use Mawiblah\Templates;
             <?php
             $data = Campaigns::getDataForDashBoardConversionRate(12);
             $dataForDisplay = [
-                    __('Sent emails','mawiblah') => $data['sent'],
-                    __('Sending failed','mawiblah') => $data['failed']
+                    __('Sent emails', 'mawiblah') => $data['sent'],
+                    __('Sending failed', 'mawiblah') => $data['failed']
             ];
             Templates::loadTemplate('campaign/bar-graph.php', $dataForDisplay);
             ?>
@@ -57,7 +57,7 @@ use Mawiblah\Templates;
         $campaignTitle = $lastCampaing->post_title ?? false;
     }
 
-    if (!$lastCampaing){
+    if (!$lastCampaing) {
         return;
     }
 
@@ -119,11 +119,39 @@ use Mawiblah\Templates;
                 $data[] = [$link, $clickCount];
             }
 
-
             Templates::renderTable($headers, $data);
             ?>
         </section>
     <?php endif; ?>
+
+    <?php if ($campaignTitle): ?>
+        <section>
+            <h2><?= $campaignTitle ?> - <?= __('Active days', 'mawiblah'); ?></h2>
+            <?php
+                $activeDays = Campaigns::getClickTimesByDayOfWeek($lastCampaing->id);
+                $dataForBarGraph = [];
+                $dataForBarGraph[__('Weekdays')] = [];
+                $headers=['Day','Count'];
+                $data = [];
+
+                foreach($activeDays as $day=>$count) {
+                    $dataForBarGraph[__('Weekdays')][] = $count;
+                    $data[] = [Templates::getDayTranslation($day), $count];
+                }
+            ?>
+
+            <div class="graph-wrap">
+                <?php Templates::loadTemplate('campaign/bar-graph.php', $dataForBarGraph); ?>
+            </div>
+            <div class="graph-wrap">
+                <?php
+                Templates::renderTable($headers, $data);
+                ?>
+            </div>
+
+        </section>
+    <?php endif; ?>
+
 
 </div>
 

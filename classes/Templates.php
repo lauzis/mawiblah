@@ -118,7 +118,7 @@ class Templates
         return MAWIBLAH_TEMPLATES_PATH. '/missingTemplate.php';
     }
 
-    public static function loadTemplate(string $templatePath, mixed $data){
+    public static function loadTemplate(string $templatePath, mixed $data) {
         include self::getTemplatePath($templatePath);
     }
 
@@ -126,5 +126,18 @@ class Templates
     {
         $data = ['headers' => $headers, 'rows' => $rows];
         self::loadTemplate('campaign/table-stats.php',$data);
+    }
+
+    public static function getDayTranslation($day){
+        return match ($day) {
+            'Monday' => __('Monday', 'mawiblah'),
+            'Tuesday' => __('Tuesday', 'mawiblah'),
+            'Wednesday' => __('Wednesday', 'mawiblah'),
+            'Thursday' => __('Thursday', 'mawiblah'),
+            'Friday' => __('Friday', 'mawiblah'),
+            'Saturday' => __('Saturday', 'mawiblah'),
+            'Sunday' => __('Sunday', 'mawiblah'),
+            default => $day,
+        };
     }
 }

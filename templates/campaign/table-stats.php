@@ -9,7 +9,7 @@ if (!isset($headers) || !isset($rows) || !is_array($headers) || !is_array($rows)
     </div>
     <?php return; ?>
 <?php endif; ?>
-aaaaaaaaaaaa
+
 <div class="mawiblah-table-container">
     <table class="mawiblah-stats-table">
         <thead>
@@ -30,7 +30,7 @@ aaaaaaaaaaaa
         </tbody>
     </table>
 </div>
-bbbbbbbbbbbbb
+
 <style>
     .mawiblah-table-container {
         width: 100%;

@@ -376,7 +376,7 @@ class Campaigns
 
         $templateHTML = Templates::copyTemplate($campaignId, $testMode);
 
-        if ($templateHTML=== false) {
+        if ($templateHTML === false) {
             return false;
         }
 
@@ -420,7 +420,7 @@ class Campaigns
 
     public static function getCounters($capmaign): object
     {
-        return (object) [
+        return (object)[
             'emailsSend' => get_post_meta($capmaign->id, 'emailsSend', true),
             'emailsFailed' => get_post_meta($capmaign->id, 'emailsFailed', true),
             'emailsSkipped' => get_post_meta($capmaign->id, 'emailsSkipped', true),
@@ -441,7 +441,7 @@ class Campaigns
     public static function linkCLicked($campaignId, $url): int
     {
         $campaign = self::getCampaignByCampaignId($campaignId);
-        $currentCountTotal = ( int ) $campaign->linksClickedTotal ?? 0;
+        $currentCountTotal = ( int )$campaign->linksClickedTotal ?? 0;
         update_post_meta($campaign->id, 'linksClickedTotal', $currentCountTotal + 1);
 
         // lets check if visit is in session already
@@ -449,43 +449,43 @@ class Campaigns
         if (!session_id()) {
             session_start();
         }
-        
+
         // Track unique user clicks (once per subscriber per campaign)
         $isNewUser = !isset($_SESSION['campaignId']) || !isset($_SESSION['subscriberId']);
         if ($isNewUser) {
-            $currentUniqueUsers = ( int ) $campaign->uniqueUserClicks ?? 0;
+            $currentUniqueUsers = ( int )$campaign->uniqueUserClicks ?? 0;
             update_post_meta($campaign->id, 'uniqueUserClicks', $currentUniqueUsers + 1);
         }
-        
-        if (isset($_SESSION['campaignId']) && isset($_SESSION['subscriberId']) &&  isset($_SESSION[$url])) {
+
+        if (isset($_SESSION['campaignId']) && isset($_SESSION['subscriberId']) && isset($_SESSION[$url])) {
             return $campaign->linksClicked;
         }
 
-        $currentCount = ( int ) $campaign->linksClicked ?? 0;
+        $currentCount = ( int )$campaign->linksClicked ?? 0;
         update_post_meta($campaign->id, 'linksClicked', $currentCount + 1);
 
         $links = $campaign->links;
         if (isset($links[$url])) {
-            $links[$url] = (int) $links[$url] + 1;
+            $links[$url] = (int)$links[$url] + 1;
         } else {
             $links[$url] = 1;
         }
         update_post_meta($campaign->id, 'links', json_encode($links));
 
-        add_post_meta($campaign->id, 'click_time', time(),false);
+        add_post_meta($campaign->id, 'click_time', time(), false);
 
-        return (int) $campaign->linksClicked + 1;
+        return (int)$campaign->linksClicked + 1;
     }
 
-    public static function getClickTimesByDayOfWeek($campaignId): array
+    public static function getClickTimesByDayOfWeek(int $campaignId): array
     {
-        $campaign = self::getCampaignByCampaignId($campaignId);
+        $campaign = self::getCampaignById($campaignId);
         if (!$campaign) {
             return [];
         }
 
         $clickTimes = get_post_meta($campaign->id, 'click_time', false);
-        
+
         if (empty($clickTimes)) {
             return [
                 'Monday' => 0,
@@ -526,7 +526,7 @@ class Campaigns
         }
 
         $clickTimes = get_post_meta($campaign->id, 'click_time', false);
-        
+
         if (empty($clickTimes)) {
             $hourStats = [];
             for ($i = 0; $i < 24; $i++) {
@@ -556,7 +556,7 @@ class Campaigns
         self::resetCounters($campaignId);
     }
 
-    public static function testFinish( int $campaignId): void
+    public static function testFinish(int $campaignId): void
     {
         update_post_meta($campaignId, 'testFinished', time());
     }

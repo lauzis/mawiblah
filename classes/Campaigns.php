@@ -399,6 +399,7 @@ class Campaigns
         $campaignId = $campaign->id;
         $templateHTML = do_shortcode($template);
         $templateHTML = str_replace('[gdlnks_newsletter_title]', $campaign->post_title, $templateHTML);
+
         $templateHTML = str_replace('[gdlnks_newsletter_content]', get_the_content($campaign->id), $templateHTML);
 
         $templateHTML = str_replace('{campaignId}', $campaign->campaignId, $templateHTML);
@@ -445,12 +446,12 @@ class Campaigns
     public static function linkCLicked($campaignId, $url): int
     {
         $campaign = self::getCampaignByCampaignId($campaignId);
-        
+
         if (!$campaign) {
             Logs::addLog('Campaign not found', 'Campaign not found', ['campaignId' => $campaignId, 'url' => $url]);
             return 0;
         }
-        
+
         $currentCountTotal = ( int )$campaign->linksClickedTotal ?? 0;
         update_post_meta($campaign->id, 'linksClickedTotal', $currentCountTotal + 1);
 
@@ -530,12 +531,13 @@ class Campaigns
 
     public static function getClickTimesByHourOfDay($campaignId): array
     {
-        $campaign = self::getCampaignByCampaignId($campaignId);
+        $campaign = self::getCampaignById($campaignId);
         if (!$campaign) {
             return [];
         }
 
         $clickTimes = get_post_meta($campaign->id, 'click_time', false);
+
 
         if (empty($clickTimes)) {
             $hourStats = [];

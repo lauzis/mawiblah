@@ -24,7 +24,7 @@ $arrayItemCount = 0;
 $maxOfMax = 0;
 foreach ($keys as $key) {
     $arrayItemCount = max($arrayItemCount, count($data[$key]));
-    $maxArray[$key] = max($data[$key]) ?: 1;
+    $maxArray[$key] = (count($data[$key]) > 0) ? (max($data[$key]) ?: 1) : 1;
     $avgArray[$key] = array_sum($data[$key]) / (count($data[$key]) ?: 1);
 }
 $maxOfMax = max($maxArray);

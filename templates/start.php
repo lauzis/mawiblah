@@ -8,17 +8,33 @@ use Mawiblah\Templates;
     .graph-wrap {
         background-color: #FFF;
         padding: 20px;
+        grid-template-columns: 1fr;
+        display: grid;
     }
 
     .wrap.mawiblah section h2 {
         font-size: 24px;
         margin-top: 48px;
+        line-height: normal;
     }
+
+    @media (min-width: 968px) {
+        .wrap.mawiblah {
+
+            display: grid;
+            gap:20px;
+            grid-template-columns: 1fr 1fr;
+        }
+        .wrap.mawiblah section {
+
+        }
+    }
+
 </style>
-<div class="wrap mawiblah">
+<h1>Mawiblah</h1>
 
-    <h1>Mawiblah</h1>
 
+    <div class="wrap mawiblah">
     <section>
         <h2><?= __('Campaigns raw numbers', 'mawiblah'); ?></h2>
         <div class="graph-wrap">

@@ -108,12 +108,14 @@
                     <th colspan="4">Audience: <?= $audienceName ?></th>
                 </tr>
 
-                    <tr>
-                        <th>Email</th>
-                        <th>First interaction</th>
-                        <th>Last interaction</th>
-                        <th>Status</th>
-                    </tr>
+                <tr>
+                    <th>Email</th>
+                    <th>First interaction</th>
+                    <th>Last interaction</th>
+                    <th>Status</th>
+                </tr>
+                </thead>
+                <tbody>
 
                 <?php
                 foreach ($subscribers as $subscriber) {
@@ -128,31 +130,29 @@
                     $index++;
                     $subscriberId = $subscriber->id;
 
-                        ?>
-                        <tr>
-                            <td><?= $subscriber->email; ?></td>
-                            <td><?= esc_html( date_i18n( 'Y-m-d H:i:s', $subscriber->firstInteraction ) ); ?></td>
-                            <td><?= esc_html( date_i18n( 'Y-m-d H:i:s', $subscriber->lastInteraction ) ); ?></td>
-                            <td>
-                                <div id="<?= $campaignId ?>-<?= $subscriberId ?>"
-                                     class="mawiblah-campaign-action test"
-                                     data-campaign-id="<?= $campaignId ?>"
-                                     data-subscriber-id="<?= $subscriberId ?>"
-                                     data-subscriber-email="<?= $email ?>">
-                                    Status
-                                </div>
-                            </td>
-                        </tr>
-                        <?php
+                    ?>
+                    <tr>
+                        <td><?= $subscriber->email; ?></td>
+                        <td><?= esc_html( date_i18n( 'Y-m-d H:i:s', $subscriber->firstInteraction ) ); ?></td>
+                        <td><?= esc_html( date_i18n( 'Y-m-d H:i:s', $subscriber->lastInteraction ) ); ?></td>
+                        <td>
+                            <div id="<?= $campaignId ?>-<?= $subscriberId ?>"
+                                 class="mawiblah-campaign-action test"
+                                 data-campaign-id="<?= $campaignId ?>"
+                                 data-subscriber-id="<?= $subscriberId ?>"
+                                 data-subscriber-email="<?= $email ?>">
+                                Status
+                            </div>
+                        </td>
+                    </tr>
+                    <?php
 
                 }
                 ?>
 
-                    </thead>
-                    <tbody>
-                </table>
-                <?php
-            }
+                </tbody>
+            </table>
+            <?php
         }
     }
     ?>

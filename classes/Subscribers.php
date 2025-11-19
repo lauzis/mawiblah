@@ -156,6 +156,10 @@ class Subscribers
 
     public static function appendMeta($post)
     {
+        if (!$post) {
+            return null;
+        }
+        
         $post->id = $post->ID ?? $post->id;
         $post->email = get_post_meta($post->id, 'email', true);
         $post->subscriberId = get_post_meta($post->id, 'subscriberId', true);
@@ -508,12 +512,22 @@ class Subscribers
             ]
         ]);
 
+        if (empty($postsByMeta)) {
+            return null;
+        }
+
         return self::appendMeta($postsByMeta[0]);
     }
 
     public static function linksClicked($subscriberId)
     {
         $subscriber = self::getSubscriberBySubscriberId($subscriberId);
+        
+        if (!$subscriber) {
+            Logs::addLog('Subscriber not found', '', ['subscriberId' => $subscriberId]);
+            return;
+        }
+        
         $subscriber->activityTotal++;
         update_post_meta($subscriber->id, 'activityTotal', $subscriber->activityTotal);
 

@@ -181,6 +181,10 @@ class Campaigns
             'posts_per_page' => 1,
         ]);
 
+        if (empty($postByMeta)) {
+            return null;
+        }
+
         return self::appendMeta((object)$postByMeta[0]);
     }
 
@@ -441,6 +445,12 @@ class Campaigns
     public static function linkCLicked($campaignId, $url): int
     {
         $campaign = self::getCampaignByCampaignId($campaignId);
+        
+        if (!$campaign) {
+            Logs::addLog('Campaign not found', 'Campaign not found', ['campaignId' => $campaignId, 'url' => $url]);
+            return 0;
+        }
+        
         $currentCountTotal = ( int )$campaign->linksClickedTotal ?? 0;
         update_post_meta($campaign->id, 'linksClickedTotal', $currentCountTotal + 1);
 

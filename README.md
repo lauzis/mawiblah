@@ -66,6 +66,13 @@ on all possible configurations and setups.
 ## Change log
 
 ### --- 1.0.15 ---
+- **New Statistics Dashboard:** Added comprehensive activity tracking:
+  - **Overall active days & Campaign start days:** Combined view to compare when campaigns are sent vs. when users are active.
+  - **Activity rating:** A calculated ratio of active days to campaign start days to identify optimal sending times.
+  - **Overall active hours:** Aggregated hourly click data for the last 12 campaigns.
+
+![Statistics dashboard](readme-assets/stats.png)
+
 - Added comprehensive campaign statistics tracking with new counters
 - Implemented tracking for newly unsubscribed users per campaign (`emailsNewlyUnsubed`)
 - Enhanced click tracking with dual metrics (total clicks vs unique session clicks)

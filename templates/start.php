@@ -12,9 +12,18 @@ use Mawiblah\Templates;
         display: grid;
     }
 
+    h1 {
+        font-size: 36px;
+    }
+
+    h2 {
+        font-size: 28px;
+        line-height: normal;
+    }
+
     .wrap.mawiblah section h2 {
         font-size: 24px;
-        margin-top: 48px;
+        margin-top: 24px;
         line-height: normal;
     }
 
@@ -33,37 +42,50 @@ use Mawiblah\Templates;
 </style>
 <h1>Mawiblah</h1>
 
-
+<h2>Overall statistics</h2>
     <div class="wrap mawiblah">
     <section>
-        <h2><?= __('Campaigns raw numbers', 'mawiblah'); ?></h2>
+        <h2><?= __('Campaigns sent emails', 'mawiblah'); ?></h2>
         <div class="graph-wrap">
             <?php
             $data = Campaigns::getDataForDashBoard(12);
+            $dataRate = Campaigns::getDataForDashBoardConversionRate(12);
             $dataForDisplay = [
                     __('Sent emails', 'mawiblah') => $data[Campaigns::STAT_SENT],
-                    __('Sending failed', 'mawiblah') => $data[Campaigns::STAT_FAILED],
-                    __('Links clicked', 'mawiblah') => $data[Campaigns::STAT_LINKS_CLICKED],
+                    __('Sending failed %', 'mawiblah') => $dataRate[Campaigns::STAT_FAILED],
             ];
             Templates::loadTemplate('campaign/bar-graph.php', $dataForDisplay);
             ?>
         </div>
     </section>
 
-    <section>
-        <h2><?= __('Campaigns conversion rates', 'mawiblah'); ?></h2>
-        <div class="graph-wrap">
-            <?php
-            $data = Campaigns::getDataForDashBoardConversionRate(12);
-            $dataForDisplay = [
-                __('Sent emails', 'mawiblah') => $data[Campaigns::STAT_SENT],
-                __('Sending failed', 'mawiblah') => $data[Campaigns::STAT_FAILED],
-                __('Newly unsubscribed','mawiblah')=>$data[Campaigns::STAT_NEWLY_UNSUBSCRIBED],
-            ];
-            Templates::loadTemplate('campaign/bar-graph.php', $dataForDisplay);
-            ?>
-        </div>
-    </section>
+        <section>
+            <h2><?= __('Campaigns links clicked unique users', 'mawiblah'); ?></h2>
+            <div class="graph-wrap">
+                <?php
+                $data = Campaigns::getDataForDashBoard(12);
+                $dataForDisplay = [
+                        __('Sent emails', 'mawiblah') => $data[Campaigns::STAT_SENT],
+                        __('Links clicked', 'mawiblah') => $data[Campaigns::STAT_UNIQUE_USERS],
+                ];
+                Templates::loadTemplate('campaign/bar-graph.php', $dataForDisplay);
+                ?>
+            </div>
+        </section>
+
+        <section>
+            <h2><?= __('Campaigns links clicked total', 'mawiblah'); ?></h2>
+            <div class="graph-wrap">
+                <?php
+                $data = Campaigns::getDataForDashBoard(12);
+                $dataForDisplay = [
+                        __('Sent emails', 'mawiblah') => $data[Campaigns::STAT_SENT],
+                        __('Links clicked', 'mawiblah') => $data[Campaigns::STAT_LINKS_CLICKED],
+                ];
+                Templates::loadTemplate('campaign/bar-graph.php', $dataForDisplay);
+                ?>
+            </div>
+        </section>
 
     <?php
     $campaings = Campaigns::getLastCampaigns(1);
@@ -73,12 +95,17 @@ use Mawiblah\Templates;
         $lastCampaing = $campaings[0];
         $campaignTitle = $lastCampaing->post_title ?? false;
     }
-
+?>
+    </div>
+<?php
     if (!$lastCampaing) {
         return;
     }
 
     ?>
+
+    <h2>Last campaign results</h2>
+    <div class="wrap mawiblah">
     <section>
         <h2><?= $campaignTitle ?> - <?= __('Latest campaign raw', 'mawiblah'); ?></h2>
         <div class="graph-wrap">

@@ -70,6 +70,7 @@ on all possible configurations and setups.
   - **Overall active days & Campaign start days:** Combined view to compare when campaigns are sent vs. when users are active.
   - **Activity rating:** A calculated ratio of active days to campaign start days to identify optimal sending times.
   - **Overall active hours:** Aggregated hourly click data for the last 12 campaigns.
+- **New Dashboard Widget:** Added a dedicated "Activity Rating" widget to the WordPress dashboard for quick access to engagement metrics.
 
 ![Statistics dashboard](readme-assets/stats.png)
 

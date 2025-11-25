@@ -167,7 +167,7 @@ Campaign click times are logged to analyze when subscribers are most active, hel
 
 ## Dashboard Statistics
 
-The dashboard provides comprehensive analytics to help optimize campaign performance:
+The dashboard provides comprehensive analytics to help optimize campaign performance. These statistics are available on the main plugin dashboard and as WordPress dashboard widgets.
 
 ### Overall Active Days & Campaign Start Days
 Compares two datasets to identify alignment between sending schedules and user activity:

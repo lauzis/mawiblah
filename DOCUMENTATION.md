@@ -165,7 +165,52 @@ Control the minimum time between emails sent to the same subscriber to avoid ove
 ### Click Timing
 Campaign click times are logged to analyze when subscribers are most active, helping optimize send times.
 
+## Dashboard Statistics
+
+The dashboard provides comprehensive analytics to help optimize campaign performance:
+
+### Overall Active Days & Campaign Start Days
+Compares two datasets to identify alignment between sending schedules and user activity:
+- **Active Days:** Aggregates click timestamps by day of the week for the last 12 campaigns.
+- **Start Days:** Aggregates campaign start timestamps by day of the week for the last 12 campaigns.
+
+### Activity Rating
+A calculated metric to evaluate the efficiency of sending days:
+```
+Activity Rating = Active Days Count / Campaign Start Days Count
+```
+- **High Rating (>1):** Users are more active on these days than you are sending campaigns (Opportunity).
+- **Low Rating (<1):** You are sending more campaigns than users are engaging with (Potential oversaturation).
+
+### Overall Active Hours
+Aggregates click timestamps by hour of the day (0-23) for the last 12 campaigns to identify peak engagement hours.
+
 ## API Functions
+
+### Campaign Statistics
+**`Campaigns::getClickTimesByDayOfWeekForLastCampaigns(int $limit = 12): array`**
+
+Aggregates click data by day of the week for the specified number of recent campaigns:
+```php
+$stats = Campaigns::getClickTimesByDayOfWeekForLastCampaigns(12);
+// Returns ['Monday' => 50, 'Tuesday' => 30, ...]
+```
+
+**`Campaigns::getCampaignStartTimesByDayOfWeek(int $limit = 12): array`**
+
+Aggregates campaign start times by day of the week:
+```php
+$stats = Campaigns::getCampaignStartTimesByDayOfWeek(12);
+// Returns ['Monday' => 2, 'Tuesday' => 1, ...]
+```
+
+**`Campaigns::getClickTimesByHourOfDayForLastCampaigns(int $limit = 12): array`**
+
+Aggregates click data by hour of the day (0-23):
+```php
+$stats = Campaigns::getClickTimesByHourOfDayForLastCampaigns(12);
+// Returns [0 => 5, 1 => 2, ..., 14 => 150, ...]
+```
 
 ### Audience Management
 **`Subscribers::getAllAudiences(): array`**

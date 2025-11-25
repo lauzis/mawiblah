@@ -74,6 +74,35 @@ use Mawiblah\Templates;
         </section>
 
         <section>
+            <h2><?= __('Activity rating (Active days / Campaign start days)', 'mawiblah'); ?></h2>
+            <?php
+            $activeDays = Campaigns::getClickTimesByDayOfWeekForLastCampaigns(12);
+            $startDays = Campaigns::getCampaignStartTimesByDayOfWeek(12);
+            $dataForBarGraph = [];
+            $dataForBarGraph[__('Weekdays')] = [];
+            $headers=['Day','Rating'];
+            $data = [];
+
+            foreach($activeDays as $day=>$count) {
+                $startCount = $startDays[$day] ?? 0;
+                $rating = $startCount > 0 ? round($count / $startCount, 2) : 0;
+
+                $dataForBarGraph[__('Weekdays')][] = $rating;
+                $data[] = [Templates::getDayTranslation($day), $rating];
+            }
+            ?>
+
+            <div class="graph-wrap">
+                <?php Templates::loadTemplate('campaign/bar-graph.php', $dataForBarGraph); ?>
+            </div>
+            <div class="graph-wrap">
+                <?php
+                Templates::renderTable($headers, $data);
+                ?>
+            </div>
+        </section>
+
+        <section>
             <h2><?= __('Campaigns links clicked total', 'mawiblah'); ?></h2>
             <div class="graph-wrap">
                 <?php
@@ -83,6 +112,81 @@ use Mawiblah\Templates;
                         __('Links clicked', 'mawiblah') => $data[Campaigns::STAT_LINKS_CLICKED],
                 ];
                 Templates::loadTemplate('campaign/bar-graph.php', $dataForDisplay);
+                ?>
+            </div>
+        </section>
+
+        <section>
+            <h2><?= __('Overall active days (last 12 campaigns)', 'mawiblah'); ?></h2>
+            <?php
+            $activeDays = Campaigns::getClickTimesByDayOfWeekForLastCampaigns(12);
+            $dataForBarGraph = [];
+            $dataForBarGraph[__('Weekdays')] = [];
+            $headers=['Day','Count'];
+            $data = [];
+
+            foreach($activeDays as $day=>$count) {
+                $dataForBarGraph[__('Weekdays')][] = $count;
+                $data[] = [Templates::getDayTranslation($day), $count];
+            }
+            ?>
+
+            <div class="graph-wrap">
+                <?php Templates::loadTemplate('campaign/bar-graph.php', $dataForBarGraph); ?>
+            </div>
+            <div class="graph-wrap">
+                <?php
+                Templates::renderTable($headers, $data);
+                ?>
+            </div>
+        </section>
+
+        <section>
+            <h2><?= __('Overall active hours (last 12 campaigns)', 'mawiblah'); ?></h2>
+            <?php
+            $activeHours = Campaigns::getClickTimesByHourOfDayForLastCampaigns(12);
+            $dataForBarGraph = [];
+            $dataForBarGraph[__('Hours')] = [];
+            $headers=['Hour','Count'];
+            $data = [];
+
+            foreach($activeHours as $hour=>$count) {
+                $dataForBarGraph[__('Hours')][] = $count;
+                $data[] = [$hour . ':00', $count];
+            }
+            ?>
+
+            <div class="graph-wrap">
+                <?php Templates::loadTemplate('campaign/bar-graph.php', $dataForBarGraph); ?>
+            </div>
+            <div class="graph-wrap">
+                <?php
+                Templates::renderTable($headers, $data);
+                ?>
+            </div>
+        </section>
+
+        <section>
+            <h2><?= __('Campaign start days (last 12 campaigns)', 'mawiblah'); ?></h2>
+            <?php
+            $startDays = Campaigns::getCampaignStartTimesByDayOfWeek(12);
+            $dataForBarGraph = [];
+            $dataForBarGraph[__('Weekdays')] = [];
+            $headers=['Day','Count'];
+            $data = [];
+
+            foreach($startDays as $day=>$count) {
+                $dataForBarGraph[__('Weekdays')][] = $count;
+                $data[] = [Templates::getDayTranslation($day), $count];
+            }
+            ?>
+
+            <div class="graph-wrap">
+                <?php Templates::loadTemplate('campaign/bar-graph.php', $dataForBarGraph); ?>
+            </div>
+            <div class="graph-wrap">
+                <?php
+                Templates::renderTable($headers, $data);
                 ?>
             </div>
         </section>

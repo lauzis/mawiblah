@@ -536,6 +536,35 @@ class Campaigns
         return $dayStats;
     }
 
+    public static function getClickTimesByDayOfWeekForLastCampaigns(int $limit = 12): array
+    {
+        $campaigns = self::getLastCampaigns($limit);
+
+        $dayStats = [
+            'Monday' => 0,
+            'Tuesday' => 0,
+            'Wednesday' => 0,
+            'Thursday' => 0,
+            'Friday' => 0,
+            'Saturday' => 0,
+            'Sunday' => 0
+        ];
+
+        foreach ($campaigns as $campaign) {
+            $clickTimes = get_post_meta($campaign->id, 'click_time', false);
+            if (!empty($clickTimes)) {
+                foreach ($clickTimes as $timestamp) {
+                    $dayOfWeek = date('l', (int)$timestamp);
+                    if (isset($dayStats[$dayOfWeek])) {
+                        $dayStats[$dayOfWeek]++;
+                    }
+                }
+            }
+        }
+
+        return $dayStats;
+    }
+
     public static function getClickTimesByHourOfDay($campaignId): array
     {
         $campaign = self::getCampaignById($campaignId);
@@ -567,6 +596,56 @@ class Campaigns
         }
 
         return $hourStats;
+    }
+
+    public static function getClickTimesByHourOfDayForLastCampaigns(int $limit = 12): array
+    {
+        $campaigns = self::getLastCampaigns($limit);
+
+        $hourStats = [];
+        for ($i = 0; $i < 24; $i++) {
+            $hourStats[$i] = 0;
+        }
+
+        foreach ($campaigns as $campaign) {
+            $clickTimes = get_post_meta($campaign->id, 'click_time', false);
+            if (!empty($clickTimes)) {
+                foreach ($clickTimes as $timestamp) {
+                    $hour = (int)date('G', (int)$timestamp);
+                    if (isset($hourStats[$hour])) {
+                        $hourStats[$hour]++;
+                    }
+                }
+            }
+        }
+
+        return $hourStats;
+    }
+
+    public static function getCampaignStartTimesByDayOfWeek(int $limit = 12): array
+    {
+        $campaigns = self::getLastCampaigns($limit);
+
+        $dayStats = [
+            'Monday' => 0,
+            'Tuesday' => 0,
+            'Wednesday' => 0,
+            'Thursday' => 0,
+            'Friday' => 0,
+            'Saturday' => 0,
+            'Sunday' => 0
+        ];
+
+        foreach ($campaigns as $campaign) {
+            if (!empty($campaign->campaignStarted)) {
+                $dayOfWeek = date('l', (int)$campaign->campaignStarted);
+                if (isset($dayStats[$dayOfWeek])) {
+                    $dayStats[$dayOfWeek]++;
+                }
+            }
+        }
+
+        return $dayStats;
     }
 
     public static function testStart(int $campaignId): void

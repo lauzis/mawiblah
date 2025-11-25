@@ -117,17 +117,25 @@ use Mawiblah\Templates;
         </section>
 
         <section>
-            <h2><?= __('Overall active days (last 12 campaigns)', 'mawiblah'); ?></h2>
+            <h2><?= __('Overall active days & Campaign start days (last 12 campaigns)', 'mawiblah'); ?></h2>
             <?php
             $activeDays = Campaigns::getClickTimesByDayOfWeekForLastCampaigns(12);
+            $startDays = Campaigns::getCampaignStartTimesByDayOfWeek(12);
+
             $dataForBarGraph = [];
-            $dataForBarGraph[__('Weekdays')] = [];
-            $headers=['Day','Count'];
+            $dataForBarGraph[__('Active Days', 'mawiblah')] = [];
+            $dataForBarGraph[__('Start Days', 'mawiblah')] = [];
+
+            $headers=[__('Day', 'mawiblah'), __('Active Count', 'mawiblah'), __('Start Count', 'mawiblah')];
             $data = [];
 
             foreach($activeDays as $day=>$count) {
-                $dataForBarGraph[__('Weekdays')][] = $count;
-                $data[] = [Templates::getDayTranslation($day), $count];
+                $startCount = $startDays[$day] ?? 0;
+
+                $dataForBarGraph[__('Active Days', 'mawiblah')][] = $count;
+                $dataForBarGraph[__('Start Days', 'mawiblah')][] = $startCount;
+
+                $data[] = [Templates::getDayTranslation($day), $count, $startCount];
             }
             ?>
 
@@ -153,31 +161,6 @@ use Mawiblah\Templates;
             foreach($activeHours as $hour=>$count) {
                 $dataForBarGraph[__('Hours')][] = $count;
                 $data[] = [$hour . ':00', $count];
-            }
-            ?>
-
-            <div class="graph-wrap">
-                <?php Templates::loadTemplate('campaign/bar-graph.php', $dataForBarGraph); ?>
-            </div>
-            <div class="graph-wrap">
-                <?php
-                Templates::renderTable($headers, $data);
-                ?>
-            </div>
-        </section>
-
-        <section>
-            <h2><?= __('Campaign start days (last 12 campaigns)', 'mawiblah'); ?></h2>
-            <?php
-            $startDays = Campaigns::getCampaignStartTimesByDayOfWeek(12);
-            $dataForBarGraph = [];
-            $dataForBarGraph[__('Weekdays')] = [];
-            $headers=['Day','Count'];
-            $data = [];
-
-            foreach($startDays as $day=>$count) {
-                $dataForBarGraph[__('Weekdays')][] = $count;
-                $data[] = [Templates::getDayTranslation($day), $count];
             }
             ?>
 

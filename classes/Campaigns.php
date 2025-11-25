@@ -4,6 +4,13 @@ namespace Mawiblah;
 
 class Campaigns
 {
+    const STAT_SENT = 'sent';
+    const STAT_FAILED = 'failed';
+    const STAT_SKIPPED = 'skipped';
+    const STAT_UNSUBSCRIBED = 'unsubscribed';
+    const STAT_NEWLY_UNSUBSCRIBED = 'newlyUnsubscribed';
+    const STAT_UNIQUE_USERS = 'uniqueUsers';
+    const STAT_LINKS_CLICKED = 'linksClicked';
 
     // exampel http://gudlenieks.test/?utm_source=email&utm_medium=email&utm_campaign=monthly-email&mawiblahId=%7BmawiblahId%7D&unsubscribe=%7Bemail%7D
     public static function init()
@@ -634,13 +641,13 @@ class Campaigns
         }
 
         return [
-            'skipped' => $skipped,
-            'sent' => $sent,
-            'unsubscribed' => $unsubscribed,
-            'newlyUnsubscribed' => $newlyUnsubscribed,
-            'failed' => $failed,
-            'uniqueUsers' => $uniqueUsers,
-            'linksClicked' => $linksClicked,
+            self::STAT_SKIPPED => $skipped,
+            self::STAT_SENT => $sent,
+            self::STAT_UNSUBSCRIBED => $unsubscribed,
+            self::STAT_NEWLY_UNSUBSCRIBED => $newlyUnsubscribed,
+            self::STAT_FAILED => $failed,
+            self::STAT_UNIQUE_USERS => $uniqueUsers,
+            self::STAT_LINKS_CLICKED => $linksClicked,
         ];
     }
 
@@ -678,13 +685,13 @@ class Campaigns
         }
 
         return [
-            'skipped' => $skipped,
-            'sent' => $sent,
-            'unsubscribed' => $unsubscribed,
-            'newlyUnsubscribed' => $newlyUnsubscribed,
-            'failed' => $failed,
-            'uniqueUsers' => $uniqueUsers,
-            'linksClicked' => $linksClicked,
+            self::STAT_SKIPPED => $skipped,
+            self::STAT_SENT => $sent,
+            self::STAT_UNSUBSCRIBED => $unsubscribed,
+            self::STAT_NEWLY_UNSUBSCRIBED => $newlyUnsubscribed,
+            self::STAT_FAILED => $failed,
+            self::STAT_UNIQUE_USERS => $uniqueUsers,
+            self::STAT_LINKS_CLICKED => $linksClicked,
         ];
     }
 }

@@ -41,9 +41,9 @@ use Mawiblah\Templates;
             <?php
             $data = Campaigns::getDataForDashBoard(12);
             $dataForDisplay = [
-                    __('Sent emails', 'mawiblah') => $data['sent'],
-                    __('Sending failed', 'mawiblah') => $data['failed'],
-                    __('Links clicked', 'mawiblah') => $data['linksClicked'],
+                    __('Sent emails', 'mawiblah') => $data[Campaigns::STAT_SENT],
+                    __('Sending failed', 'mawiblah') => $data[Campaigns::STAT_FAILED],
+                    __('Links clicked', 'mawiblah') => $data[Campaigns::STAT_LINKS_CLICKED],
             ];
             Templates::loadTemplate('campaign/bar-graph.php', $dataForDisplay);
             ?>
@@ -56,8 +56,9 @@ use Mawiblah\Templates;
             <?php
             $data = Campaigns::getDataForDashBoardConversionRate(12);
             $dataForDisplay = [
-                    __('Sent emails', 'mawiblah') => $data['sent'],
-                    __('Sending failed', 'mawiblah') => $data['failed']
+                __('Sent emails', 'mawiblah') => $data[Campaigns::STAT_SENT],
+                __('Sending failed', 'mawiblah') => $data[Campaigns::STAT_FAILED],
+                __('Newly unsubscribed','mawiblah')=>$data[Campaigns::STAT_NEWLY_UNSUBSCRIBED],
             ];
             Templates::loadTemplate('campaign/bar-graph.php', $dataForDisplay);
             ?>
@@ -85,13 +86,13 @@ use Mawiblah\Templates;
             $data = Campaigns::getDataForDashBoard(1);
 
             $dataForDisplay = [
-                    'Email sending failed' => $data['failed'],
-                    'Email sending skipped' => $data['skipped'],
-                    'Unsubscribed' => $data['unsubscribed'],
-                    'Newly unsubscribed' => $data['newlyUnsubscribed'],
-                    'Sent emails' => $data['sent'],
-                    'User opened' => $data['uniqueUsers'],
-                    'Links clicked' => $data['linksClicked']
+                    'Email sending failed' => $data[Campaigns::STAT_FAILED],
+                    'Email sending skipped' => $data[Campaigns::STAT_SKIPPED],
+                    'Unsubscribed' => $data[Campaigns::STAT_UNSUBSCRIBED],
+                    'Newly unsubscribed' => $data[Campaigns::STAT_NEWLY_UNSUBSCRIBED],
+                    'Sent emails' => $data[Campaigns::STAT_SENT],
+                    'User opened' => $data[Campaigns::STAT_UNIQUE_USERS],
+                    'Links clicked' => $data[Campaigns::STAT_LINKS_CLICKED]
             ];
             Templates::loadTemplate('campaign/bar-graph.php', $dataForDisplay);
             ?>
@@ -107,13 +108,13 @@ use Mawiblah\Templates;
                 $data = Campaigns::getDataForDashBoardConversionRate(1);
 
                 $dataForDisplay = [
-                        'Email sending failed' => $data['failed'],
-                        'Email sending skipped' => $data['skipped'],
-                        'Unsubscribed' => $data['unsubscribed'],
-                        'Newly unsubscribed' => $data['newlyUnsubscribed'],
-                        'Sent emails' => $data['sent'],
-                        'User opened' => $data['uniqueUsers'],
-                        'Links clicked' => $data['linksClicked']
+                        'Email sending failed' => $data[Campaigns::STAT_FAILED],
+                        'Email sending skipped' => $data[Campaigns::STAT_SKIPPED],
+                        'Unsubscribed' => $data[Campaigns::STAT_UNSUBSCRIBED],
+                        'Newly unsubscribed' => $data[Campaigns::STAT_NEWLY_UNSUBSCRIBED],
+                        'Sent emails' => $data[Campaigns::STAT_SENT],
+                        'User opened' => $data[Campaigns::STAT_UNIQUE_USERS],
+                        'Links clicked' => $data[Campaigns::STAT_LINKS_CLICKED]
                 ];
 
                 Templates::loadTemplate('campaign/bar-graph.php', $dataForDisplay);

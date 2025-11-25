@@ -27,9 +27,9 @@ class Actions
         $data = Campaigns::getDataForDashBoard(3);
 
         $dataForDisplay = [
-            __('Emails sent', 'mawiblah') => $data['sent'],
-            __('Unique visitors', 'mawiblah') => $data['uniqueUsers'],
-            __('Links opened', 'mawiblah') => $data['linksClicked'],
+            __('Emails sent', 'mawiblah') => $data[Campaigns::STAT_SENT],
+            __('Unique visitors', 'mawiblah') => $data[Campaigns::STAT_UNIQUE_USERS],
+            __('Links opened', 'mawiblah') => $data[Campaigns::STAT_LINKS_CLICKED],
         ];
         Templates::loadTemplate('campaign/bar-graph.php', $dataForDisplay);
     }

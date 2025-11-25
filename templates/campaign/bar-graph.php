@@ -69,7 +69,7 @@ $oneItem = $arrayItemCount === 1;
                         <?= $maxArray[$k2] ?>
                     </td>
                     <td align="right">
-                        <?= $avgArray[$k2] ?>
+                        <?= round($avgArray[$k2], 2) ?>
                     </td>
                 </tr>
 

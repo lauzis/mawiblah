@@ -574,4 +574,43 @@ class Subscribers
     {
         update_post_meta($subscriberId, 'firstInteraction', $time);
     }
+
+    public static function getSubscriberGrowthStats(int $months = 12): array
+    {
+        global $wpdb;
+        
+        $stats = [];
+        for ($i = $months - 1; $i >= 0; $i--) {
+            $date = date('Y-m', strtotime("-$i months"));
+            $stats[$date] = 0;
+        }
+
+        $query = "
+            SELECT DATE_FORMAT(post_date, '%Y-%m') as month, COUNT(ID) as count
+            FROM {$wpdb->posts}
+            WHERE post_type = %s
+            AND post_status = 'publish'
+            AND post_date >= DATE_SUB(NOW(), INTERVAL %d MONTH)
+            GROUP BY month
+            ORDER BY month ASC
+        ";
+
+        $results = $wpdb->get_results($wpdb->prepare($query, self::postType(), $months));
+
+        foreach ($results as $row) {
+            if (isset($stats[$row->month])) {
+                $stats[$row->month] = (int)$row->count;
+            }
+        }
+
+        // Format keys for display (e.g., "Jan 2023")
+        $formattedStats = [];
+        foreach ($stats as $ym => $count) {
+            $timestamp = strtotime($ym . '-01');
+            $label = date_i18n('M Y', $timestamp);
+            $formattedStats[$label] = $count;
+        }
+
+        return $formattedStats;
+    }
 }

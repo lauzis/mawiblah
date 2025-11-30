@@ -185,6 +185,29 @@ Activity Rating = Active Days Count / Campaign Start Days Count
 ### Overall Active Hours
 Aggregates click timestamps by hour of the day (0-23) for the last 12 campaigns to identify peak engagement hours.
 
+### Subscriber & Unsubscribe Growth
+Visualizes the growth of your subscriber base and unsubscribe trends over the last 12 months, helping you track list health and retention.
+
+## Individual Campaign Statistics
+
+When viewing or editing a specific campaign, detailed statistics are provided to analyze its performance:
+
+### Campaign Raw Stats
+A breakdown of the campaign's delivery status, including sent, failed, and skipped emails.
+
+### Campaign Conversion Rate
+A visual comparison of key metrics:
+- **Delivery:** Sent, failed, and skipped counts.
+- **Engagement:** Unique user clicks ("User opened") and total unique link clicks.
+- **Attrition:** Total unsubscribed and newly unsubscribed users for this campaign.
+
+### Link Performance
+Shows which specific links in the campaign received the most clicks.
+
+### Activity Timing
+- **Activity by Day:** Shows which days of the week generated the most engagement for this campaign.
+- **Activity by Hour:** Shows the time of day when subscribers were most active.
+
 ## API Functions
 
 ### Campaign Statistics

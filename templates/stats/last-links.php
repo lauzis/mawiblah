@@ -12,10 +12,12 @@ $lastCampaign = $data['campaign'];
             $headers = [__('Links'), __('Click count')];
             $data = [];
 
-            asort($lastCampaign->links);
-            $lastCampaign->links  = array_reverse($lastCampaign->links) ;
-            foreach ($lastCampaign->links as $link => $clickCount) {
-                $data[] = [$link, $clickCount];
+            if (isset($lastCampaign->links) && is_array($lastCampaign->links)) {
+                asort($lastCampaign->links);
+                $lastCampaign->links  = array_reverse($lastCampaign->links) ;
+                foreach ($lastCampaign->links as $link => $clickCount) {
+                    $data[] = [$link, $clickCount];
+                }
             }
 
             Templates::renderTable($headers, $data);

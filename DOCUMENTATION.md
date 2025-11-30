@@ -17,7 +17,7 @@ MAWIBLAH is a WordPress email campaign plugin that provides basic email marketin
 Each campaign in MAWIBLAH tracks various metrics and metadata stored as WordPress post meta fields:
 
 ### Basic Campaign Information
-- **`campaignId`** - Unique MD5 hash identifier for the campaign (generated from post ID)
+- **`campaignHash`** - Unique MD5 hash identifier for the campaign (generated from post ID, stored as `campaignId` meta)
 - **`contentTitle`** - Internal title/name for the campaign
 - **`subject`** - Email subject line
 - **`template`** - Email template to use
@@ -98,7 +98,7 @@ This metric counts only unique clicks per user session. If a subscriber clicks t
 
 - Incremented only once per URL per session
 - Duplicate clicks from same subscriber/session are ignored
-- Session is tracked using PHP sessions with `campaignId`, `subscriberId`, and URL
+- Session is tracked using PHP sessions with `campaignHash`, `subscriberId`, and URL
 - Useful for measuring unique link engagement
 - Example: If one person clicks 3 different links, this counts as 3
 
@@ -109,7 +109,7 @@ This metric counts the number of unique subscribers who clicked any link in the 
 
 - Incremented only once per subscriber per campaign
 - Tracks unique visitors who engaged with the campaign
-- Session is tracked using PHP sessions with `campaignId` and `subscriberId`
+- Session is tracked using PHP sessions with `campaignHash` and `subscriberId`
 - Useful for measuring reach and user-level engagement
 - Example: If one person clicks 5 different links multiple times, this counts as 1
 
@@ -118,7 +118,7 @@ This metric counts the number of unique subscribers who clicked any link in the 
 When a link is clicked:
 1. `linksClickedTotal` is always incremented (every click)
 2. Session is checked for existing campaign/subscriber visit
-3. If new subscriber (no `campaignId` or `subscriberId` in session), `uniqueUserClicks` IS incremented
+3. If new subscriber (no `campaignHash` or `subscriberId` in session), `uniqueUserClicks` IS incremented
 4. If URL was not clicked in this session (`$_SESSION[$url]` not set), `linksClicked` IS incremented
 5. If session already exists for that URL, only `linksClickedTotal` is updated
 

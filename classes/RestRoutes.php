@@ -31,19 +31,19 @@ class RestRoutes
     {
         $post = $request->get_json_params();
 
-        $campaignId = $post['campaignId'];
+        $campaignPostId = $post['campaignId'];
         $subscriberId = $post['subscriberId'];
         $email = $post['email'];
         $lastItem = $post['lastItem'] ?? false;
 
         // Initialize or retrieve current counters
-        $currentCounters = Campaigns::getCounters((object)['id' => $campaignId]);
+        $currentCounters = Campaigns::getCounters((object)['id' => $campaignPostId]);
         $emailsSent = (int)($currentCounters->emailsSend ?? 0);
         $emailsFailed = (int)($currentCounters->emailsFailed ?? 0);
         $emailsSkipped = (int)($currentCounters->emailsSkipped ?? 0);
         $emailsUnsubed = (int)($currentCounters->emailsUnsubed ?? 0);
 
-        if (!is_numeric($campaignId) || !is_numeric($subscriberId)) {
+        if (!is_numeric($campaignPostId) || !is_numeric($subscriberId)) {
             return [
                 'stats' => Helpers::emailSendingStats(skipped:1),
                 'status' => 'error',
@@ -51,14 +51,14 @@ class RestRoutes
             ];
         }
 
-        $campaign = Campaigns::getCampaignById($campaignId);
+        $campaign = Campaigns::getCampaignById($campaignPostId);
         $subscriber = Subscribers::getSubscriberById($subscriberId);
 
         if (!$campaign) {
             return [
                 'stats' => Helpers::emailSendingStats(skipped:1),
                 'data' => [
-                    'campaignId' => $campaignId,
+                    'campaignId' => $campaignPostId,
                     'subscriberId' => $subscriberId,
                     'email' => $email
                 ],
@@ -71,7 +71,7 @@ class RestRoutes
             return [
                 'stats' => Helpers::emailSendingStats(skipped:1),
                 'data' => [
-                    'campaignId' => $campaignId,
+                    'campaignId' => $campaignPostId,
                     'subscriberId' => $subscriberId,
                     'email' => $email
                 ],
@@ -90,10 +90,10 @@ class RestRoutes
 
         if ($lastItem) {
             if ($testMode && $campaign->testStarted) {
-                Campaigns::testFinish($campaignId);
+                Campaigns::testFinish($campaignPostId);
             }
             if(!$testMode && $campaign->campaignStarted) {
-                Campaigns::campaignFinish($campaignId);
+                Campaigns::campaignFinish($campaignPostId);
             }
         }
 
@@ -108,7 +108,7 @@ class RestRoutes
             return [
                 'stats' => Helpers::emailSendingStats(unsubscribed:1),
                 'data' => [
-                    'campaignId' => $campaignId,
+                    'campaignId' => $campaignPostId,
                     'subscriberId' => $subscriberId,
                     'email' => $email
                 ],
@@ -119,13 +119,13 @@ class RestRoutes
         //-----------------------------------------------------
         // --------------- Already sent email -----------------
         //----------------------------------------------------
-        $alreadySent = Subscribers::isEmailSent($subscriberId, $campaignId);
+        $alreadySent = Subscribers::isEmailSent($subscriberId, $campaignPostId);
 
         if ($alreadySent) {
             return [
                 'stats' => Helpers::emailSendingStats(alreadySent:1),
                 'data' => [
-                    'campaignId' => $campaignId,
+                    'campaignId' => $campaignPostId,
                     'subscriberId' => $subscriberId,
                     'email' => $email,
                     'testMode' => $testMode,
@@ -160,7 +160,7 @@ class RestRoutes
             return [
                 'stats' => Helpers::emailSendingStats(doNotDisturb:1),
                 'data' => [
-                    'campaignId' => $campaignId,
+                    'campaignId' => $campaignPostId,
                     'subscriberId' => $subscriberId,
                     'email' => $email,
                     'testMode' => $testMode,
@@ -198,7 +198,7 @@ class RestRoutes
                 'message' => $message,
                 'stats' => Helpers::emailSendingStats(emailsDisabled:1),
                 'data' => [
-                    'campaignId' => $campaignId,
+                    'campaignId' => $campaignPostId,
                     'subscriberId' => $subscriberId,
                     'email' => $email,
                     'testMode' => $testMode,
@@ -219,7 +219,7 @@ class RestRoutes
                 'data' => [
                     'testMode' => $testMode,
                     'isTester' => $isTester,
-                    'campaignId' => $campaignId,
+                    'campaignId' => $campaignPostId,
                     'subscriberId' => $subscriberId,
                     'email' => $email,
                     'campaign' => $campaign,
@@ -242,7 +242,7 @@ class RestRoutes
                 'subscriber' => $subscriber,
                 'testMode' => $testMode,
                 'isTester' => $isTester,
-                'campaignId' => $campaignId,
+                'campaignId' => $campaignPostId,
                 'subscriberId' => $subscriberId,
                 'email' => $email,
                 'timeDiff' => $timeDiff,
@@ -256,7 +256,7 @@ class RestRoutes
                 'data' => [
                     'testMode' => $testMode,
                     'isTester' => $isTester,
-                    'campaignId' => $campaignId,
+                    'campaignId' => $campaignPostId,
                     'subscriberId' => $subscriberId,
                     'email' => $email,
                     'campaign' => $campaign,
@@ -286,7 +286,7 @@ class RestRoutes
                 'testMode' => $testMode,
                 'emailSendingResult' => $emailSendingResult,
                 'isTester' => $isTester,
-                'campaignId' => $campaignId,
+                'campaignId' => $campaignPostId,
                 'subscriberId' => $subscriberId,
                 'email' => $email,
                 'timeDiff' => $timeDiff,
@@ -300,7 +300,7 @@ class RestRoutes
                 'data' => [
                     'testMode' => $testMode,
                     'isTester' => $isTester,
-                    'campaignId' => $campaignId,
+                    'campaignId' => $campaignPostId,
                     'subscriberId' => $subscriberId,
                     'email' => $email,
                     'campaign' => $campaign,
@@ -326,7 +326,7 @@ class RestRoutes
             'testMode' => $testMode,
             'emailSendingResult' => $emailSendingResult,
             'isTester' => $isTester,
-            'campaignId' => $campaignId,
+            'campaignId' => $campaignPostId,
             'subscriberId' => $subscriberId,
             'email' => $email,
             'timeDiff' => $timeDiff,
@@ -340,7 +340,7 @@ class RestRoutes
             'data' => [
                 'testMode' => $testMode,
                 'isTester' => $isTester,
-                'campaignId' => $campaignId,
+                'campaignId' => $campaignPostId,
                 'subscriberId' => $subscriberId,
                 'email' => $email,
                 'campaign' => $campaign,

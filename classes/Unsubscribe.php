@@ -7,16 +7,16 @@ class Unsubscribe
     public static function init()
     {
         if (isset($_GET['subscriberId']) && isset($_GET['unsubscribe'])) {
-            $campaignId = isset($_GET['campaignId']) ? sanitize_text_field($_GET['campaignId']) : null;
+            $campaignHash = isset($_GET['campaignId']) ? sanitize_text_field($_GET['campaignId']) : null;
             if (!isset($_GET['unsubToken'])) {
-                self::unsubscribe($_GET['unsubscribe'], $_GET['subscriberId'], $campaignId);
+                self::unsubscribe($_GET['unsubscribe'], $_GET['subscriberId'], $campaignHash);
             } else {
-                self::unsubscribeAprooved($_GET['subscriberId'],$_GET['unsubscribe'], $_GET['unsubToken'], $campaignId);
+                self::unsubscribeAprooved($_GET['subscriberId'],$_GET['unsubscribe'], $_GET['unsubToken'], $campaignHash);
             }
         }
     }
 
-    public static function unsubscribe(string $email, string $subscriberId, ?string $campaignId = null): array
+    public static function unsubscribe(string $email, string $subscriberId, ?string $campaignHash = null): array
     {
         $subscriber = Subscribers::getSubscriber($email);
 
@@ -33,7 +33,7 @@ class Unsubscribe
             }
             $unsubToken = Subscribers::getUnsubToken($subId, $email);
 
-            $formUrl = Helpers::getCurrentUrlPath() . self::unsubscribeConfirmLink($subscriberId, $email, $unsubToken, $campaignId);
+            $formUrl = Helpers::getCurrentUrlPath() . self::unsubscribeConfirmLink($subscriberId, $email, $unsubToken, $campaignHash);
 
             include(MAWIBLAH_TEMPLATE_DIR . '/unsubscribe/are-you-sure.php');
             die();
@@ -56,7 +56,7 @@ class Unsubscribe
         ]);
     }
 
-    public static function unsubscribeConfirmLink($subscriberId, $email, $unsubToken, ?string $campaignId = null)
+    public static function unsubscribeConfirmLink($subscriberId, $email, $unsubToken, ?string $campaignHash = null)
     {
         $params = [
             'subscriberId' => $subscriberId,
@@ -64,20 +64,20 @@ class Unsubscribe
             'unsubToken' => $unsubToken
         ];
 
-        if ($campaignId) {
-            $params['campaignId'] = $campaignId;
+        if ($campaignHash) {
+            $params['campaignId'] = $campaignHash;
         }
 
         return Helpers::trackingParams($params);
     }
 
-    public static function unsubscribeAprooved($subscriberId, $email, $unsubToken, ?string $campaignId = null)
+    public static function unsubscribeAprooved($subscriberId, $email, $unsubToken, ?string $campaignHash = null)
     {
         $debug = [
             'subscriberId' => $subscriberId,
             'email' => $email,
             'unsubToken' => $unsubToken,
-            'campaignId' => $campaignId
+            'campaignId' => $campaignHash
         ];
         $subscriber = Subscribers::getSubscriber($email);
         $debug['subscriber'] = $subscriber;
@@ -100,8 +100,8 @@ class Unsubscribe
                     }
                     
                     // Increment newly unsubscribed counter for the campaign
-                    if ($campaignId) {
-                        $campaign = Campaigns::getCampaignByCampaignId($campaignId);
+                    if ($campaignHash) {
+                        $campaign = Campaigns::getCampaignByHash($campaignHash);
                         if ($campaign) {
                             Campaigns::incrementNewlyUnsubed($campaign->id);
                         }

@@ -16,6 +16,7 @@ class Init
     const MAWIBLAH_ACTIONS = 'mawiblah-actions';
     public function init(): void
     {
+        Migrations::run();
         if (is_admin()) {
             add_action('admin_menu', [$this, 'add_menu_links']);
         }

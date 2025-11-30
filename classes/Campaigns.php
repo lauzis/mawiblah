@@ -241,7 +241,7 @@ class Campaigns
         $post->linksClickedTotal = get_post_meta($post->id, 'linksClickedTotal', true) ?? 0;
         $post->uniqueUserClicks = get_post_meta($post->id, 'uniqueUserClicks', true) ?? 0;
         $post->links = json_decode(get_post_meta($post->id, 'links', true) ?? '[]', true);
-        $post->campaignId = get_post_meta($post->id, 'campaignId', true);
+        $post->campaignHash = get_post_meta($post->id, 'campaignHash', true);
 
         $post->emailsSend = get_post_meta($post->id, 'emailsSend', true);
         $post->emailsFailed = get_post_meta($post->id, 'emailsFailed', true);
@@ -256,9 +256,9 @@ class Campaigns
         $post->campaignStarted = get_post_meta($post->id, 'campaignStarted', true) ?? false;
         $post->campaignFinished = get_post_meta($post->id, 'campaignFinished', true) ?? false;
 
-        if (!$post->campaignId) {
-            $post->campaignId = md5($post->id);
-            update_post_meta($post->id, 'campaignId', $post->campaignId);
+        if (!$post->campaignHash) {
+            $post->campaignHash = md5($post->id);
+            update_post_meta($post->id, 'campaignHash', $post->campaignHash);
         }
 
         return $post;
@@ -282,12 +282,12 @@ class Campaigns
         return self::appendMeta($campaign);
     }
 
-    public static function getCampaignByCampaignId($campaignId): object|null
+    public static function getCampaignByHash($campaignHash): object|null
     {
         $postByMeta = get_posts([
             'post_type' => self::postType(),
-            'meta_key' => 'campaignId',
-            'meta_value' => $campaignId,
+            'meta_key' => 'campaignHash',
+            'meta_value' => $campaignHash,
             'posts_per_page' => 1,
         ]);
 
@@ -497,7 +497,7 @@ class Campaigns
         $templateHTML = do_shortcode($templateHTML);
         $templateHTML = str_replace('[gdlnks_newsletter_title]', $campaign->contentTitle ?? $campaign->post_title, $templateHTML);
         $templateHTML = str_replace('[gdlnks_newsletter_content]', $campaign->post_content, $templateHTML);
-        $templateHTML = str_replace('{campaignId}', $campaign->campaignId, $templateHTML);
+        $templateHTML = str_replace('{campaignId}', $campaign->campaignHash, $templateHTML);
 
         return $templateHTML;
     }
@@ -512,11 +512,11 @@ class Campaigns
 
         $templateHTML = str_replace('[gdlnks_newsletter_content]', get_the_content($campaign->id), $templateHTML);
 
-        $templateHTML = str_replace('{campaignId}', $campaign->campaignId, $templateHTML);
+        $templateHTML = str_replace('{campaignId}', $campaign->campaignHash, $templateHTML);
         $templateHTML = str_replace('{subscriberId}', $subscriber->subscriberId, $templateHTML);
         $templateHTML = str_replace('{email}', $email, $templateHTML);
 
-        $templateHTML = str_replace('%7BcampaignId%7D', $campaign->campaignId, $templateHTML);
+        $templateHTML = str_replace('%7BcampaignId%7D', $campaign->campaignHash, $templateHTML);
         $templateHTML = str_replace('%7BsubscriberId%7D', $subscriber->subscriberId, $templateHTML);
         $templateHTML = str_replace('%7Bemail%7D', $email, $templateHTML);
 
@@ -554,12 +554,12 @@ class Campaigns
         }
     }
 
-    public static function linkCLicked($campaignId, $url): int
+    public static function linkCLicked($campaignHash, $url): int
     {
-        $campaign = self::getCampaignByCampaignId($campaignId);
+        $campaign = self::getCampaignByHash($campaignHash);
 
         if (!$campaign) {
-            Logs::addLog('Campaign not found', 'Campaign not found', ['campaignId' => $campaignId, 'url' => $url]);
+            Logs::addLog('Campaign not found', 'Campaign not found', ['campaignId' => $campaignHash, 'url' => $url]);
             return 0;
         }
 

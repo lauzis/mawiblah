@@ -11,13 +11,13 @@ $lastCampaign = $data['campaign'];
             <?php
                 $activeDays = Campaigns::getClickTimesByDayOfWeek($lastCampaign->id);
                 $dataForBarGraph = [];
-                $dataForBarGraph[__('Weekdays')] = [];
-                $headers=['Day','Count'];
-                $data = [];
+                $dataForBarGraph[__('Weekdays', 'mawiblah')] = [];
+                $headers=[__('Day', 'mawiblah'), __('Count', 'mawiblah')];
+                $tableData = [];
 
                 foreach($activeDays as $day=>$count) {
-                    $dataForBarGraph[__('Weekdays')][] = $count;
-                    $data[] = [Templates::getDayTranslation($day), $count];
+                    $dataForBarGraph[__('Weekdays', 'mawiblah')][] = $count;
+                    $tableData[] = [Templates::getDayTranslation($day), $count];
                 }
             ?>
 
@@ -26,7 +26,7 @@ $lastCampaign = $data['campaign'];
             </div>
             <div class="graph-wrap">
                 <?php
-                Templates::renderTable($headers, $data);
+                Templates::renderTable($headers, $tableData);
                 ?>
             </div>
 

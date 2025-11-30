@@ -11,13 +11,13 @@ $lastCampaign = $data['campaign'];
             <?php
             $activeHours = Campaigns::getClickTimesByHourOfDay($lastCampaign->id);
             $dataForBarGraph = [];
-            $dataForBarGraph[__('Hours')] = [];
-            $headers=['Hour','Count'];
-            $data = [];
+            $dataForBarGraph[__('Hours', 'mawiblah')] = [];
+            $headers=[__('Hour', 'mawiblah'), __('Count', 'mawiblah')];
+            $tableData = [];
 
             foreach($activeHours as $hour=>$count) {
-                $dataForBarGraph[__('Hours')][] = $count;
-                $data[] = [$hour . ':00', $count];
+                $dataForBarGraph[__('Hours', 'mawiblah')][] = $count;
+                $tableData[] = [$hour . ':00', $count];
             }
             ?>
 
@@ -26,7 +26,7 @@ $lastCampaign = $data['campaign'];
             </div>
             <div class="graph-wrap">
                 <?php
-                Templates::renderTable($headers, $data);
+                Templates::renderTable($headers, $tableData);
                 ?>
             </div>
 

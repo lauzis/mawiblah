@@ -13,7 +13,7 @@ use Mawiblah\Templates;
             $dataForBarGraph[__('Start Days', 'mawiblah')] = [];
 
             $headers=[__('Day', 'mawiblah'), __('Active Count', 'mawiblah'), __('Start Count', 'mawiblah')];
-            $data = [];
+            $tableData = [];
 
             foreach($activeDays as $day=>$count) {
                 $startCount = $startDays[$day] ?? 0;
@@ -21,7 +21,7 @@ use Mawiblah\Templates;
                 $dataForBarGraph[__('Active Days', 'mawiblah')][] = $count;
                 $dataForBarGraph[__('Start Days', 'mawiblah')][] = $startCount;
 
-                $data[] = [Templates::getDayTranslation($day), $count, $startCount];
+                $tableData[] = [Templates::getDayTranslation($day), $count, $startCount];
             }
             ?>
 
@@ -30,7 +30,7 @@ use Mawiblah\Templates;
             </div>
             <div class="graph-wrap">
                 <?php
-                Templates::renderTable($headers, $data);
+                Templates::renderTable($headers, $tableData);
                 ?>
             </div>
         </section>

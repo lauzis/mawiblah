@@ -33,7 +33,7 @@ class Unsubscribe
             }
             $unsubToken = Subscribers::getUnsubToken($subId, $email);
 
-            $formUrl = Helpers::getCurrentUrlPath() . self::unsubscribeConfirmLink($subscriberId, $email, $unsubToken);
+            $formUrl = Helpers::getCurrentUrlPath() . self::unsubscribeConfirmLink($subscriberId, $email, $unsubToken, $campaignId);
 
             include(MAWIBLAH_TEMPLATE_DIR . '/unsubscribe/are-you-sure.php');
             die();
@@ -56,13 +56,20 @@ class Unsubscribe
         ]);
     }
 
-    public static function unsubscribeConfirmLink($subscriberId, $email, $unsubToken)
+    public static function unsubscribeConfirmLink($subscriberId, $email, $unsubToken, ?string $campaignId = null)
     {
-        return Helpers::trackingParams([
+        $params = [
             'subscriberId' => $subscriberId,
             'unsubscribe' => $email,
             'unsubToken' => $unsubToken
         ]);
+        ];
+
+        if ($campaignId) {
+            $params['campaignId'] = $campaignId;
+        }
+
+        return Helpers::trackingParams($params);
     }
 
     public static function unsubscribeAprooved($subscriberId, $email, $unsubToken, ?string $campaignId = null)

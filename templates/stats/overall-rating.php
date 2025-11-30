@@ -8,16 +8,16 @@ use Mawiblah\Templates;
             $activeDays = Campaigns::getClickTimesByDayOfWeekForLastCampaigns(12);
             $startDays = Campaigns::getCampaignStartTimesByDayOfWeek(12);
             $dataForBarGraph = [];
-            $dataForBarGraph[__('Weekdays')] = [];
-            $headers=['Day','Rating'];
-            $data = [];
+            $dataForBarGraph[__('Weekdays', 'mawiblah')] = [];
+            $headers=[__('Day', 'mawiblah'), __('Rating', 'mawiblah')];
+            $tableData = [];
 
             foreach($activeDays as $day=>$count) {
                 $startCount = $startDays[$day] ?? 0;
                 $rating = $startCount > 0 ? round($count / $startCount, 2) : 0;
 
-                $dataForBarGraph[__('Weekdays')][] = $rating;
-                $data[] = [Templates::getDayTranslation($day), $rating];
+                $dataForBarGraph[__('Weekdays', 'mawiblah')][] = $rating;
+                $tableData[] = [Templates::getDayTranslation($day), $rating];
             }
             ?>
 
@@ -26,7 +26,7 @@ use Mawiblah\Templates;
             </div>
             <div class="graph-wrap">
                 <?php
-                Templates::renderTable($headers, $data);
+                Templates::renderTable($headers, $tableData);
                 ?>
             </div>
         </section>

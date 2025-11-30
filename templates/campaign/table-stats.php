@@ -5,7 +5,7 @@ $rows = $data['rows'];
 
 if (!isset($headers) || !isset($rows) || !is_array($headers) || !is_array($rows)): ?>
     <div class="mawiblah-table-container">
-        <?= _e('No data to display.', 'mawiblah'); ?>
+        <?php _e('No data to display.', 'mawiblah'); ?>
     </div>
     <?php return; ?>
 <?php endif; ?>

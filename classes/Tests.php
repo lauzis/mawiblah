@@ -29,9 +29,9 @@ class Tests
     public static function tests(): void
     {
 
-        $campaingTitle = self::getCampaignTitle();
-        $campaingTitle2 = self::getCampaignTitle()." ---2";
-        $campaingTitle3 = self::getCampaignTitle()." ---3";
+        $campaignTitle = self::getCampaignTitle();
+        $campaignTitle2 = self::getCampaignTitle()." ---2";
+        $campaignTitle3 = self::getCampaignTitle()." ---3";
 
         if (current_user_can('editor') || current_user_can('administrator')) {
             // test that adds comaingn to posts
@@ -41,7 +41,7 @@ class Tests
             self::echoHeading("Campaigns self tests");
 
             self::echoTitle('Mawiblah Test Campaing');
-            $result = Campaigns::addCampaign($campaingTitle, 'Test subject',  'Test content title','Test content', ['Test audience'], 'Test template');
+            $result = Campaigns::addCampaign($campaignTitle, 'Test subject',  'Test content title','Test content', ['Test audience'], 'Test template');
             $tiId = $result;
             if ($result) {
                 self::echoResult('Campaign added', 'success');
@@ -49,13 +49,13 @@ class Tests
                 self::echoResult('Campaign not added', 'error');
             }
 
-            $result = Campaigns::addCampaign($campaingTitle3, 'Test subject', 'Test content title','Test content', ['Test audience'], 'Test template');
+            $result = Campaigns::addCampaign($campaignTitle3, 'Test subject', 'Test content title','Test content', ['Test audience'], 'Test template');
             $t3Id = $result;
 
             // check if newly created campaign exists
             self::echoTitle('Check if newly created campaign exists');
-            $campaign = Campaigns::getCampaign($campaingTitle);
-            if ($campaign && $campaign->post_title === $campaingTitle) {
+            $campaign = Campaigns::getCampaign($campaignTitle);
+            if ($campaign && $campaign->post_title === $campaignTitle) {
                 self::echoResult('Campaign exists', 'success');
             } else {
                 self::echoResult('Campaign does not exist', 'error');
@@ -63,7 +63,7 @@ class Tests
 
             //check the campaign that should not exist
             self::echoTitle('Check the campaign that should not exist');
-            $campaign = Campaigns::getCampaign($campaingTitle2);
+            $campaign = Campaigns::getCampaign($campaignTitle2);
             if ($campaign === null) {
                 self::echoResult('Campaign does not exist', 'success');
             } else {

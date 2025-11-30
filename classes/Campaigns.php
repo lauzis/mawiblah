@@ -22,6 +22,15 @@ class Campaigns
     public static function addMetaBoxes()
     {
         add_meta_box(
+            'mawiblah_campaign_details',
+            __('Campaign Details', 'mawiblah'),
+            [self::class, 'renderDetailsMetaBox'],
+            self::postType(),
+            'normal',
+            'high'
+        );
+
+        add_meta_box(
             'mawiblah_campaign_stats',
             __('Campaign Statistics', 'mawiblah'),
             [self::class, 'renderStatsMetaBox'],
@@ -29,6 +38,51 @@ class Campaigns
             'normal',
             'high'
         );
+    }
+
+    public static function renderDetailsMetaBox($post)
+    {
+        $campaign = self::appendMeta($post);
+        $data = ['campaign' => $campaign];
+        \Mawiblah\Templates::loadTemplate('campaign/edit-fields.php', $data);
+    }
+
+    public static function saveMetaBoxData($post_id)
+    {
+        if (!isset($_POST['mawiblah_campaign_details_nonce'])) {
+            return;
+        }
+
+        if (!wp_verify_nonce($_POST['mawiblah_campaign_details_nonce'], 'mawiblah_save_campaign_details')) {
+            return;
+        }
+
+        if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
+            return;
+        }
+
+        if (!current_user_can('edit_post', $post_id)) {
+            return;
+        }
+
+        if (isset($_POST['subject'])) {
+            update_post_meta($post_id, 'subject', sanitize_text_field($_POST['subject']));
+        }
+
+        if (isset($_POST['contentTitle'])) {
+            update_post_meta($post_id, 'contentTitle', sanitize_text_field($_POST['contentTitle']));
+        }
+
+        if (isset($_POST['template'])) {
+            update_post_meta($post_id, 'template', sanitize_text_field($_POST['template']));
+        }
+
+        if (isset($_POST['audiences'])) {
+            $audiences = array_map('sanitize_text_field', $_POST['audiences']);
+            update_post_meta($post_id, 'audiences', $audiences);
+        } else {
+            update_post_meta($post_id, 'audiences', []);
+        }
     }
 
     public static function renderStatsMetaBox($post)
@@ -724,7 +778,7 @@ class Campaigns
     public static function campaignStart(int $campaignId): void
     {
         $campaign = self::getCampaignById($campaignId);
-        if (!$campaign->campaignStarted) {
+        if ($campaign && !$campaign->campaignStarted) {
             self::resetCounters($campaignId);
         }
         update_post_meta($campaignId, 'campaignStarted', time());

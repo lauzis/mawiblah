@@ -8,16 +8,16 @@ $campaignTitle = $data['title'];
         <h2><?= esc_html($campaignTitle) ?> - <?= __('Latest campaign raw', 'mawiblah'); ?></h2>
         <div class="graph-wrap">
             <?php
-            $data = Campaigns::getDataForDashBoard(1);
+            $rawStats = Campaigns::getDataForDashBoard(1);
 
             $dataForDisplay = [
-                    'Email sending failed' => $data[Campaigns::STAT_FAILED],
-                    'Email sending skipped' => $data[Campaigns::STAT_SKIPPED],
-                    'Unsubscribed' => $data[Campaigns::STAT_UNSUBSCRIBED],
-                    'Newly unsubscribed' => $data[Campaigns::STAT_NEWLY_UNSUBSCRIBED],
-                    'Sent emails' => $data[Campaigns::STAT_SENT],
-                    'User opened' => $data[Campaigns::STAT_UNIQUE_USERS],
-                    'Links clicked' => $data[Campaigns::STAT_LINKS_CLICKED]
+                    __('Email sending failed', 'mawiblah') => $rawStats[Campaigns::STAT_FAILED],
+                    __('Email sending skipped', 'mawiblah') => $rawStats[Campaigns::STAT_SKIPPED],
+                    __('Unsubscribed', 'mawiblah') => $rawStats[Campaigns::STAT_UNSUBSCRIBED],
+                    __('Newly unsubscribed', 'mawiblah') => $rawStats[Campaigns::STAT_NEWLY_UNSUBSCRIBED],
+                    __('Sent emails', 'mawiblah') => $rawStats[Campaigns::STAT_SENT],
+                    __('User opened', 'mawiblah') => $rawStats[Campaigns::STAT_UNIQUE_USERS],
+                    __('Links clicked', 'mawiblah') => $rawStats[Campaigns::STAT_LINKS_CLICKED]
             ];
             Templates::loadTemplate('campaign/bar-graph.php', $dataForDisplay);
             ?>

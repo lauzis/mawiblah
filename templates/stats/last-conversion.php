@@ -10,16 +10,16 @@ $campaignTitle = $data['title'];
             <div class="graph-wrap">
                 <?php
 
-                $data = Campaigns::getDataForDashBoardConversionRate(1);
+                $conversionStats = Campaigns::getDataForDashBoardConversionRate(1);
 
                 $dataForDisplay = [
-                        'Email sending failed' => $data[Campaigns::STAT_FAILED],
-                        'Email sending skipped' => $data[Campaigns::STAT_SKIPPED],
-                        'Unsubscribed' => $data[Campaigns::STAT_UNSUBSCRIBED],
-                        'Newly unsubscribed' => $data[Campaigns::STAT_NEWLY_UNSUBSCRIBED],
-                        'Sent emails' => $data[Campaigns::STAT_SENT],
-                        'User opened' => $data[Campaigns::STAT_UNIQUE_USERS],
-                        'Links clicked' => $data[Campaigns::STAT_LINKS_CLICKED]
+                        __('Email sending failed', 'mawiblah') => $conversionStats[Campaigns::STAT_FAILED],
+                        __('Email sending skipped', 'mawiblah') => $conversionStats[Campaigns::STAT_SKIPPED],
+                        __('Unsubscribed', 'mawiblah') => $conversionStats[Campaigns::STAT_UNSUBSCRIBED],
+                        __('Newly unsubscribed', 'mawiblah') => $conversionStats[Campaigns::STAT_NEWLY_UNSUBSCRIBED],
+                        __('Sent emails', 'mawiblah') => $conversionStats[Campaigns::STAT_SENT],
+                        __('User opened', 'mawiblah') => $conversionStats[Campaigns::STAT_UNIQUE_USERS],
+                        __('Links clicked', 'mawiblah') => $conversionStats[Campaigns::STAT_LINKS_CLICKED]
                 ];
 
                 Templates::loadTemplate('campaign/bar-graph.php', $dataForDisplay);

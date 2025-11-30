@@ -62,7 +62,6 @@ class Unsubscribe
             'subscriberId' => $subscriberId,
             'unsubscribe' => $email,
             'unsubToken' => $unsubToken
-        ]);
         ];
 
         if ($campaignId) {

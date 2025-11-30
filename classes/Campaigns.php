@@ -17,6 +17,7 @@ class Campaigns
     {
         self::registerPostType();
         add_action('add_meta_boxes', [self::class, 'addMetaBoxes']);
+        add_action('save_post', [self::class, 'saveMetaBoxData']);
     }
 
     public static function addMetaBoxes()

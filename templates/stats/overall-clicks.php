@@ -8,8 +8,6 @@ use Mawiblah\Templates;
                 <?php
                 $statsData = Campaigns::getDataForDashBoard(12);
                 $dataForDisplay = [
-                        __('Sent emails', 'mawiblah') => $data[Campaigns::STAT_SENT],
-                        __('Links clicked', 'mawiblah') => $data[Campaigns::STAT_LINKS_CLICKED],
                         __('Sent emails', 'mawiblah') => $statsData[Campaigns::STAT_SENT],
                         __('Links clicked', 'mawiblah') => $statsData[Campaigns::STAT_LINKS_CLICKED],
                 ];

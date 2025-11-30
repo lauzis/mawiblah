@@ -40,36 +40,36 @@ class Renderer
                 require MAWIBLAH_PLUGIN_DIR . "/templates/campaign/email-list.php";
                 break;
             case 'campaign-test-reset':
-                if (isset($_GET['campaignId'])) {
-                    $campaignId = $_GET['campaignId'];
-                    $result = Campaigns::testReset($campaignId);
+                if (isset($_GET['campaignPostId'])) {
+                    $campaignPostId = $_GET['campaignPostId'];
+                    $result = Campaigns::testReset($campaignPostId);
                 }
                 require MAWIBLAH_PLUGIN_DIR . "/templates/campaign/list.php";
                 break;
             case 'campaign-test-approve':
-                if (isset($_GET['campaignId'])) {
-                    $campaignId = intval($_GET['campaignId'] ?? 0);
+                if (isset($_GET['campaignPostId'])) {
+                    $campaignPostId = intval($_GET['campaignPostId'] ?? 0);
 
-                    if ($campaignId > 0 && !current_user_can('edit_post', $campaignId)) {
+                    if ($campaignPostId > 0 && !current_user_can('edit_post', $campaignPostId)) {
                         wp_die(__('You are not allowed to do this.', 'mawiblah'), 403);
                     }
-                    check_admin_referer('campaign-test-approve_' . $campaignId);
+                    check_admin_referer('campaign-test-approve_' . $campaignPostId);
 
-                    $result = Campaigns::testApprove($campaignId);
+                    $result = Campaigns::testApprove($campaignPostId);
                 }
                 require MAWIBLAH_PLUGIN_DIR . "/templates/campaign/list.php";
                 break;
 
             case 'campaign-send':
-                if (isset($_GET['campaignId'])) {
-                    $campaignId = intval($_GET['campaignId'] ?? 0);
+                if (isset($_GET['campaignPostId'])) {
+                    $campaignPostId = intval($_GET['campaignPostId'] ?? 0);
 
-                    if ($campaignId > 0 && !current_user_can('edit_post', $campaignId)) {
+                    if ($campaignPostId > 0 && !current_user_can('edit_post', $campaignPostId)) {
                         wp_die(__('You are not allowed to do this.', 'mawiblah'), 403);
                     }
-                    check_admin_referer('campaign-send_' . $campaignId);
+                    check_admin_referer('campaign-send_' . $campaignPostId);
 
-                    $result = Campaigns::campaignStart($campaignId);
+                    $result = Campaigns::campaignStart($campaignPostId);
 
                     require MAWIBLAH_PLUGIN_DIR . "/templates/campaign/email-list.php";
                 }
@@ -80,7 +80,7 @@ class Renderer
                 $debug['post'] = $_POST;
                 $debug['valid'] = false;
                 $debug['unique'] = false;
-                $debug['campaignId'] = null;
+                $debug['campaignPostId'] = null;
                 $debug['existingCampaign'] = null;
 
                 if (Helpers::canEdit()) {
@@ -97,10 +97,10 @@ class Renderer
                         $debug['valid'] = true;
                         if (Campaigns::isUnique($title)) {
                             $debug['unique'] = true;
-                            $campaignId = Campaigns::addCampaign(title: $title, subject: $subject, contentTitle: $contentTitle, content: $content, audiences: $audiences, template: $template);
+                            $campaignPostId = Campaigns::addCampaign(title: $title, subject: $subject, contentTitle: $contentTitle, content: $content, audiences: $audiences, template: $template);
 
-                            $debug['campaignId'] = $campaignId;
-                            if ($campaignId) {
+                            $debug['campaignPostId'] = $campaignPostId;
+                            if ($campaignPostId) {
                                 Renderer::campaign_created($debug);
                             } else {
                                 Renderer::campaign_could_not_create($debug);
@@ -121,18 +121,18 @@ class Renderer
                 break;
 
             case 'campaign-edit':
-                if (isset($_GET['campaignId'])) {
-                    $campaignId = $_GET['campaignId'];
-                    $campaign = Campaigns::getCampaignById($campaignId);
+                if (isset($_GET['campaignPostId'])) {
+                    $campaignPostId = $_GET['campaignPostId'];
+                    $campaign = Campaigns::getCampaignById($campaignPostId);
 
                     require MAWIBLAH_PLUGIN_DIR . "/templates/campaign/add-campaign.php";
                 }
                 break;
 
             case 'campaign-delete':
-                if (isset($_GET['campaignId'])) {
-                    $campaignId = $_GET['campaignId'];
-                    $result = Campaigns::deleteCampaign($campaignId);
+                if (isset($_GET['campaignPostId'])) {
+                    $campaignPostId = $_GET['campaignPostId'];
+                    $result = Campaigns::deleteCampaign($campaignPostId);
                 }
                 require MAWIBLAH_PLUGIN_DIR . "/templates/campaign/list.php";
                 break;

@@ -121,9 +121,9 @@ class Campaigns
         echo '</div>';
     }
 
-    public static function deleteCampaign($campaignId)
+    public static function deleteCampaign($campaignPostId)
     {
-        return wp_delete_post($campaignId);
+        return wp_delete_post($campaignPostId);
     }
 
     public static function isUnique($title): bool
@@ -257,7 +257,7 @@ class Campaigns
         $post->campaignFinished = get_post_meta($post->id, 'campaignFinished', true) ?? false;
 
         if (!$post->campaignHash) {
-            $post->campaignHash = md5($post->id);
+            $post->campaignHash = Helpers::generateCampaignHash($post->id);
             update_post_meta($post->id, 'campaignHash', $post->campaignHash);
         }
 
@@ -481,14 +481,14 @@ class Campaigns
         }
     }
 
-    public static function lockTemplate($campaign, bool $testMode): string|bool
+    public static function lockTemplate(object $campaign, bool $testMode): string|bool
     {
 
-        $campaignId = $campaign->id;
-        update_post_meta($campaignId, 'status', 'sending-in-progress');
+        $campaignPostId = $campaign->id;
+        update_post_meta($campaignPostId, 'status', 'sending-in-progress');
         // copy template
 
-        $templateHTML = Templates::copyTemplate($campaignId, $testMode);
+        $templateHTML = Templates::copyTemplate($campaignPostId, $testMode);
 
         if ($templateHTML === false) {
             return false;
@@ -506,7 +506,7 @@ class Campaigns
     public static function fillTemplate(string $template, object $campaign, object $subscriber): string
     {
         $email = $subscriber->email;
-        $campaignId = $campaign->id;
+        $campaignPostId = $campaign->id;
         $templateHTML = do_shortcode($template);
         $templateHTML = str_replace('[gdlnks_newsletter_title]', $campaign->post_title, $templateHTML);
 
@@ -523,43 +523,43 @@ class Campaigns
         return $templateHTML;
     }
 
-    public static function updateCounters($campaign, $emailsSent, $emailsFailed, $emailsSkipped, $emailsUnsubed)
+    public static function updateCounters(object $campaign, int $emailsSent, int $emailsFailed, int $emailsSkipped, int $emailsUnsubed): void
     {
 
-        $campaignId = $campaign->id;
-        update_post_meta($campaignId, 'emailsSend', $emailsSent);
-        update_post_meta($campaignId, 'emailsFailed', $emailsFailed);
-        update_post_meta($campaignId, 'emailsSkipped', $emailsSkipped);
-        update_post_meta($campaignId, 'emailsUnsubed', $emailsUnsubed);
+        $campaignPostId = $campaign->id;
+        update_post_meta($campaignPostId, 'emailsSend', $emailsSent);
+        update_post_meta($campaignPostId, 'emailsFailed', $emailsFailed);
+        update_post_meta($campaignPostId, 'emailsSkipped', $emailsSkipped);
+        update_post_meta($campaignPostId, 'emailsUnsubed', $emailsUnsubed);
     }
 
-    public static function getCounters($capmaign): object
+    public static function getCounters(object $campaign): object
     {
         return (object)[
-            'emailsSend' => get_post_meta($capmaign->id, 'emailsSend', true),
-            'emailsFailed' => get_post_meta($capmaign->id, 'emailsFailed', true),
-            'emailsSkipped' => get_post_meta($capmaign->id, 'emailsSkipped', true),
-            'emailsUnsubed' => get_post_meta($capmaign->id, 'emailsUnsubed', true),
-            'emailsNewlyUnsubed' => get_post_meta($capmaign->id, 'emailsNewlyUnsubed', true) ?? 0,
+            'emailsSend' => get_post_meta($campaign->id, 'emailsSend', true),
+            'emailsFailed' => get_post_meta($campaign->id, 'emailsFailed', true),
+            'emailsSkipped' => get_post_meta($campaign->id, 'emailsSkipped', true),
+            'emailsUnsubed' => get_post_meta($campaign->id, 'emailsUnsubed', true),
+            'emailsNewlyUnsubed' => get_post_meta($campaign->id, 'emailsNewlyUnsubed', true) ?? 0,
         ];
     }
 
-    public static function incrementNewlyUnsubed($campaignId): void
+    public static function incrementNewlyUnsubed(int $campaignPostId): void
     {
-        $campaign = self::getCampaignById($campaignId);
+        $campaign = self::getCampaignById($campaignPostId);
         if ($campaign) {
             $current = (int)($campaign->emailsNewlyUnsubed ?? 0);
-            update_post_meta($campaignId, 'emailsNewlyUnsubed', $current + 1);
-            add_post_meta($campaignId, 'unsub_time', time(), false);
+            update_post_meta($campaignPostId, 'emailsNewlyUnsubed', $current + 1);
+            add_post_meta($campaignPostId, 'unsub_time', time(), false);
         }
     }
 
-    public static function linkCLicked($campaignHash, $url): int
+    public static function linkCLicked(string $campaignHash, string $url): int
     {
         $campaign = self::getCampaignByHash($campaignHash);
 
         if (!$campaign) {
-            Logs::addLog('Campaign not found', 'Campaign not found', ['campaignId' => $campaignHash, 'url' => $url]);
+            Logs::addLog('Campaign not found', 'Campaign not found', ['campaignHash' => $campaignHash, 'url' => $url]);
             return 0;
         }
 
@@ -573,13 +573,13 @@ class Campaigns
         }
 
         // Track unique user clicks (once per subscriber per campaign)
-        $isNewUser = !isset($_SESSION['campaignId']) || !isset($_SESSION['subscriberId']);
+        $isNewUser = !isset($_SESSION['campaignHash']) || !isset($_SESSION['subscriberId']);
         if ($isNewUser) {
             $currentUniqueUsers = ( int )$campaign->uniqueUserClicks ?? 0;
             update_post_meta($campaign->id, 'uniqueUserClicks', $currentUniqueUsers + 1);
         }
 
-        if (isset($_SESSION['campaignId']) && isset($_SESSION['subscriberId']) && isset($_SESSION[$url])) {
+        if (isset($_SESSION['campaignHash']) && isset($_SESSION['subscriberId']) && isset($_SESSION[$url])) {
             return (int)$campaign->linksClicked;
         }
 
@@ -600,9 +600,9 @@ class Campaigns
         return $newCount;
     }
 
-    public static function getClickTimesByDayOfWeek(int $campaignId): array
+    public static function getClickTimesByDayOfWeek(int $campaignPostId): array
     {
-        $campaign = self::getCampaignById($campaignId);
+        $campaign = self::getCampaignById($campaignPostId);
         if (!$campaign) {
             return [];
         }
@@ -670,9 +670,9 @@ class Campaigns
         return $dayStats;
     }
 
-    public static function getClickTimesByHourOfDay($campaignId): array
+    public static function getClickTimesByHourOfDay(int $campaignPostId): array
     {
-        $campaign = self::getCampaignById($campaignId);
+        $campaign = self::getCampaignById($campaignPostId);
         if (!$campaign) {
             return [];
         }
@@ -753,56 +753,56 @@ class Campaigns
         return $dayStats;
     }
 
-    public static function testStart(int $campaignId): void
+    public static function testStart(int $campaignPostId): void
     {
-        update_post_meta($campaignId, 'testStarted', time());
-        self::resetCounters($campaignId);
+        update_post_meta($campaignPostId, 'testStarted', time());
+        self::resetCounters($campaignPostId);
     }
 
-    public static function testFinish(int $campaignId): void
+    public static function testFinish(int $campaignPostId): void
     {
-        update_post_meta($campaignId, 'testFinished', time());
+        update_post_meta($campaignPostId, 'testFinished', time());
     }
 
-    public static function testApprove(int $campaignId): void
+    public static function testApprove(int $campaignPostId): void
     {
-        update_post_meta($campaignId, 'testApproved', time());
+        update_post_meta($campaignPostId, 'testApproved', time());
     }
 
-    public static function testReset(int $campaignId): void
+    public static function testReset(int $campaignPostId): void
     {
-        update_post_meta($campaignId, 'testStarted', false);
-        update_post_meta($campaignId, 'testFinished', false);
-        update_post_meta($campaignId, 'testApproved', false);
+        update_post_meta($campaignPostId, 'testStarted', false);
+        update_post_meta($campaignPostId, 'testFinished', false);
+        update_post_meta($campaignPostId, 'testApproved', false);
     }
 
-    public static function campaignStart(int $campaignId): void
+    public static function campaignStart(int $campaignPostId): void
     {
-        $campaign = self::getCampaignById($campaignId);
+        $campaign = self::getCampaignById($campaignPostId);
         if ($campaign && !$campaign->campaignStarted) {
-            self::resetCounters($campaignId);
+            self::resetCounters($campaignPostId);
         }
-        update_post_meta($campaignId, 'campaignStarted', time());
+        update_post_meta($campaignPostId, 'campaignStarted', time());
     }
 
-    public static function campaignFinish(int $campaignId): void
+    public static function campaignFinish(int $campaignPostId): void
     {
-        update_post_meta($campaignId, 'campaignFinished', time());
+        update_post_meta($campaignPostId, 'campaignFinished', time());
     }
 
-    public static function resetCounters(int $campaignId): void
+    public static function resetCounters(int $campaignPostId): void
     {
-        update_post_meta($campaignId, 'emailsSend', 0);
-        update_post_meta($campaignId, 'emailsFailed', 0);
-        update_post_meta($campaignId, 'emailsSkipped', 0);
-        update_post_meta($campaignId, 'emailsUnsubed', 0);
-        update_post_meta($campaignId, 'emailsNewlyUnsubed', 0);
-        update_post_meta($campaignId, 'linksClicked', 0);
-        update_post_meta($campaignId, 'linksClickedTotal', 0);
-        update_post_meta($campaignId, 'uniqueUserClicks', 0);
+        update_post_meta($campaignPostId, 'emailsSend', 0);
+        update_post_meta($campaignPostId, 'emailsFailed', 0);
+        update_post_meta($campaignPostId, 'emailsSkipped', 0);
+        update_post_meta($campaignPostId, 'emailsUnsubed', 0);
+        update_post_meta($campaignPostId, 'emailsNewlyUnsubed', 0);
+        update_post_meta($campaignPostId, 'linksClicked', 0);
+        update_post_meta($campaignPostId, 'linksClickedTotal', 0);
+        update_post_meta($campaignPostId, 'uniqueUserClicks', 0);
     }
 
-    public static function getStatsForCampaign($campaign)
+    public static function getStatsForCampaign(object $campaign): array
     {
         $lastCampaigns = [$campaign];
 
@@ -835,7 +835,7 @@ class Campaigns
         ];
     }
 
-    public static function getConversionStatsForCampaign($campaign)
+    public static function getConversionStatsForCampaign(object $campaign): array
     {
         $lastCampaigns = [$campaign];
 
@@ -879,7 +879,7 @@ class Campaigns
         ];
     }
 
-    public static function getDataForDashBoard($limit)
+    public static function getDataForDashBoard(int $limit): array
     {
         $lastCampaigns = Campaigns::getLastCampaigns($limit);
 
@@ -912,7 +912,7 @@ class Campaigns
         ];
     }
 
-    public static function getDataForDashBoardConversionRate($limit)
+    public static function getDataForDashBoardConversionRate(int $limit): array
     {
         $lastCampaigns = Campaigns::getLastCampaigns($limit);
 

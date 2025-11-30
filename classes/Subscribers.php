@@ -421,9 +421,9 @@ class Subscribers
         return $term;
     }
 
-    public static function isEmailSent(int $subscriberId, int $campaignId): bool
+    public static function isEmailSent(int $subscriberId, int $campaignPostId): bool
     {
-        $sent = get_post_meta($subscriberId, 'sent_' . $campaignId, true);
+        $sent = get_post_meta($subscriberId, 'sent_' . $campaignPostId, true);
 
         return (bool)$sent;
     }
@@ -472,20 +472,20 @@ class Subscribers
         update_post_meta($subscriberId, 'lastInteraction', $interactionDate);
     }
 
-    public static function sendingEmail(int $subscriberId, int $campaignId): void
+    public static function sendingEmail(int $subscriberId, int $campaignPostId): void
     {
-        update_post_meta($subscriberId, 'sent_' . $campaignId, 'sending');
+        update_post_meta($subscriberId, 'sent_' . $campaignPostId, 'sending');
     }
 
-    public static function sentEmail(int $subscriberId, int $campaignId): void
+    public static function sentEmail(int $subscriberId, int $campaignPostId): void
     {
-        update_post_meta($subscriberId, 'sent_' . $campaignId, 'sent');
+        update_post_meta($subscriberId, 'sent_' . $campaignPostId, 'sent');
         self::updateLastInteraction($subscriberId);
     }
 
-    public static function sentEmailFailed(int $subscriberId, int $campaignId): void
+    public static function sentEmailFailed(int $subscriberId, int $campaignPostId): void
     {
-        update_post_meta($subscriberId, 'sent_' . $campaignId, 'failed');
+        update_post_meta($subscriberId, 'sent_' . $campaignPostId, 'failed');
     }
 
     public static function getSubscriberById(int $id): object|null
@@ -536,7 +536,7 @@ class Subscribers
         if (!session_id()) {
             session_start();
         }
-        if (isset($_SESSION['campaignId']) && isset($_SESSION['subscriberId'])) {
+        if (isset($_SESSION['campaignHash']) && isset($_SESSION['subscriberId'])) {
             return $subscriber->activity;
         }
 

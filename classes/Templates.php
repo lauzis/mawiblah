@@ -76,10 +76,10 @@ class Templates
         return false;
     }
 
-    public static function copyTemplate(int $campaignId, bool $testMode): string|bool
+    public static function copyTemplate(int $campaignPostId, bool $testMode): string|bool
     {
-        $templateName = get_post_meta($campaignId, 'template', true);
-        $templateArchived = get_post_meta($campaignId, 'email_template_copied', true);
+        $templateName = get_post_meta($campaignPostId, 'template', true);
+        $templateArchived = get_post_meta($campaignPostId, 'email_template_copied', true);
 
         $dir = MAWIBLAH_PLUGIN_DIR . '/email_templates/archived';
         $template = self::getTemplateByNameViaRest($templateName);
@@ -94,9 +94,9 @@ class Templates
         }
 
         if (!$templateArchived || $testMode) {
-            $filename = $campaignId . '_' . $templateName . '.html';
+            $filename = $campaignPostId . '_' . $templateName . '.html';
             file_put_contents($dir . '/' . $filename, $template);
-            update_post_meta($campaignId, 'email_template_copied', true);
+            update_post_meta($campaignPostId, 'email_template_copied', true);
         }
 
         return $template;

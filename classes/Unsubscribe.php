@@ -7,7 +7,7 @@ class Unsubscribe
     public static function init()
     {
         if (isset($_GET['subscriberId']) && isset($_GET['unsubscribe'])) {
-            $campaignHash = isset($_GET['campaignId']) ? sanitize_text_field($_GET['campaignId']) : null;
+            $campaignHash = isset($_GET['campaign']) ? sanitize_text_field($_GET['campaign']) : null;
             if (!isset($_GET['unsubToken'])) {
                 self::unsubscribe($_GET['unsubscribe'], $_GET['subscriberId'], $campaignHash);
             } else {
@@ -48,7 +48,7 @@ class Unsubscribe
         }
     }
 
-    public static function unsubscribeLink($subscriberId, $email)
+    public static function unsubscribeLink(string $subscriberId, string $email)
     {
         return Helpers::trackingParams([
             'subscriberId' => $subscriberId,
@@ -56,7 +56,7 @@ class Unsubscribe
         ]);
     }
 
-    public static function unsubscribeConfirmLink($subscriberId, $email, $unsubToken, ?string $campaignHash = null)
+    public static function unsubscribeConfirmLink(string $subscriberId, string $email, string $unsubToken, ?string $campaignHash = null)
     {
         $params = [
             'subscriberId' => $subscriberId,
@@ -65,19 +65,19 @@ class Unsubscribe
         ];
 
         if ($campaignHash) {
-            $params['campaignId'] = $campaignHash;
+            $params['campaign'] = $campaignHash;
         }
 
         return Helpers::trackingParams($params);
     }
 
-    public static function unsubscribeAprooved($subscriberId, $email, $unsubToken, ?string $campaignHash = null)
+    public static function unsubscribeAprooved(string $subscriberId, string $email, string $unsubToken, ?string $campaignHash = null)
     {
         $debug = [
             'subscriberId' => $subscriberId,
             'email' => $email,
             'unsubToken' => $unsubToken,
-            'campaignId' => $campaignHash
+            'campaign' => $campaignHash
         ];
         $subscriber = Subscribers::getSubscriber($email);
         $debug['subscriber'] = $subscriber;

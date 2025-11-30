@@ -108,14 +108,14 @@ class Helpers
         return self::getCurrentUrl() . '&' . http_build_query($params);
     }
 
-    public static function campaignTestResetUrl(int $campaignId): string
+    public static function campaignTestResetUrl(int $campaignPostId): string
     {
-        return self::generatePluginUrl(['action' => 'campaign-test-reset', 'campaignId' => $campaignId], 'campaignId');
+        return self::generatePluginUrl(['action' => 'campaign-test-reset', 'campaignPostId' => $campaignPostId], 'campaignPostId');
     }
 
-    public static function campaignTestApproveUrl(int $campaignId): string
+    public static function campaignTestApproveUrl(int $campaignPostId): string
     {
-        return self::generatePluginUrl(['action' => 'campaign-test-approve', 'campaignId' => $campaignId], 'campaignId');
+        return self::generatePluginUrl(['action' => 'campaign-test-approve', 'campaignPostId' => $campaignPostId], 'campaignPostId');
     }
 
     public static function emailSendingStats(int $sent=0,int $skipped=0,int $failed=0,int $unsubscribed=0, int $alreadySent=-0, int $doNotDisturb=0, int $emailsDisabled=0, int $notTester=0 ): array{
@@ -137,5 +137,9 @@ class Helpers
 
     public static function generateSubscriberId(int $id): string{
         return md5($id);
+    }
+
+    public static function generateCampaignHash(int $id): string{
+        return md5($id . time());
     }
 }

@@ -6,7 +6,7 @@
     use Mawiblah\Subscribers;
     use Mawiblah\Settings;
 
-    if (isset($_GET['campaignId'])) {
+    if (isset($_GET['campaignPostId'])) {
 
         $sleepBeforeJob = Settings::getOption('mawiblah-time-between-emails');
         if (!is_numeric($sleepBeforeJob) || $sleepBeforeJob < 0) {
@@ -17,12 +17,12 @@
         $maxTime = ini_get('max_execution_time');
         $unsubedAudience = Subscribers::unsubedAudience();
 
-        $campaignId = intval($_GET['campaignId'] ?? 0);
-        if ($campaignId <= 0) {
+        $campaignPostId = intval($_GET['campaignPostId'] ?? 0);
+        if ($campaignPostId <= 0) {
             wp_die(__('Invalid campaign ID', 'mawiblah'));
         }
 
-        $campaign = Campaigns::getCampaignById($campaignId);
+        $campaign = Campaigns::getCampaignById($campaignPostId);
 
         if ($campaign->testFinished && !$campaign->campaignStarted) {
             ?>
@@ -30,10 +30,10 @@
                 <strong>Test finished</strong>
                 <p>Test was already finished. You cannot test it again.</p>
                 <div class="flex flex-row space-between">
-                    <a class="btn btn-secondary" href="<?= Helpers::campaignTestResetUrl($campaignId) ?>"
+                    <a class="btn btn-secondary" href="<?= Helpers::campaignTestResetUrl($campaignPostId) ?>"
                        class="btn btn-primary">Retest</a>
                     <?php if (!$campaign->testApproved) : ?>
-                        <a class="btn btn-primary" href="<?= Helpers::campaignTestApproveUrl($campaignId) ?>"
+                        <a class="btn btn-primary" href="<?= Helpers::campaignTestApproveUrl($campaignPostId) ?>"
                            class="btn btn-primary">Approve</a>
                     <?php endif; ?>
                 </div>
@@ -50,7 +50,7 @@
             exit;
         }
 
-        Campaigns::testStart($campaignId);
+        Campaigns::testStart($campaignPostId);
 
         $audiences = $campaign->audiences;
 
@@ -136,9 +136,9 @@
                         <td><?= esc_html( date_i18n( 'Y-m-d H:i:s', $subscriber->firstInteraction ) ); ?></td>
                         <td><?= esc_html( date_i18n( 'Y-m-d H:i:s', $subscriber->lastInteraction ) ); ?></td>
                         <td>
-                            <div id="<?= $campaignId ?>-<?= $subscriberId ?>"
+                            <div id="<?= $campaignPostId ?>-<?= $subscriberId ?>"
                                  class="mawiblah-campaign-action test"
-                                 data-campaign-id="<?= $campaignId ?>"
+                                 data-campaign-post-id="<?= $campaignPostId ?>"
                                  data-subscriber-id="<?= $subscriberId ?>"
                                  data-subscriber-email="<?= $email ?>">
                                 Status

@@ -91,6 +91,7 @@ on all possible configurations and setups.
   - **Fixed:** Saved unsubscribe timestamp (`unsub_time`) for accurate growth tracking (with fallback to `lastInteraction`).
   - **Improved:** Split dashboard template into modular components for better maintainability.
   - **Improved:** Added campaign statistics graphs (Raw, Conversion, Links, Days, Hours) to the individual campaign edit/view screen.
+  - **Refactor:** Separated internal campaign IDs (`campaignPostId`) from public-facing hashes (`campaignHash`) for better security and cleaner architecture.
 
 - Added comprehensive campaign statistics tracking with new counters
 - Implemented tracking for newly unsubscribed users per campaign (`emailsNewlyUnsubed`)

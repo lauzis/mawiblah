@@ -17,7 +17,7 @@ MAWIBLAH is a WordPress email campaign plugin that provides basic email marketin
 Each campaign in MAWIBLAH tracks various metrics and metadata stored as WordPress post meta fields:
 
 ### Basic Campaign Information
-- **`campaignHash`** - Unique MD5 hash identifier for the campaign (generated from post ID, stored as `campaignId` meta)
+- **`campaignHash`** - Unique MD5 hash identifier for the campaign (generated from post ID, stored as `campaignHash` meta)
 - **`contentTitle`** - Internal title/name for the campaign
 - **`subject`** - Email subject line
 - **`template`** - Email template to use
@@ -44,6 +44,19 @@ Each campaign in MAWIBLAH tracks various metrics and metadata stored as WordPres
 - **`testApproved`** - Timestamp when test was approved (or `false` if not approved)
 - **`campaignStarted`** - Timestamp when actual campaign sending began (or `false` if not started)
 - **`campaignFinished`** - Timestamp when campaign sending completed (or `false` if not finished)
+
+## Architecture & Data Models
+
+### Campaign Identification
+The plugin uses two different identifiers for campaigns to ensure security and separation of concerns:
+
+- **`campaignPostId` (int)**: The internal WordPress Post ID. Used exclusively in the admin dashboard, database operations, and internal logic.
+- **`campaignHash` (string)**: A public-facing unique identifier (MD5 hash of the ID). Used in:
+  - Unsubscribe links
+  - Tracking URLs
+  - Public-facing shortcodes
+  - Session tracking
+  - Email template placeholders (`{campaignHash}`)
 
 ### Counter Usage Examples
 

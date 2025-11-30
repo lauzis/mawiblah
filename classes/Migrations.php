@@ -32,7 +32,7 @@ class Migrations
                 delete_post_meta($campaign->ID, 'campaignId');
             } elseif (!$campaignHashMeta) {
                 // Generate hash if missing entirely (should be handled by appendMeta but good for DB consistency)
-                $hash = md5($campaign->ID);
+                $hash = Helpers::generateCampaignHash($campaign->ID);
                 update_post_meta($campaign->ID, 'campaignHash', $hash);
             }
         }

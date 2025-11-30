@@ -67,12 +67,16 @@ on all possible configurations and setups.
 
 ### --- 1.0.15 ---
 - **New Statistics Dashboard:** Added comprehensive activity tracking:
+  ![Statistics dashboard](readme-assets/stats.png)
   - **Overall active days & Campaign start days:** Combined view to compare when campaigns are sent vs. when users are active.
   - **Activity rating:** A calculated ratio of active days to campaign start days to identify optimal sending times.
   - **Overall active hours:** Aggregated hourly click data for the last 12 campaigns.
-- **New Dashboard Widget:** Added a dedicated "Activity Rating" widget to the WordPress dashboard for quick access to engagement metrics.
+  - **Campaigns sent emails:** Overview of sent emails vs. failure rates.
+  - **Campaigns links clicked unique users:** Tracking unique user engagement across campaigns.
+  - **Campaigns links clicked total:** Total link clicks including multiple clicks by the same user.
 
-![Statistics dashboard](readme-assets/stats.png)
+- **New Dashboard Widget:** Added a dedicated "Activity Rating" widget to the WordPress dashboard for quick access to engagement metrics.
+![Dashboard view](readme-assets/dashboard.png)
 
 - Added comprehensive campaign statistics tracking with new counters
 - Implemented tracking for newly unsubscribed users per campaign (`emailsNewlyUnsubed`)

@@ -211,6 +211,10 @@ $oneItem = $arrayItemCount === 1;
         margin-top: 20px;
     }
 
+    .stats-box-email-sent-labels table {
+        width: 100%;
+    }
+
     .stats-box-email-sent-labels table,
     .stats-box-email-sent-labels table tr td {
         border-width: 1px;
@@ -261,7 +265,7 @@ $oneItem = $arrayItemCount === 1;
 
     .stats-month-avg-line {
         border-color: green;
-        text-aling: left;
+        text-align: left;
         font-weight: bold;
         text-shadow: 0 0 4px white;
         padding-left: 5px;

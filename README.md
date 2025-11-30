@@ -68,6 +68,8 @@ on all possible configurations and setups.
 ### --- 1.0.15 ---
 - **New Statistics Dashboard:** Added comprehensive activity tracking:
   ![Statistics dashboard](readme-assets/stats.png)
+  - **Subscriber Growth:** Visualizes new subscriber trends over the last 12 months.
+  - **Unsubscribe Growth:** Visualizes unsubscribe trends over the last 12 months.
   - **Overall active days & Campaign start days:** Combined view to compare when campaigns are sent vs. when users are active.
   - **Activity rating:** A calculated ratio of active days to campaign start days to identify optimal sending times.
   - **Overall active hours:** Aggregated hourly click data for the last 12 campaigns.
@@ -77,6 +79,17 @@ on all possible configurations and setups.
 
 - **New Dashboard Widget:** Added a dedicated "Activity Rating" widget to the WordPress dashboard for quick access to engagement metrics.
 ![Dashboard view](readme-assets/dashboard.png)
+
+- **Improvements & Fixes:**
+  - **Fixed:** Corrected percentage calculation for clicked links in campaign stats.
+  - **Fixed:** Resolved CSS conflict in bar graphs (purple vs cyan).
+  - **Fixed:** Prevented PHP warnings by checking `headers_sent()` before starting sessions.
+  - **Fixed:** Handled empty data scenarios in bar graphs to prevent fatal errors.
+  - **Fixed:** Corrected variable name typos in dashboard templates.
+  - **Fixed:** Escaped campaign titles in dashboard for better security (XSS prevention).
+  - **Fixed:** Ensured `linkCLicked` returns the updated count immediately.
+  - **Fixed:** Saved unsubscribe timestamp (`unsub_time`) for accurate growth tracking (with fallback to `lastInteraction`).
+  - **Improved:** Split dashboard template into modular components for better maintainability.
 
 - Added comprehensive campaign statistics tracking with new counters
 - Implemented tracking for newly unsubscribed users per campaign (`emailsNewlyUnsubed`)

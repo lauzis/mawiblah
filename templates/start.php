@@ -10,6 +10,7 @@ Templates::loadTemplate('stats/styles.php', []);
 <h2>Overall statistics</h2>
     <div class="wrap mawiblah">
     <?php Templates::loadTemplate('stats/subscriber-growth.php', []); ?>
+    <?php Templates::loadTemplate('stats/unsubscribe-growth.php', []); ?>
     <?php Templates::loadTemplate('stats/overall-sent.php', []); ?>
     <?php Templates::loadTemplate('stats/overall-unique.php', []); ?>
     <?php Templates::loadTemplate('stats/overall-rating.php', []); ?>

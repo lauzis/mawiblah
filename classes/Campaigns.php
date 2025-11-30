@@ -447,6 +447,7 @@ class Campaigns
         if ($campaign) {
             $current = (int)($campaign->emailsNewlyUnsubed ?? 0);
             update_post_meta($campaignId, 'emailsNewlyUnsubed', $current + 1);
+            add_post_meta($campaignId, 'unsub_time', time(), false);
         }
     }
 
@@ -773,5 +774,65 @@ class Campaigns
             self::STAT_UNIQUE_USERS => $uniqueUsers,
             self::STAT_LINKS_CLICKED => $linksClicked,
         ];
+    }
+
+    public static function getUnsubscribeGrowthStats(int $months = 12): array
+    {
+        $stats = [];
+        for ($i = $months - 1; $i >= 0; $i--) {
+            $date = date('Y-m', strtotime("-$i months"));
+            $stats[$date] = 0;
+        }
+
+        global $wpdb;
+        $subscriberPostType = Subscribers::postType();
+        
+        $query = "
+            SELECT 
+                p.ID,
+                pm_time.meta_value as unsub_time,
+                pm_last.meta_value as last_interaction
+            FROM {$wpdb->posts} p
+            INNER JOIN {$wpdb->postmeta} pm_unsub ON p.ID = pm_unsub.post_id
+            LEFT JOIN {$wpdb->postmeta} pm_time ON p.ID = pm_time.post_id AND pm_time.meta_key = 'unsub_time'
+            LEFT JOIN {$wpdb->postmeta} pm_last ON p.ID = pm_last.post_id AND pm_last.meta_key = 'lastInteraction'
+            WHERE p.post_type = %s
+            AND pm_unsub.meta_key = 'unsubed' 
+            AND pm_unsub.meta_value = '1'
+        ";
+        
+        $results = $wpdb->get_results($wpdb->prepare($query, $subscriberPostType));
+        
+        $cutoff = strtotime("-$months months");
+
+        foreach ($results as $row) {
+            $timestamp = $row->unsub_time;
+            if (empty($timestamp)) {
+                $timestamp = $row->last_interaction;
+            }
+            
+            if (!empty($timestamp)) {
+                if (!is_numeric($timestamp)) {
+                    $timestamp = strtotime($timestamp);
+                }
+                
+                if ($timestamp >= $cutoff) {
+                    $ym = date('Y-m', (int)$timestamp);
+                    if (isset($stats[$ym])) {
+                        $stats[$ym]++;
+                    }
+                }
+            }
+        }
+
+        // Format keys for display
+        $formattedStats = [];
+        foreach ($stats as $ym => $count) {
+            $timestamp = strtotime($ym . '-01');
+            $label = date_i18n('M Y', $timestamp);
+            $formattedStats[$label] = $count;
+        }
+
+        return $formattedStats;
     }
 }

@@ -464,7 +464,7 @@ class Campaigns
 
         // lets check if visit is in session already
         // check if session started
-        if (!session_id()) {
+        if (!session_id() && !headers_sent()) {
             session_start();
         }
 
@@ -476,11 +476,12 @@ class Campaigns
         }
 
         if (isset($_SESSION['campaignId']) && isset($_SESSION['subscriberId']) && isset($_SESSION[$url])) {
-            return $campaign->linksClicked;
+            return (int)$campaign->linksClicked;
         }
 
         $currentCount = ( int )$campaign->linksClicked ?? 0;
-        update_post_meta($campaign->id, 'linksClicked', $currentCount + 1);
+        $newCount = $currentCount + 1;
+        update_post_meta($campaign->id, 'linksClicked', $newCount);
 
         $links = $campaign->links;
         if (isset($links[$url])) {
@@ -492,7 +493,7 @@ class Campaigns
 
         add_post_meta($campaign->id, 'click_time', time(), false);
 
-        return (int)$campaign->linksClicked + 1;
+        return $newCount;
     }
 
     public static function getClickTimesByDayOfWeek(int $campaignId): array
@@ -760,7 +761,7 @@ class Campaigns
             $newlyUnsubscribed[] = round($newlyUnsubscribedCount/$total*100, 2);
             $failed[] = round($failedCount/$total*100,2);
             $uniqueUsers[] = round($uniqueUsersCount/$total*100,2);
-            $linksClicked[] = round($linksClickedCount/($totalLinksCount*$total),2);
+            $linksClicked[] = round($linksClickedCount/($totalLinksCount*$total)*100,2);
         }
 
         return [

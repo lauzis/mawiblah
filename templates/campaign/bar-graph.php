@@ -2,7 +2,7 @@
     <div class="stats-box-email-container">
         <?= _e('No data to display.', 'maiblah'); ?>
     </div>
-<?php endif; ?>
+<?php return; endif; ?>
 
 <?php
 
@@ -153,7 +153,7 @@ $oneItem = $arrayItemCount === 1;
         border-color: #4d0099; /* A very deep purple */
     }
 
-    .mawiblah-stats-bar.purple {
+    .mawiblah-stats-bar.cyan {
         background-color: #80ffff; /* A bright, light cyan */
         border-color: #00bfff; /* A deep sky blue/azure that complements the cyan */
     }
@@ -196,7 +196,7 @@ $oneItem = $arrayItemCount === 1;
         border-color: #4d0099; /* A very deep purple */
     }
 
-    .mawiblah-stats-square.purple {
+    .mawiblah-stats-square.cyan {
         background-color: #80ffff; /* A bright, light cyan */
         border-color: #00bfff; /* A deep sky blue/azure that complements the cyan */
     }

@@ -175,17 +175,17 @@ use Mawiblah\Templates;
         </section>
 
     <?php
-    $campaings = Campaigns::getLastCampaigns(1);
+    $campaigns = Campaigns::getLastCampaigns(1);
     $campaignTitle = false;
-    $lastCampaing = false;
-    if (is_array($campaings)) {
-        $lastCampaing = $campaings[0];
-        $campaignTitle = $lastCampaing->post_title ?? false;
+    $lastCampaign = false;
+    if (is_array($campaigns)) {
+        $lastCampaign = $campaigns[0];
+        $campaignTitle = $lastCampaign->post_title ?? false;
     }
 ?>
     </div>
 <?php
-    if (!$lastCampaing) {
+    if (!$lastCampaign) {
         return;
     }
 
@@ -194,7 +194,7 @@ use Mawiblah\Templates;
     <h2>Last campaign results</h2>
     <div class="wrap mawiblah">
     <section>
-        <h2><?= $campaignTitle ?> - <?= __('Latest campaign raw', 'mawiblah'); ?></h2>
+        <h2><?= esc_html($campaignTitle) ?> - <?= __('Latest campaign raw', 'mawiblah'); ?></h2>
         <div class="graph-wrap">
             <?php
             $data = Campaigns::getDataForDashBoard(1);
@@ -215,7 +215,7 @@ use Mawiblah\Templates;
 
     <section>
         <?php if ($campaignTitle): ?>
-            <h2><?= $campaignTitle ?> - <?= __('Latest campaign conversion rate', 'mawiblah'); ?></h2>
+            <h2><?= esc_html($campaignTitle) ?> - <?= __('Latest campaign conversion rate', 'mawiblah'); ?></h2>
             <div class="graph-wrap">
                 <?php
 
@@ -239,14 +239,14 @@ use Mawiblah\Templates;
 
     <?php if ($campaignTitle): ?>
         <section>
-            <h2><?= $campaignTitle ?> - <?= __('Links clicked', 'mawiblah'); ?></h2>
+            <h2><?= esc_html($campaignTitle) ?> - <?= __('Links clicked', 'mawiblah'); ?></h2>
             <?php
             $headers = [__('Links'), __('Click count')];
             $data = [];
 
-            asort($lastCampaing->links);
-            $lastCampaing->links  = array_reverse($lastCampaing->links) ;
-            foreach ($lastCampaing->links as $link => $clickCount) {
+            asort($lastCampaign->links);
+            $lastCampaign->links  = array_reverse($lastCampaign->links) ;
+            foreach ($lastCampaign->links as $link => $clickCount) {
                 $data[] = [$link, $clickCount];
             }
 
@@ -257,9 +257,9 @@ use Mawiblah\Templates;
 
     <?php if ($campaignTitle): ?>
         <section>
-            <h2><?= $campaignTitle ?> - <?= __('Active days', 'mawiblah'); ?></h2>
+            <h2><?= esc_html($campaignTitle) ?> - <?= __('Active days', 'mawiblah'); ?></h2>
             <?php
-                $activeDays = Campaigns::getClickTimesByDayOfWeek($lastCampaing->id);
+                $activeDays = Campaigns::getClickTimesByDayOfWeek($lastCampaign->id);
                 $dataForBarGraph = [];
                 $dataForBarGraph[__('Weekdays')] = [];
                 $headers=['Day','Count'];
@@ -285,9 +285,9 @@ use Mawiblah\Templates;
 
     <?php if ($campaignTitle): ?>
         <section>
-            <h2><?= $campaignTitle ?> - <?= __('Active hours', 'mawiblah'); ?></h2>
+            <h2><?= esc_html($campaignTitle) ?> - <?= __('Active hours', 'mawiblah'); ?></h2>
             <?php
-            $activeHours = Campaigns::getClickTimesByHourOfDay($lastCampaing->id);
+            $activeHours = Campaigns::getClickTimesByHourOfDay($lastCampaign->id);
             $dataForBarGraph = [];
             $dataForBarGraph[__('Hours')] = [];
             $headers=['Hour','Count'];

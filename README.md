@@ -90,6 +90,7 @@ on all possible configurations and setups.
   - **Fixed:** Ensured `linkCLicked` returns the updated count immediately.
   - **Fixed:** Saved unsubscribe timestamp (`unsub_time`) for accurate growth tracking (with fallback to `lastInteraction`).
   - **Improved:** Split dashboard template into modular components for better maintainability.
+  - **Improved:** Added campaign statistics graphs (Raw, Conversion, Links, Days, Hours) to the individual campaign edit/view screen.
 
 - Added comprehensive campaign statistics tracking with new counters
 - Implemented tracking for newly unsubscribed users per campaign (`emailsNewlyUnsubed`)

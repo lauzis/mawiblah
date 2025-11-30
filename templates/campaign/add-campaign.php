@@ -54,3 +54,33 @@
         </div>
     </div>
 </div>
+
+<?php if (isset($campaign) && $campaign->id): ?>
+    <?php
+    \Mawiblah\Templates::loadTemplate('stats/styles.php', []);
+    
+    $rawStats = \Mawiblah\Campaigns::getStatsForCampaign($campaign);
+    $conversionStats = \Mawiblah\Campaigns::getConversionStatsForCampaign($campaign);
+    
+    $campaignData = [
+        'campaign' => $campaign,
+        'title' => $campaign->post_title,
+        'stats' => $rawStats
+    ];
+    
+    $conversionData = [
+        'campaign' => $campaign,
+        'title' => $campaign->post_title,
+        'stats' => $conversionStats
+    ];
+    ?>
+    
+    <div class="wrap mawiblah" style="margin-top: 40px;">
+        <h2>Campaign Statistics</h2>
+        <?php \Mawiblah\Templates::loadTemplate('stats/campaign-raw.php', $campaignData); ?>
+        <?php \Mawiblah\Templates::loadTemplate('stats/campaign-conversion.php', $conversionData); ?>
+        <?php \Mawiblah\Templates::loadTemplate('stats/last-links.php', $campaignData); ?>
+        <?php \Mawiblah\Templates::loadTemplate('stats/last-days.php', $campaignData); ?>
+        <?php \Mawiblah\Templates::loadTemplate('stats/last-hours.php', $campaignData); ?>
+    </div>
+<?php endif; ?>

@@ -16,6 +16,54 @@ class Campaigns
     public static function init()
     {
         self::registerPostType();
+        add_action('add_meta_boxes', [self::class, 'addMetaBoxes']);
+    }
+
+    public static function addMetaBoxes()
+    {
+        add_meta_box(
+            'mawiblah_campaign_stats',
+            __('Campaign Statistics', 'mawiblah'),
+            [self::class, 'renderStatsMetaBox'],
+            self::postType(),
+            'normal',
+            'high'
+        );
+    }
+
+    public static function renderStatsMetaBox($post)
+    {
+        $campaign = self::appendMeta($post);
+        
+        if (!$campaign->campaignStarted) {
+            echo '<p>' . __('Campaign has not started yet.', 'mawiblah') . '</p>';
+            return;
+        }
+
+        \Mawiblah\Templates::loadTemplate('stats/styles.php', []);
+        
+        $rawStats = self::getStatsForCampaign($campaign);
+        $conversionStats = self::getConversionStatsForCampaign($campaign);
+        
+        $campaignData = [
+            'campaign' => $campaign,
+            'title' => $campaign->post_title,
+            'stats' => $rawStats
+        ];
+        
+        $conversionData = [
+            'campaign' => $campaign,
+            'title' => $campaign->post_title,
+            'stats' => $conversionStats
+        ];
+        
+        echo '<div class="wrap mawiblah">';
+        \Mawiblah\Templates::loadTemplate('stats/campaign-raw.php', $campaignData);
+        \Mawiblah\Templates::loadTemplate('stats/campaign-conversion.php', $conversionData);
+        \Mawiblah\Templates::loadTemplate('stats/last-links.php', $campaignData);
+        \Mawiblah\Templates::loadTemplate('stats/last-days.php', $campaignData);
+        \Mawiblah\Templates::loadTemplate('stats/last-hours.php', $campaignData);
+        echo '</div>';
     }
 
     public static function deleteCampaign($campaignId)
@@ -697,6 +745,83 @@ class Campaigns
         update_post_meta($campaignId, 'linksClicked', 0);
         update_post_meta($campaignId, 'linksClickedTotal', 0);
         update_post_meta($campaignId, 'uniqueUserClicks', 0);
+    }
+
+    public static function getStatsForCampaign($campaign)
+    {
+        $lastCampaigns = [$campaign];
+
+        $skipped = [];
+        $sent = [];
+        $unsubscribed = [];
+        $newlyUnsubscribed = [];
+        $failed = [];
+        $uniqueUsers = [];
+        $linksClicked = [];
+
+        foreach ($lastCampaigns as $lastCampaign) {
+            $skipped[] = is_numeric($lastCampaign->emailsSkipped) ? $lastCampaign->emailsSkipped : 0;
+            $sent[] = is_numeric($lastCampaign->emailsSend) ? $lastCampaign->emailsSend : 0;
+            $unsubscribed[] = is_numeric($lastCampaign->emailsUnsubed) ? $lastCampaign->emailsUnsubed : 0;
+            $newlyUnsubscribed[] = is_numeric($lastCampaign->emailsNewlyUnsubed) ? $lastCampaign->emailsNewlyUnsubed : 0;
+            $failed[] = is_numeric($lastCampaign->emailsFailed) ? $lastCampaign->emailsFailed : 0;
+            $uniqueUsers[] = is_numeric($lastCampaign->uniqueUserClicks) ? $lastCampaign->uniqueUserClicks : 0;
+            $linksClicked[] = is_numeric($lastCampaign->linksClicked) ? $lastCampaign->linksClicked : 0;
+        }
+
+        return [
+            self::STAT_SKIPPED => $skipped,
+            self::STAT_SENT => $sent,
+            self::STAT_UNSUBSCRIBED => $unsubscribed,
+            self::STAT_NEWLY_UNSUBSCRIBED => $newlyUnsubscribed,
+            self::STAT_FAILED => $failed,
+            self::STAT_UNIQUE_USERS => $uniqueUsers,
+            self::STAT_LINKS_CLICKED => $linksClicked,
+        ];
+    }
+
+    public static function getConversionStatsForCampaign($campaign)
+    {
+        $lastCampaigns = [$campaign];
+
+        $skipped = [];
+        $sent = [];
+        $unsubscribed = [];
+        $newlyUnsubscribed = [];
+        $failed = [];
+        $uniqueUsers = [];
+        $linksClicked = [];
+
+        foreach ($lastCampaigns as $lastCampaign) {
+
+            $totalLinksCount = $lastCampaign->links ? count($lastCampaign->links) : 1;
+            $skip = is_numeric($lastCampaign->emailsSkipped) ? $lastCampaign->emailsSkipped : 0;
+            $sentCount = is_numeric($lastCampaign->emailsSend) ? $lastCampaign->emailsSend : 0;
+            $newlyUnsubscribedCount = is_numeric($lastCampaign->emailsNewlyUnsubed) ? $lastCampaign->emailsNewlyUnsubed : 0;
+            $failedCount = is_numeric($lastCampaign->emailsFailed) ? $lastCampaign->emailsFailed : 0;
+            $uniqueUsersCount = is_numeric($lastCampaign->uniqueUserClicks) ? $lastCampaign->uniqueUserClicks : 0;
+            $linksClickedCount = is_numeric($lastCampaign->linksClicked) ? $lastCampaign->linksClicked : 0;
+            $total = $skip + $sentCount + $failedCount;
+            $total = $total === 0 ? 1 : $total;
+            $unsubed = is_numeric($lastCampaign->emailsUnsubed) ? $lastCampaign->emailsUnsubed : 0;
+            $skipped[] = round($skip/$total*100,2);
+            $sent[] = round($sentCount/$total*100,2);
+            $unsubscribed[] = round($unsubed/($total+$unsubed)*100,2);
+            $newlyUnsubscribed[] = round($newlyUnsubscribedCount/$total*100, 2);
+            $failed[] = round($failedCount/$total*100,2);
+            $uniqueUsers[] = round($uniqueUsersCount/$total*100,2);
+            $linksClicked[] = round($linksClickedCount/($totalLinksCount*$total)*100,2);
+        }
+
+        return [
+            self::STAT_SKIPPED => $skipped,
+            self::STAT_SENT => $sent,
+            self::STAT_UNSUBSCRIBED => $unsubscribed,
+            self::STAT_NEWLY_UNSUBSCRIBED => $newlyUnsubscribed,
+            self::STAT_FAILED => $failed,
+            self::STAT_UNIQUE_USERS => $uniqueUsers,
+            self::STAT_LINKS_CLICKED => $linksClicked,
+        ];
     }
 
     public static function getDataForDashBoard($limit)

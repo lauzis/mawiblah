@@ -328,6 +328,7 @@ class Subscribers
         if ($subscriber->unsubToken === $unsubToken) {
             update_post_meta($subscriber->id, 'unsubed', true);
             update_post_meta($subscriber->id, 'unsubed_feedback', $feedback);
+            update_post_meta($subscriber->id, 'unsub_time', time());
             
             // Add to Unsubed audience
             $audience = self::unsubedAudience();
@@ -403,6 +404,11 @@ class Subscribers
         $unsubedAudience = self::unsubedAudience();
         if ($unsubedAudience && $audienceId === $unsubedAudience->term_id) {
              update_post_meta($subscriberId, 'unsubed', true);
+             if (!get_post_meta($subscriberId, 'unsub_time', true)) {
+                 $lastInteraction = get_post_meta($subscriberId, 'lastInteraction', true);
+                 $time = !empty($lastInteraction) ? (is_numeric($lastInteraction) ? $lastInteraction : strtotime($lastInteraction)) : time();
+                 update_post_meta($subscriberId, 'unsub_time', $time);
+             }
         }
     }
 
@@ -658,6 +664,12 @@ class Subscribers
 
         foreach ($idsToUpdate as $id) {
             update_post_meta($id, 'unsubed', true);
+            // Only set unsub_time if it doesn't exist
+            if (!get_post_meta($id, 'unsub_time', true)) {
+                $lastInteraction = get_post_meta($id, 'lastInteraction', true);
+                $time = !empty($lastInteraction) ? (is_numeric($lastInteraction) ? $lastInteraction : strtotime($lastInteraction)) : time();
+                update_post_meta($id, 'unsub_time', $time);
+            }
         }
 
         // 2. Subscribers with 'unsubed' meta = true -> add to 'Unsubed' category

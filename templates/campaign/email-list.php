@@ -24,6 +24,10 @@
 
         $campaign = Campaigns::getCampaignById($campaignPostId);
 
+        if (!$campaign) {
+            wp_die(__('Campaign not found', 'mawiblah'));
+        }
+
         if ($campaign->testFinished && !$campaign->campaignStarted) {
             ?>
             <div class="alert alert-danger">
@@ -132,7 +136,7 @@
 
                     ?>
                     <tr>
-                        <td><?= $subscriber->email; ?></td>
+                        <td><?= esc_html($subscriber->email); ?></td>
                         <td><?= esc_html( date_i18n( 'Y-m-d H:i:s', $subscriber->firstInteraction ) ); ?></td>
                         <td><?= esc_html( date_i18n( 'Y-m-d H:i:s', $subscriber->lastInteraction ) ); ?></td>
                         <td>
@@ -140,7 +144,7 @@
                                  class="mawiblah-campaign-action test"
                                  data-campaign-post-id="<?= $campaignPostId ?>"
                                  data-subscriber-id="<?= $subscriberId ?>"
-                                 data-subscriber-email="<?= $email ?>">
+                                 data-subscriber-email="<?= esc_attr($email) ?>">
                                 Status
                             </div>
                         </td>

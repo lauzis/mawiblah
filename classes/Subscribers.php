@@ -310,13 +310,13 @@ class Subscribers
         if (!$id) {
             $sub = self::getSubscriber($subEmail);
             if ($sub) {
-                $id = $sub['ID'];
+                $id = $sub->id;
             }
         }
         $unsubToken = get_post_meta($id, 'unsubToken', true);
         if (!$unsubToken) {
-            $unsubToken = md5($subId . $subEmail);
-            add_post_meta($subId, 'unsubToken', $unsubToken);
+            $unsubToken = md5($id . $subEmail);
+            add_post_meta($id, 'unsubToken', $unsubToken);
         }
         return $unsubToken;
 
@@ -328,6 +328,13 @@ class Subscribers
         if ($subscriber->unsubToken === $unsubToken) {
             update_post_meta($subscriber->id, 'unsubed', true);
             update_post_meta($subscriber->id, 'unsubed_feedback', $feedback);
+            
+            // Add to Unsubed audience
+            $audience = self::unsubedAudience();
+            if ($audience && isset($audience->term_id)) {
+                self::addSubscriberToAudience($subscriber->id, $audience->term_id);
+            }
+            
             return true;
         } else {
             return false;
@@ -391,6 +398,12 @@ class Subscribers
     public static function addSubscriberToAudience(int $subscriberId, int $audienceId): void
     {
         wp_set_post_terms($subscriberId, $audienceId, Subscribers::postType() . '_category', true);
+        
+        // Sync with unsubed meta
+        $unsubedAudience = self::unsubedAudience();
+        if ($unsubedAudience && $audienceId === $unsubedAudience->term_id) {
+             update_post_meta($subscriberId, 'unsubed', true);
+        }
     }
 
     public static function checkMailchimpUnsubedAudience($email): bool
@@ -416,7 +429,11 @@ class Subscribers
     {
         $term = get_term_by('name', 'Unsubed', Subscribers::postType() . '_category');
         if (!$term) {
-            $term = wp_insert_term('Unsubed', Subscribers::postType() . '_category');
+            $result = wp_insert_term('Unsubed', Subscribers::postType() . '_category');
+            if (is_wp_error($result)) {
+                return null;
+            }
+            $term = get_term($result['term_id'], Subscribers::postType() . '_category');
         }
         return $term;
     }
@@ -612,5 +629,111 @@ class Subscribers
         }
 
         return $formattedStats;
+    }
+
+    public static function syncUnsubscribeStatus(): void
+    {
+        $unsubedAudience = self::unsubedAudience();
+        if (!$unsubedAudience) {
+            return;
+        }
+
+        global $wpdb;
+
+        // 1. Subscribers in 'Unsubed' category -> set 'unsubed' meta to true
+        // Use custom query to find only those that need updating (missing meta or not set to 1)
+        // This avoids loading full subscriber objects and extra meta calls
+        $query = "
+            SELECT p.ID 
+            FROM {$wpdb->posts} p
+            INNER JOIN {$wpdb->term_relationships} tr ON p.ID = tr.object_id
+            INNER JOIN {$wpdb->term_taxonomy} tt ON tr.term_taxonomy_id = tt.term_taxonomy_id
+            LEFT JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id AND pm.meta_key = 'unsubed'
+            WHERE p.post_type = %s
+            AND tt.term_id = %d
+            AND (pm.meta_value IS NULL OR pm.meta_value != '1')
+        ";
+
+        $idsToUpdate = $wpdb->get_col($wpdb->prepare($query, self::postType(), $unsubedAudience->term_id));
+
+        foreach ($idsToUpdate as $id) {
+            update_post_meta($id, 'unsubed', true);
+        }
+
+        // 2. Subscribers with 'unsubed' meta = true -> add to 'Unsubed' category
+        $subscribersWithMeta = get_posts([
+            'post_type' => self::postType(),
+            'posts_per_page' => -1,
+            'meta_query' => [
+                [
+                    'key' => 'unsubed',
+                    'value' => '1',
+                    'compare' => '='
+                ]
+            ],
+            'fields' => 'ids'
+        ]);
+
+        foreach ($subscribersWithMeta as $subscriberId) {
+            // Check if already in audience
+            if (!has_term($unsubedAudience->term_id, self::postType() . '_category', $subscriberId)) {
+                self::addSubscriberToAudience($subscriberId, $unsubedAudience->term_id);
+            }
+        }
+    }
+
+    public static function getUnsubscribeReasons(int $limit = 20): array
+    {
+        global $wpdb;
+        $subscriberPostType = self::postType();
+        
+        $query = "
+            SELECT 
+                p.ID,
+                pm_feedback.meta_value as feedback,
+                pm_time.meta_value as unsub_time,
+                pm_last.meta_value as last_interaction
+            FROM {$wpdb->posts} p
+            INNER JOIN {$wpdb->postmeta} pm_unsub ON p.ID = pm_unsub.post_id
+            INNER JOIN {$wpdb->postmeta} pm_feedback ON p.ID = pm_feedback.post_id
+            LEFT JOIN {$wpdb->postmeta} pm_time ON p.ID = pm_time.post_id AND pm_time.meta_key = 'unsub_time'
+            LEFT JOIN {$wpdb->postmeta} pm_last ON p.ID = pm_last.post_id AND pm_last.meta_key = 'lastInteraction'
+            WHERE p.post_type = %s
+            AND pm_unsub.meta_key = 'unsubed' 
+            AND pm_unsub.meta_value = '1'
+            AND pm_feedback.meta_key = 'unsubed_feedback'
+            AND pm_feedback.meta_value != ''
+            ORDER BY 
+                CASE 
+                    WHEN pm_time.meta_value IS NOT NULL THEN pm_time.meta_value 
+                    ELSE pm_last.meta_value 
+                END DESC
+            LIMIT %d
+        ";
+        
+        $results = $wpdb->get_results($wpdb->prepare($query, $subscriberPostType, $limit));
+        
+        $reasons = [];
+        foreach ($results as $row) {
+            $timestamp = $row->unsub_time;
+            if (empty($timestamp)) {
+                $timestamp = $row->last_interaction;
+            }
+            
+            $date = '';
+            if (!empty($timestamp)) {
+                if (!is_numeric($timestamp)) {
+                    $timestamp = strtotime($timestamp);
+                }
+                $date = date_i18n('Y-m-d H:i', (int)$timestamp);
+            }
+            
+            $reasons[] = [
+                'feedback' => $row->feedback,
+                'date' => $date
+            ];
+        }
+        
+        return $reasons;
     }
 }

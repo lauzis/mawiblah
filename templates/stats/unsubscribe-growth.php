@@ -28,4 +28,23 @@ use Mawiblah\Templates;
     <div class="graph-wrap">
         <?php Templates::renderTable($headers, $tableData); ?>
     </div>
+    
+    <?php
+    $reasons = \Mawiblah\Subscribers::getUnsubscribeReasons(20);
+    if (!empty($reasons)) {
+        ?>
+        <h3><?= __('Latest Unsubscribe Reasons', 'mawiblah'); ?></h3>
+        <div class="graph-wrap">
+            <?php
+            $reasonHeaders = [__('Date', 'mawiblah'), __('Reason', 'mawiblah')];
+            $reasonData = [];
+            foreach ($reasons as $reason) {
+                $reasonData[] = [$reason['date'], esc_html($reason['feedback'])];
+            }
+            Templates::renderTable($reasonHeaders, $reasonData);
+            ?>
+        </div>
+        <?php
+    }
+    ?>
 </section>

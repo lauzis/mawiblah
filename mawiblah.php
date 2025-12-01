@@ -7,6 +7,7 @@
  * Author: Aivars Lauzis
  * Author URI: https://github.com/lauzis/
  * License: GPL3 - http://www.gnu.org/licenses/gpl.html
+ * Requires PHP: 8.0
  */
 
 if (!defined('MAWIBLAH_VERSION')) {

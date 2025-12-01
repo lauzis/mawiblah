@@ -498,6 +498,7 @@ class Campaigns
         $templateHTML = str_replace('[gdlnks_newsletter_title]', $campaign->contentTitle ?? $campaign->post_title, $templateHTML);
         $templateHTML = str_replace('[gdlnks_newsletter_content]', $campaign->post_content, $templateHTML);
         $templateHTML = str_replace('{campaignId}', $campaign->campaignHash, $templateHTML);
+        $templateHTML = str_replace('{campaignHash}', $campaign->campaignHash, $templateHTML);
 
         return $templateHTML;
     }
@@ -513,10 +514,12 @@ class Campaigns
         $templateHTML = str_replace('[gdlnks_newsletter_content]', get_the_content($campaign->id), $templateHTML);
 
         $templateHTML = str_replace('{campaignId}', $campaign->campaignHash, $templateHTML);
+        $templateHTML = str_replace('{campaignHash}', $campaign->campaignHash, $templateHTML);
         $templateHTML = str_replace('{subscriberId}', $subscriber->subscriberId, $templateHTML);
         $templateHTML = str_replace('{email}', $email, $templateHTML);
 
         $templateHTML = str_replace('%7BcampaignId%7D', $campaign->campaignHash, $templateHTML);
+        $templateHTML = str_replace('%7BcampaignHash%7D', $campaign->campaignHash, $templateHTML);
         $templateHTML = str_replace('%7BsubscriberId%7D', $subscriber->subscriberId, $templateHTML);
         $templateHTML = str_replace('%7Bemail%7D', $email, $templateHTML);
 
@@ -755,6 +758,7 @@ class Campaigns
 
     public static function testStart(int $campaignPostId): void
     {
+        Subscribers::syncUnsubscribeStatus();
         update_post_meta($campaignPostId, 'testStarted', time());
         self::resetCounters($campaignPostId);
     }

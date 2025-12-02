@@ -11,7 +11,9 @@ class Visits
         if (isset($_GET['campaign']) && isset($_GET['subscriberId']) && !isset($_GET['unsubscribe'])) {
 
             $currentUrl = Helpers::getCurrentUrlPath();
-            self::visit($_GET['campaign'], $_GET['subscriberId'], $currentUrl);
+            $campaignHash = sanitize_text_field($_GET['campaign']);
+            $subscriberId = sanitize_text_field($_GET['subscriberId']);
+            self::visit($campaignHash, $subscriberId, $currentUrl);
         }
     }
 

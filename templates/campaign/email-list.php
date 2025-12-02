@@ -6,6 +6,8 @@
     use Mawiblah\Subscribers;
     use Mawiblah\Settings;
 
+    $testMode = $testMode ?? false;
+
     if (isset($_GET['campaignPostId'])) {
 
         $sleepBeforeJob = Settings::getOption('mawiblah-time-between-emails');
@@ -57,7 +59,6 @@
         Campaigns::testStart($campaignPostId);
 
         $audiences = $campaign->audiences;
-
         $template = Campaigns::lockTemplate($campaign, $testMode);
 
         $counters = Campaigns::getCounters($campaign);

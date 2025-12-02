@@ -70,6 +70,7 @@ on all possible configurations and setups.
   ![Statistics dashboard](readme-assets/stats.png)
   - **Subscriber Growth:** Visualizes new subscriber trends over the last 12 months.
   - **Unsubscribe Growth:** Visualizes unsubscribe trends over the last 12 months.
+  - **Unsubscribe Reasons:** Added a table displaying the latest unsubscribe reasons and dates.
   - **Overall active days & Campaign start days:** Combined view to compare when campaigns are sent vs. when users are active.
   - **Activity rating:** A calculated ratio of active days to campaign start days to identify optimal sending times.
   - **Overall active hours:** Aggregated hourly click data for the last 12 campaigns.
@@ -89,8 +90,14 @@ on all possible configurations and setups.
   - **Fixed:** Escaped campaign titles in dashboard for better security (XSS prevention).
   - **Fixed:** Ensured `linkCLicked` returns the updated count immediately.
   - **Fixed:** Saved unsubscribe timestamp (`unsub_time`) for accurate growth tracking (with fallback to `lastInteraction`).
+  - **Fixed:** Resolved fatal error when `getCampaignById` returns null in email list template.
+  - **Fixed:** Corrected unsubscribe link placeholder replacement logic (`{campaignHash}`).
+  - **Fixed:** Handled `wp_insert_term` return values correctly to prevent fatal errors in audience creation.
+  - **Security:** Added `Requires PHP: 8.0` to plugin header.
+  - **Security:** Escaped email output in email list template to prevent XSS.
   - **Improved:** Split dashboard template into modular components for better maintainability.
   - **Improved:** Added campaign statistics graphs (Raw, Conversion, Links, Days, Hours) to the individual campaign edit/view screen.
+  - **Improved:** Synchronized 'Unsubed' audience category with `unsubed` meta field automatically.
   - **Refactor:** Separated internal campaign IDs (`campaignPostId`) from public-facing hashes (`campaignHash`) for better security and cleaner architecture.
 
 - Added comprehensive campaign statistics tracking with new counters

@@ -33,15 +33,16 @@ class Renderer
     {
 
         $testMode = false;
-        $action = $_GET['action'] ?? 'list';
+        $action = isset($_GET['action']) ? sanitize_key($_GET['action']) : 'list';
 
         switch ($action) {
             case 'test':
+                $testMode = true;
                 require MAWIBLAH_PLUGIN_DIR . "/templates/campaign/email-list.php";
                 break;
             case 'campaign-test-reset':
                 if (isset($_GET['campaignPostId'])) {
-                    $campaignPostId = $_GET['campaignPostId'];
+                    $campaignPostId = intval($_GET['campaignPostId']);
                     $result = Campaigns::testReset($campaignPostId);
                 }
                 require MAWIBLAH_PLUGIN_DIR . "/templates/campaign/list.php";
@@ -122,7 +123,7 @@ class Renderer
 
             case 'campaign-edit':
                 if (isset($_GET['campaignPostId'])) {
-                    $campaignPostId = $_GET['campaignPostId'];
+                    $campaignPostId = intval($_GET['campaignPostId']);
                     $campaign = Campaigns::getCampaignById($campaignPostId);
 
                     require MAWIBLAH_PLUGIN_DIR . "/templates/campaign/add-campaign.php";
@@ -131,7 +132,7 @@ class Renderer
 
             case 'campaign-delete':
                 if (isset($_GET['campaignPostId'])) {
-                    $campaignPostId = $_GET['campaignPostId'];
+                    $campaignPostId = intval($_GET['campaignPostId']);
                     $result = Campaigns::deleteCampaign($campaignPostId);
                 }
                 require MAWIBLAH_PLUGIN_DIR . "/templates/campaign/list.php";

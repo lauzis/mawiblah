@@ -7,11 +7,15 @@ class Unsubscribe
     public static function init()
     {
         if (isset($_GET['subscriberId']) && isset($_GET['unsubscribe'])) {
+            $subscriberId = sanitize_text_field($_GET['subscriberId']);
+            $email = sanitize_email($_GET['unsubscribe']);
             $campaignHash = isset($_GET['campaign']) ? sanitize_text_field($_GET['campaign']) : null;
+
             if (!isset($_GET['unsubToken'])) {
-                self::unsubscribe($_GET['unsubscribe'], $_GET['subscriberId'], $campaignHash);
+                self::unsubscribe($email, $subscriberId, $campaignHash);
             } else {
-                self::unsubscribeAprooved($_GET['subscriberId'],$_GET['unsubscribe'], $_GET['unsubToken'], $campaignHash);
+                $unsubToken = sanitize_text_field($_GET['unsubToken']);
+                self::unsubscribeAprooved($subscriberId, $email, $unsubToken, $campaignHash);
             }
         }
     }

@@ -110,7 +110,7 @@
             <table class="mawiblah-email-list wp-list-table widefat striped table-view-list">
                 <thead>
                 <tr>
-                    <th colspan="4">Audience: <?= $audienceName ?></th>
+                    <th colspan="4">Audience: <?= esc_html($audienceName) ?></th>
                 </tr>
 
                 <tr>

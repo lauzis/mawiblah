@@ -133,7 +133,15 @@ class Renderer
             case 'campaign-delete':
                 if (isset($_GET['campaignPostId'])) {
                     $campaignPostId = intval($_GET['campaignPostId']);
-                    $result = Campaigns::deleteCampaign($campaignPostId);
+
+                    if ($campaignPostId > 0) {
+                        if (!current_user_can('edit_post', $campaignPostId)) {
+                            wp_die(__('You are not allowed to do this.', 'mawiblah'), 403);
+                        }
+                        check_admin_referer('campaign-delete_' . $campaignPostId);
+
+                        Campaigns::deleteCampaign($campaignPostId);
+                    }
                 }
                 require MAWIBLAH_PLUGIN_DIR . "/templates/campaign/list.php";
                 break;

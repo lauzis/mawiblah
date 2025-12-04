@@ -108,7 +108,8 @@ class ShortCodes
     {
 
         $url = get_site_url() . Helpers::trackingParams([
-            'unsubscribe' => '{email}'
+            'unsubscribe' => '{email}',
+            'campaign' => '{campaignHash}'
         ]);
         $linkText = __('Unsubscribe', 'mawiblah');
 

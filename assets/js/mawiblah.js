@@ -127,7 +127,7 @@ function MAWIBLAH_sendEmail(item, list, totalCount, startingTime) {
 
   var subscriberId = item.getAttribute('data-subscriber-id');
   var email = item.getAttribute('data-subscriber-email');
-  var campaignId = item.getAttribute('data-campaign-id');
+  var campaignPostId = item.getAttribute('data-campaign-post-id');
 
   var sleepBeforeJob =0;
   var progressBar = document.querySelector('.progress');
@@ -143,7 +143,7 @@ function MAWIBLAH_sendEmail(item, list, totalCount, startingTime) {
 
   var data = {
     subscriberId: subscriberId,
-    campaignId: campaignId,
+    campaignPostId: campaignPostId,
     email: email,
     lastItem: lastItem
   };

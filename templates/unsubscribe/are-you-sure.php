@@ -59,14 +59,14 @@
 
             <h2><?php _e('Help us to get better', 'mawiblah'); ?></h2>
             <p><?php _e('We are sad to see you go, but could you provide us feedback? We want to get better. Your opinion is highly valuable to us.', 'mawiblah'); ?></p>
-            <form action="<?= $formUrl; ?>" method="POST">
+            <form action="<?= esc_url($formUrl); ?>" method="POST">
 
                 <label><?php _e('Let us know what we can improve','mawiblah'); ?></label>
                 <textarea id="feedback" name="feedback" ></textarea>
 
-                <input type="hidden" name="email" value="<?= $email; ?>"/>
-                <input type="hidden" name="subscriberId" value="<?= $subscriberId; ?>"/>
-                <input type="hidden" name="unsubToken" value="<?= $unsubToken; ?>"/>
+                <input type="hidden" name="email" value="<?= esc_attr($email); ?>"/>
+                <input type="hidden" name="subscriberId" value="<?= esc_attr($subscriberId); ?>"/>
+                <input type="hidden" name="unsubToken" value="<?= esc_attr($unsubToken); ?>"/>
                 <button type="submit" name="submit" value="<?php _e('Unsubscribe','mawiblah'); ?>">
                     <?php _e('Unsubscribe','mawiblah'); ?>
                 </button>

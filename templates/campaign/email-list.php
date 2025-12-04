@@ -2,12 +2,13 @@
     <?php
 
     use Mawiblah\Campaigns;
-    use Mawiblah\GravityForms;
     use Mawiblah\Helpers;
     use Mawiblah\Subscribers;
     use Mawiblah\Settings;
 
-    if (isset($_GET['campaignId'])) {
+    $testMode = $testMode ?? false;
+
+    if (isset($_GET['campaignPostId'])) {
 
         $sleepBeforeJob = Settings::getOption('mawiblah-time-between-emails');
         if (!is_numeric($sleepBeforeJob) || $sleepBeforeJob < 0) {
@@ -18,12 +19,16 @@
         $maxTime = ini_get('max_execution_time');
         $unsubedAudience = Subscribers::unsubedAudience();
 
-        $campaignId = intval($_GET['campaignId'] ?? 0);
-        if ($campaignId <= 0) {
+        $campaignPostId = intval($_GET['campaignPostId'] ?? 0);
+        if ($campaignPostId <= 0) {
             wp_die(__('Invalid campaign ID', 'mawiblah'));
         }
 
-        $campaign = Campaigns::getCampaignById($campaignId);
+        $campaign = Campaigns::getCampaignById($campaignPostId);
+
+        if (!$campaign) {
+            wp_die(__('Campaign not found', 'mawiblah'));
+        }
 
         if ($campaign->testFinished && !$campaign->campaignStarted) {
             ?>
@@ -31,10 +36,10 @@
                 <strong>Test finished</strong>
                 <p>Test was already finished. You cannot test it again.</p>
                 <div class="flex flex-row space-between">
-                    <a class="btn btn-secondary" href="<?= Helpers::campaignTestResetUrl($campaignId) ?>"
+                    <a class="btn btn-secondary" href="<?= Helpers::campaignTestResetUrl($campaignPostId) ?>"
                        class="btn btn-primary">Retest</a>
                     <?php if (!$campaign->testApproved) : ?>
-                        <a class="btn btn-primary" href="<?= Helpers::campaignTestApproveUrl($campaignId) ?>"
+                        <a class="btn btn-primary" href="<?= Helpers::campaignTestApproveUrl($campaignPostId) ?>"
                            class="btn btn-primary">Approve</a>
                     <?php endif; ?>
                 </div>
@@ -51,10 +56,9 @@
             exit;
         }
 
-        Campaigns::testStart($campaignId);
+        Campaigns::testStart($campaignPostId);
 
         $audiences = $campaign->audiences;
-
         $template = Campaigns::lockTemplate($campaign, $testMode);
 
         $counters = Campaigns::getCounters($campaign);
@@ -92,72 +96,68 @@
 
         <?php
 
-        foreach ($audiences as $id) {
-            if (substr_count($id, "GF__") > 0) {
-                $id = str_replace("GF__", "", $id);
-                $audienceName = GravityForms::getFormName($id) . " (Gravity Forms)";
-                $audience = Subscribers::getGFAudience($id, $audienceName);
-                $emails = GravityForms::getAllEmailsForForm($id);
+        foreach ($audiences as $audienceId) {
+            $audience = Subscribers::getAudience($audienceId);
+            if (!$audience) {
+                continue;
+            }
 
+            $audienceName = $audience->name;
+            $subscribers = Subscribers::getSubscribersByAudience($audienceId);
+
+            ?>
+
+            <table class="mawiblah-email-list wp-list-table widefat striped table-view-list">
+                <thead>
+                <tr>
+                    <th colspan="4">Audience: <?= esc_html($audienceName) ?></th>
+                </tr>
+
+                <tr>
+                    <th>Email</th>
+                    <th>First interaction</th>
+                    <th>Last interaction</th>
+                    <th>Status</th>
+                </tr>
+                </thead>
+                <tbody>
+
+                <?php
+                foreach ($subscribers as $subscriber) {
+                    $email = trim(strtolower($subscriber->email));
+
+                    if (isset($uniqueEmails[$email])) {
+                        $skippingReasons['notUniqueEmail'][] = $email;
+                        continue;
+                    }
+                    $uniqueEmails[$email] = true;
+
+                    $index++;
+                    $subscriberId = $subscriber->id;
+
+                    ?>
+                    <tr>
+                        <td><?= esc_html($subscriber->email); ?></td>
+                        <td><?= esc_html( date_i18n( 'Y-m-d H:i:s', $subscriber->firstInteraction ) ); ?></td>
+                        <td><?= esc_html( date_i18n( 'Y-m-d H:i:s', $subscriber->lastInteraction ) ); ?></td>
+                        <td>
+                            <div id="<?= $campaignPostId ?>-<?= $subscriberId ?>"
+                                 class="mawiblah-campaign-action test"
+                                 data-campaign-post-id="<?= $campaignPostId ?>"
+                                 data-subscriber-id="<?= $subscriberId ?>"
+                                 data-subscriber-email="<?= esc_attr($email) ?>">
+                                Status
+                            </div>
+                        </td>
+                    </tr>
+                    <?php
+
+                }
                 ?>
 
-                <table class="mawiblah-email-list wp-list-table widefat striped table-view-list">
-                    <thead>
-                    <tr>
-                        <th colspan="4">Audience: <?= $audienceName ?></th>
-                    </tr>
-
-                    <tr>
-                        <th>Email</th>
-                        <th>First interaction</th>
-                        <th>Last interaction</th>
-                        <th>Status</th>
-                    </tr>
-
-                    <?php
-                    foreach ($emails as $email => $info) {
-                        $email = trim(strtolower($email));
-
-                        if (isset($uniqueEmails[$email])) {
-                            $skippingReasons['notUniqueEmail'][] = $email;
-                            continue;
-                        }
-                        $uniqueEmails[$email] = true;
-
-                        $index++;
-
-                        $subscriber = Subscribers::getSubscriber($email);
-                        if (!$subscriber) {
-                            $subscriber = Subscribers::addSubscriber($email);
-                        }
-
-                        $subscriberId = $subscriber->id;
-
-                        ?>
-                        <tr>
-                            <td><?= $subscriber->email; ?></td>
-                            <td><?= esc_html( date_i18n( 'Y-m-d H:i:s', $subscriber->firstInteraction ) ); ?></td>
-                            <td><?= esc_html( date_i18n( 'Y-m-d H:i:s', $subscriber->lastInteraction ) ); ?></td>
-                            <td>
-                                <div id="<?= $campaignId ?>-<?= $subscriberId ?>"
-                                     class="mawiblah-campaign-action test"
-                                     data-campaign-id="<?= $campaignId ?>"
-                                     data-subscriber-id="<?= $subscriberId ?>"
-                                     data-subscriber-email="<?= $email ?>">
-                                    Status
-                                </div>
-                            </td>
-                        </tr>
-                        <?php
-
-                    }
-                    ?>
-
-                    </thead>
-                    <tbody>
-                </table>
-                <?php
-            }
+                </tbody>
+            </table>
+            <?php
         }
     }
     ?>

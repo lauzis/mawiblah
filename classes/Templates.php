@@ -76,10 +76,10 @@ class Templates
         return false;
     }
 
-    public static function copyTemplate(int $campaignId, bool $testMode): string|bool
+    public static function copyTemplate(int $campaignPostId, bool $testMode): string|bool
     {
-        $templateName = get_post_meta($campaignId, 'template', true);
-        $templateArchived = get_post_meta($campaignId, 'email_template_copied', true);
+        $templateName = get_post_meta($campaignPostId, 'template', true);
+        $templateArchived = get_post_meta($campaignPostId, 'email_template_copied', true);
 
         $dir = MAWIBLAH_PLUGIN_DIR . '/email_templates/archived';
         $template = self::getTemplateByNameViaRest($templateName);
@@ -94,11 +94,50 @@ class Templates
         }
 
         if (!$templateArchived || $testMode) {
-            $filename = $campaignId . '_' . $templateName . '.html';
+            $filename = $campaignPostId . '_' . $templateName . '.html';
             file_put_contents($dir . '/' . $filename, $template);
-            update_post_meta($campaignId, 'email_template_copied', true);
+            update_post_meta($campaignPostId, 'email_template_copied', true);
         }
 
         return $template;
+    }
+
+    public static function getTemplatePath( string $templatePath ):string {
+        $theme_template_paths = array(
+            trailingslashit( get_stylesheet_directory() ) .'mawiblah/'. $templatePath , // Child/Active Theme
+            trailingslashit( get_template_directory('mawiblah') ) .'mawiblah/'. $templatePath ,    // Parent Theme
+            MAWIBLAH_TEMPLATES_PATH .'/'. $templatePath ,
+        );
+
+        foreach ($theme_template_paths as $template_path) {
+            if (file_exists($template_path)) {
+                return $template_path;
+            }
+        }
+
+        return MAWIBLAH_TEMPLATES_PATH. '/missingTemplate.php';
+    }
+
+    public static function loadTemplate(string $templatePath, mixed $data) {
+        include self::getTemplatePath($templatePath);
+    }
+
+    public static function renderTable(array $headers, array $rows): void
+    {
+        $data = ['headers' => $headers, 'rows' => $rows];
+        self::loadTemplate('campaign/table-stats.php',$data);
+    }
+
+    public static function getDayTranslation($day){
+        return match ($day) {
+            'Monday' => __('Monday', 'mawiblah'),
+            'Tuesday' => __('Tuesday', 'mawiblah'),
+            'Wednesday' => __('Wednesday', 'mawiblah'),
+            'Thursday' => __('Thursday', 'mawiblah'),
+            'Friday' => __('Friday', 'mawiblah'),
+            'Saturday' => __('Saturday', 'mawiblah'),
+            'Sunday' => __('Sunday', 'mawiblah'),
+            default => $day,
+        };
     }
 }

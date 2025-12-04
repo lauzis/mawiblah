@@ -1,8 +1,11 @@
-<h2>Create campaing</h2>
+<h2><?= (isset($campaign) && $campaign->id) ? 'Update campaign' : 'Create campaign' ?></h2>
 
 <div class="flex ">
     <div class="flex-column">
         <form action="<?= \Mawiblah\Helpers::generatePluginUrl(['action' => 'save-campaign']); ?>" method="POST" class="create-campaign-form">
+            <?php if (isset($campaign) && $campaign->id): ?>
+                <input type="hidden" name="campaignPostId" value="<?= $campaign->id ?>">
+            <?php endif; ?>
             <label for="title">Title</label>
             <input type="text" name="title" id="title" value="<?= isset($campaign) ? $campaign->post_title : ''; ?>">
 
@@ -31,22 +34,21 @@
 
             <label for="audiences">Audiences</label>
             <?php
-                $audiences = \Mawiblah\GravityForms::getArrayOfGravityForms();
+                $audiences = \Mawiblah\Subscribers::getAllAudiences();
             ?>
             <select name="audiences[]" id="audiences" multiple>
-
                 <?php foreach ($audiences as $audience): ?>
                     <?php $selected = ''; ?>
-                    <?php if (isset($campaign) && in_array("GF__{$audience['id']}" ,$campaign->audiences)) {
+                    <?php if (isset($campaign) && is_array($campaign->audiences) && in_array($audience->term_id, $campaign->audiences)) {
                         $selected = 'selected';
                     } ?>
-                    <option <?= $selected ?> value="GF__<?= $audience['id'] ?>">
-                        <?= $audience['title'] ?>
-                    </option>;
+                    <option <?= $selected ?> value="<?= $audience->term_id ?>">
+                        <?= $audience->name ?>
+                    </option>
                 <?php endforeach; ?>
             </select>
 
-            <input type="submit" value="Create">
+            <input type="submit" value="<?= (isset($campaign) && $campaign->id) ? 'Update' : 'Create' ?>">
         </form>
     </div>
     <div class="flex-column flex-grow">
@@ -55,3 +57,33 @@
         </div>
     </div>
 </div>
+
+<?php if (isset($campaign) && $campaign->id): ?>
+    <?php
+    \Mawiblah\Templates::loadTemplate('stats/styles.php', []);
+    
+    $rawStats = \Mawiblah\Campaigns::getStatsForCampaign($campaign);
+    $conversionStats = \Mawiblah\Campaigns::getConversionStatsForCampaign($campaign);
+    
+    $campaignData = [
+        'campaign' => $campaign,
+        'title' => $campaign->post_title,
+        'stats' => $rawStats
+    ];
+    
+    $conversionData = [
+        'campaign' => $campaign,
+        'title' => $campaign->post_title,
+        'stats' => $conversionStats
+    ];
+    ?>
+    
+    <div class="wrap mawiblah" style="margin-top: 40px;">
+        <h2>Campaign Statistics</h2>
+        <?php \Mawiblah\Templates::loadTemplate('stats/campaign-raw.php', $campaignData); ?>
+        <?php \Mawiblah\Templates::loadTemplate('stats/campaign-conversion.php', $conversionData); ?>
+        <?php \Mawiblah\Templates::loadTemplate('stats/last-links.php', $campaignData); ?>
+        <?php \Mawiblah\Templates::loadTemplate('stats/last-days.php', $campaignData); ?>
+        <?php \Mawiblah\Templates::loadTemplate('stats/last-hours.php', $campaignData); ?>
+    </div>
+<?php endif; ?>

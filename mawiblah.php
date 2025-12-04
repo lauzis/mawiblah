@@ -3,14 +3,15 @@
  * Plugin Name: Mawiblah
  * Plugin URI: https://github.com/lauzis/
  * Description: Fff-ine, will build my own mailchimp... with blackjack and hookers.
- * Version: 1.0.14
+ * Version: 1.0.15
  * Author: Aivars Lauzis
  * Author URI: https://github.com/lauzis/
  * License: GPL3 - http://www.gnu.org/licenses/gpl.html
+ * Requires PHP: 8.0
  */
 
 if (!defined('MAWIBLAH_VERSION')) {
-    define('MAWIBLAH_VERSION', '1.0.14.' . time());
+    define('MAWIBLAH_VERSION', '1.0.15.' . time());
 }
 
 define('MAWIBLAH_PLUGIN_NAME', 'Mawiblah');
@@ -85,6 +86,7 @@ require(MAWIBLAH_PLUGIN_DIR . '/classes/GravityForms.php');
 require(MAWIBLAH_PLUGIN_DIR . '/classes/Renderer.php');
 require(MAWIBLAH_PLUGIN_DIR . '/classes/Visits.php');
 require(MAWIBLAH_PLUGIN_DIR . '/classes/Logs.php');
+require(MAWIBLAH_PLUGIN_DIR . '/classes/Migrations.php');
 require(MAWIBLAH_PLUGIN_DIR . '/classes/Actions.php');
 
 function mawiblah_init(): void
@@ -99,10 +101,12 @@ function mawiblah_init(): void
     \Mawiblah\Visits::init();
     \Mawiblah\Logs::init();
     \Mawiblah\GravityForms::init();
-    \Mawiblah\Actions::init();
 }
 
 add_action('init', 'mawiblah_init');
+
+// Dashboard widget needs to be registered earlier
+\Mawiblah\Actions::init();
 
 function mawiblah_load_textdomain()
 {

@@ -27,9 +27,11 @@ So... "Fine... will do my own Mailchimp... with blackjack and hookers"
 - Includes unsubscribe functionality.
 - Imports a list of unsubscribed users from Mailchimp.
 - Imports the audience from Gravity Form entries.
-- Tracks clicks for the campaigns.
+- Tracks clicks for the campaigns (both total and unique per session).
 - Tracks the timing of clicks for the campaigns.
-- Logs the actions. 
+- Logs the actions.
+
+📖 **[View detailed documentation](DOCUMENTATION.md)** for feature detailed explanations.
 
 ## Support
 This is a free plugin, so support is limited.
@@ -62,6 +64,59 @@ on all possible configurations and setups.
 
 
 ## Change log
+
+### --- 1.0.15 ---
+- **New Statistics Dashboard:** Added comprehensive activity tracking:
+  ![Statistics dashboard](readme-assets/stats.png)
+  - **Subscriber Growth:** Visualizes new subscriber trends over the last 12 months.
+  - **Unsubscribe Growth:** Visualizes unsubscribe trends over the last 12 months.
+  - **Unsubscribe Reasons:** Added a table displaying the latest unsubscribe reasons and dates.
+  - **Overall active days & Campaign start days:** Combined view to compare when campaigns are sent vs. when users are active.
+  - **Activity rating:** A calculated ratio of active days to campaign start days to identify optimal sending times.
+  - **Overall active hours:** Aggregated hourly click data for the last 12 campaigns.
+  - **Campaigns sent emails:** Overview of sent emails vs. failure rates.
+  - **Campaigns links clicked unique users:** Tracking unique user engagement across campaigns.
+  - **Campaigns links clicked total:** Total link clicks including multiple clicks by the same user.
+
+- **New Dashboard Widget:** Added a dedicated "Activity Rating" widget to the WordPress dashboard for quick access to engagement metrics.
+![Dashboard view](readme-assets/dashboard.png)
+
+- **Improvements & Fixes:**
+  - **Fixed:** Corrected percentage calculation for clicked links in campaign stats.
+  - **Fixed:** Resolved CSS conflict in bar graphs (purple vs cyan).
+  - **Fixed:** Prevented PHP warnings by checking `headers_sent()` before starting sessions.
+  - **Fixed:** Handled empty data scenarios in bar graphs to prevent fatal errors.
+  - **Fixed:** Corrected variable name typos in dashboard templates.
+  - **Fixed:** Escaped campaign titles in dashboard for better security (XSS prevention).
+  - **Fixed:** Ensured `linkCLicked` returns the updated count immediately.
+  - **Fixed:** Saved unsubscribe timestamp (`unsub_time`) for accurate growth tracking (with fallback to `lastInteraction`).
+  - **Fixed:** Resolved fatal error when `getCampaignById` returns null in email list template.
+  - **Fixed:** Corrected unsubscribe link placeholder replacement logic (`{campaignHash}`).
+  - **Fixed:** Handled `wp_insert_term` return values correctly to prevent fatal errors in audience creation.
+  - **Security:** Added `Requires PHP: 8.0` to plugin header.
+  - **Security:** Escaped email output in email list template to prevent XSS.
+  - **Improved:** Split dashboard template into modular components for better maintainability.
+  - **Improved:** Added campaign statistics graphs (Raw, Conversion, Links, Days, Hours) to the individual campaign edit/view screen.
+  - **Improved:** Synchronized 'Unsubed' audience category with `unsubed` meta field automatically.
+  - **Refactor:** Separated internal campaign IDs (`campaignPostId`) from public-facing hashes (`campaignHash`) for better security and cleaner architecture.
+
+- Added comprehensive campaign statistics tracking with new counters
+- Implemented tracking for newly unsubscribed users per campaign (`emailsNewlyUnsubed`)
+- Enhanced click tracking with dual metrics (total clicks vs unique session clicks)
+- Added detailed documentation (DOCUMENTATION.md) explaining all campaign fields and counters
+- Campaign statistics now update correctly during test runs
+- Improved counter initialization and update mechanisms
+- **Major:** Migrated audience system from Gravity Forms to WordPress native taxonomy
+  - Campaigns now use `mawiblah_subscriber_category` taxonomy for audience management
+  - Removed hardcoded Gravity Forms dependencies from campaign creation and email sending
+  - Added `Subscribers::getAllAudiences()` to retrieve all taxonomy audiences
+  - Added `Subscribers::getSubscribersByAudience()` for efficient subscriber querying via tax_query
+  - Updated `Subscribers::validateAudiences()` to validate taxonomy term IDs
+- **New:** Added `Campaigns::updateCampaignStats()` function to calculate and update campaign statistics from subscriber meta data
+- **New:** Added `Templates::renderTable()` for rendering styled data tables using template files
+- **Improved:** Campaign list now displays human-readable audience names instead of IDs
+- **Fixed:** Resolved undefined property error in `Subscribers::appendMeta()` for better compatibility with both ID and id properties
+- **Documentation:** Updated DOCUMENTATION.md with new API functions and taxonomy audience system explanation
 
 ### --- 1.0.14 ---
 - styling fixes

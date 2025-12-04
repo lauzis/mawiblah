@@ -27,6 +27,7 @@ use Mawiblah\Helpers;
             <th>Emails failed</th>
             <th>Emails skipped</th>
             <th>Emails unsubed</th>
+            <th>Unique visitors</th>
             <th>Links clicked</th>
             <th colspan="4">Actions</th>
         </tr>
@@ -41,12 +42,22 @@ use Mawiblah\Helpers;
             echo "<td>" . $campaign->post_title . "</td>";
             echo "<td>" . $campaign->subject . "</td>";
             echo "<td>" . $campaign->template . "</td>";
-            echo "<td>" . implode(",", $campaign->audiences) . "</td>";
+            $audienceNames = [];
+            if (is_array($campaign->audiences)) {
+                foreach ($campaign->audiences as $audienceId) {
+                    $audience = \Mawiblah\Subscribers::getAudience($audienceId);
+                    if ($audience) {
+                        $audienceNames[] = $audience->name;
+                    }
+                }
+            }
+            echo "<td>" . implode(", ", $audienceNames) . "</td>";
             echo "<td>" . $campaign->status . "</td>";
             echo "<td>" . $campaign->emailsSend . "</td>";
             echo "<td>" . $campaign->emailsFailed . "</td>";
             echo "<td>" . $campaign->emailsSkipped . "</td>";
             echo "<td>" . $campaign->emailsUnsubed . "</td>";
+            echo "<td>" . $campaign->uniqueUserClicks . "</td>";
             echo "<td>" . $campaign->linksClicked . "</td>";
             $status = $campaign->post_status;
 
@@ -78,16 +89,16 @@ use Mawiblah\Helpers;
                     </td>";
             } else {
                 echo "<td>
-                    <a class='btn link-send campaign-actions' data-type='send' data-href='" . Helpers::generatePluginUrl(['action' => 'test', 'campaignId' => $campaign->id]) . "'>" . $testButtonText . "</a>
+                    <a class='btn link-send campaign-actions' data-type='send' data-href='" . Helpers::generatePluginUrl(['action' => 'test', 'campaignPostId' => $campaign->id]) . "'>" . $testButtonText . "</a>
                 </td>";
                 echo "<td>
-                        <a class='btn btn-danger link-send campaign-actions $sendDisabled' data-type='send' data-href='" . Helpers::generatePluginUrl(['action' => 'campaign-send', 'campaignId' => $campaign->id], 'campaignId') . "'>Send</a>
+                        <a class='btn btn-danger link-send campaign-actions $sendDisabled' data-type='send' data-href='" . Helpers::generatePluginUrl(['action' => 'campaign-send', 'campaignPostId' => $campaign->id], 'campaignPostId') . "'>Send</a>
                     </td>";
                 echo "<td>
-                    <a class='btn btn-warning link-delete campaign-actions $deleteDisabled' data-type='delete' data-href='" . Helpers::generatePluginUrl(['action' => 'campaign-delete', 'campaignId' => $campaign->id], 'campaignId') . "'>Delete</a>
+                    <a class='btn btn-warning link-delete campaign-actions $deleteDisabled' data-type='delete' data-href='" . Helpers::generatePluginUrl(['action' => 'campaign-delete', 'campaignPostId' => $campaign->id], 'campaignPostId') . "'>Delete</a>
                     </td>";
                 echo "<td>
-                    <a class='btn link-edit campaign-actions $editDisabled' data-type='edit' data-href='" . Helpers::generatePluginUrl(['action' => 'campaign-edit', 'campaignId' => $campaign->id], 'campaignId') . "'>Edit</a>
+                    <a class='btn link-edit campaign-actions $editDisabled' data-type='edit' data-href='" . Helpers::generatePluginUrl(['action' => 'campaign-edit', 'campaignPostId' => $campaign->id], 'campaignPostId') . "'>Edit</a>
                 </td>";
             }
 

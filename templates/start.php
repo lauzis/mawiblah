@@ -1,87 +1,48 @@
-<div class="wrap mawiblah">
+<?php
 
-    <h1>FU M Mail</h1>
-    <p>
-        Fine. I will do it myself. I will make my own mailchinp with blackjack and hookers.
-    </p>
+use Mawiblah\Campaigns;
+use Mawiblah\Templates;
 
+Templates::loadTemplate('stats/styles.php', []);
+?>
+<h1>Mawiblah</h1>
 
+<h2>Overall statistics</h2>
+    <div class="wrap mawiblah">
+    <?php Templates::loadTemplate('stats/subscriber-growth.php', []); ?>
+    <?php Templates::loadTemplate('stats/unsubscribe-growth.php', []); ?>
+    <?php Templates::loadTemplate('stats/overall-sent.php', []); ?>
+    <?php Templates::loadTemplate('stats/overall-unique.php', []); ?>
+    <?php Templates::loadTemplate('stats/overall-rating.php', []); ?>
+    <?php Templates::loadTemplate('stats/overall-clicks.php', []); ?>
+    <?php Templates::loadTemplate('stats/overall-days.php', []); ?>
+    <?php Templates::loadTemplate('stats/overall-hours.php', []); ?>
 
+    <?php
+    $campaigns = Campaigns::getLastCampaigns(1);
+    $campaignTitle = false;
+    $lastCampaign = false;
+    if (is_array($campaigns)) {
+        $lastCampaign = $campaigns[0];
+        $campaignTitle = $lastCampaign->post_title ?? false;
+    }
+?>
+    </div>
+<?php
+    if (!$lastCampaign) {
+        return;
+    }
 
+    $lastCampaignData = ['campaign' => $lastCampaign, 'title' => $campaignTitle];
+    ?>
 
-
-
-    <h2>Gravity forms (Audiences)</h2>
-    <table>
-        <thead>
-        <tr>
-            <th>Id</th>
-            <th>Name</th>
-            <th>Actions</th>
-        </tr>
-        </thead>
-        <tbody>
-        <?php
-        $forms = \Mawiblah\GravityForms::getArrayOfGravityForms();
-        foreach ($forms as $form) {
-            echo "<tr>";
-            echo "<td>" . $form['id'] . "</td>";
-            echo "<td>" . $form['title'] . "</td>";
-            echo "<td><a href=''>Edit</a> | <a href=''>Delete</a></td>";
-            echo "</tr>";
-        }
-        ?>
-        </tbody>
-    </table>
-
-
-
-    <h2>List of email templates</h2>
-    <table>
-        <thead>
-        <tr>
-            <th>Id</th>
-            <th>Name</th>
-            <th>Actions</th>
-        </tr>
-        </thead>
-        <tbody>
-        <?php
-        $templates = \Mawiblah\Templates::getArrayOfEmailTemplates();
-        foreach ($templates as $template) {
-            echo "<tr>";
-            echo "<td>" . $template . "</td>";
-            echo "<td>" . $template . "</td>";
-            echo "<td><a href=''>Edit</a> | <a href=''>Delete</a></td>";
-            echo "</tr>";
-        }
-        ?>
-        </tbody>
-    </table>
-
-
-    <h2>Compaigns</h2>
-    <table>
-        <thead>
-        <tr>
-            <th>Id</th>
-            <th>Name</th>
-            <th>Actions</th>
-        </tr>
-        </thead>
-        <tbody>
-        <?php
-        $campaigns = \Mawiblah\Helpers::getArrayOfCampaigns();
-        foreach ($campaigns as $campaign) {
-            echo "<tr>";
-            echo "<td>" . $campaign['ID'] . "</td>";
-            echo "<td>" . $campaign['title'] . "</td>";
-            echo "<td><a href=''>Edit</a> | <a href=''>Delete</a></td>";
-            echo "</tr>";
-        }
-        ?>
-        </tbody>
-    </table>
+    <h2>Last campaign results</h2>
+    <div class="wrap mawiblah">
+    <?php Templates::loadTemplate('stats/last-raw.php', $lastCampaignData); ?>
+    <?php Templates::loadTemplate('stats/last-conversion.php', $lastCampaignData); ?>
+    <?php Templates::loadTemplate('stats/last-links.php', $lastCampaignData); ?>
+    <?php Templates::loadTemplate('stats/last-days.php', $lastCampaignData); ?>
+    <?php Templates::loadTemplate('stats/last-hours.php', $lastCampaignData); ?>
 </div>
 
 

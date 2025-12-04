@@ -409,6 +409,29 @@ class Campaigns
         return $post_id;
     }
 
+    public static function updateCampaign(int $campaignPostId, string $title, string $subject, string $contentTitle, string $content, array $audiences, string $template): int
+    {
+        // Prepare the post data
+        $post_data = [
+            'ID' => $campaignPostId,
+            'post_title' => $title,
+            'post_content' => $content,
+        ];
+
+        // Update the post in the database
+        $post_id = wp_update_post($post_data);
+
+        if (!is_wp_error($post_id)) {
+            // Save the email as a meta field
+            update_post_meta($post_id, 'template', $template);
+            update_post_meta($post_id, 'audiences', $audiences);
+            update_post_meta($post_id, 'subject', $subject);
+            update_post_meta($post_id, 'contentTitle', $contentTitle);
+        }
+
+        return $post_id;
+    }
+
 
     public static function getArrayOfCampaigns(): array
     {

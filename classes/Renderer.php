@@ -43,7 +43,15 @@ class Renderer
             case 'campaign-test-reset':
                 if (isset($_GET['campaignPostId'])) {
                     $campaignPostId = intval($_GET['campaignPostId']);
-                    $result = Campaigns::testReset($campaignPostId);
+
+                    if ($campaignPostId > 0) {
+                        if (!current_user_can('edit_post', $campaignPostId)) {
+                            wp_die(__('You are not allowed to do this.', 'mawiblah'), 403);
+                        }
+                        check_admin_referer('campaign-test-reset_' . $campaignPostId);
+
+                        Campaigns::testReset($campaignPostId);
+                    }
                 }
                 require MAWIBLAH_PLUGIN_DIR . "/templates/campaign/list.php";
                 break;
@@ -56,7 +64,7 @@ class Renderer
                     }
                     check_admin_referer('campaign-test-approve_' . $campaignPostId);
 
-                    $result = Campaigns::testApprove($campaignPostId);
+                    Campaigns::testApprove($campaignPostId);
                 }
                 require MAWIBLAH_PLUGIN_DIR . "/templates/campaign/list.php";
                 break;
@@ -96,9 +104,18 @@ class Renderer
 
                     if (Campaigns::validateCampaign($title, $subject, $audiences, $template)) {
                         $debug['valid'] = true;
-                        if (Campaigns::isUnique($title)) {
+
+                        $campaignPostId = isset($_POST['campaignPostId']) ? intval($_POST['campaignPostId']) : null;
+                        $campaignWithTitle = Campaigns::getCampaign($title);
+                        $isUnique = !$campaignWithTitle || ($campaignPostId && $campaignWithTitle->id == $campaignPostId);
+
+                        if ($isUnique) {
                             $debug['unique'] = true;
-                            $campaignPostId = Campaigns::addCampaign(title: $title, subject: $subject, contentTitle: $contentTitle, content: $content, audiences: $audiences, template: $template);
+                            if ($campaignPostId) {
+                                Campaigns::updateCampaign($campaignPostId, $title, $subject, $contentTitle, $content, $audiences, $template);
+                            } else {
+                                $campaignPostId = Campaigns::addCampaign(title: $title, subject: $subject, contentTitle: $contentTitle, content: $content, audiences: $audiences, template: $template);
+                            }
 
                             $debug['campaignPostId'] = $campaignPostId;
                             if ($campaignPostId) {
@@ -107,7 +124,7 @@ class Renderer
                                 Renderer::campaign_could_not_create($debug);
                             }
                         } else {
-                            $debug['existingCampaign'] = Campaigns::getCampaign($title);
+                            $debug['existingCampaign'] = $campaignWithTitle;
                             Renderer::campaign_already_exists($debug);
                         }
                     } else {

@@ -1,8 +1,11 @@
-<h2>Create campaing</h2>
+<h2><?= (isset($campaign) && $campaign->id) ? 'Update campaign' : 'Create campaign' ?></h2>
 
 <div class="flex ">
     <div class="flex-column">
         <form action="<?= \Mawiblah\Helpers::generatePluginUrl(['action' => 'save-campaign']); ?>" method="POST" class="create-campaign-form">
+            <?php if (isset($campaign) && $campaign->id): ?>
+                <input type="hidden" name="campaignPostId" value="<?= $campaign->id ?>">
+            <?php endif; ?>
             <label for="title">Title</label>
             <input type="text" name="title" id="title" value="<?= isset($campaign) ? $campaign->post_title : ''; ?>">
 
@@ -45,7 +48,7 @@
                 <?php endforeach; ?>
             </select>
 
-            <input type="submit" value="Create">
+            <input type="submit" value="<?= (isset($campaign) && $campaign->id) ? 'Update' : 'Create' ?>">
         </form>
     </div>
     <div class="flex-column flex-grow">

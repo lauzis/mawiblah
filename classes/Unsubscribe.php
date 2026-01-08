@@ -6,8 +6,8 @@ class Unsubscribe
 
     public static function init()
     {
-        if (isset($_GET['subscriberId']) && isset($_GET['unsubscribe'])) {
-            $subscriberId = sanitize_text_field($_GET['subscriberId']);
+        if (isset($_GET['subscriber']) && isset($_GET['unsubscribe'])) {
+            $subscriberId = sanitize_text_field($_GET['subscriber']);
             $email = sanitize_email($_GET['unsubscribe']);
             $campaignHash = isset($_GET['campaign']) ? sanitize_text_field($_GET['campaign']) : null;
 
@@ -55,7 +55,7 @@ class Unsubscribe
     public static function unsubscribeLink(string $subscriberId, string $email)
     {
         return Helpers::trackingParams([
-            'subscriberId' => $subscriberId,
+            'subscriber' => $subscriberId,
             'unsubscribe' => $email
         ]);
     }
@@ -63,7 +63,7 @@ class Unsubscribe
     public static function unsubscribeConfirmLink(string $subscriberId, string $email, string $unsubToken, ?string $campaignHash = null)
     {
         $params = [
-            'subscriberId' => $subscriberId,
+            'subscriber' => $subscriberId,
             'unsubscribe' => $email,
             'unsubToken' => $unsubToken
         ];

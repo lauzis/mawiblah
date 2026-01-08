@@ -559,7 +559,7 @@ class Subscribers
         if (!session_id()) {
             session_start();
         }
-        if (isset($_SESSION['campaignHash']) && isset($_SESSION['subscriberId'])) {
+        if (isset($_SESSION['campaignHash']) && isset($_SESSION['subscriberHash'])) {
             return $subscriber->activity;
         }
 

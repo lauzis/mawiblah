@@ -65,7 +65,7 @@ class Helpers
                 'utm_source' => 'email',
                 'utm_medium' => 'email',
                 'utm_campaign' => 'monthly-email',
-                'subscriberId' => '{subscriberId}',
+                'subscriber' => '{subscriberId}',
             ],
             $additionalParams
         );

@@ -599,13 +599,13 @@ class Campaigns
         }
 
         // Track unique user clicks (once per subscriber per campaign)
-        $isNewUser = !isset($_SESSION['campaignHash']) || !isset($_SESSION['subscriberId']);
+        $isNewUser = !isset($_SESSION['campaignHash']) || !isset($_SESSION['subscriberHash']);
         if ($isNewUser) {
             $currentUniqueUsers = ( int )$campaign->uniqueUserClicks ?? 0;
             update_post_meta($campaign->id, 'uniqueUserClicks', $currentUniqueUsers + 1);
         }
 
-        if (isset($_SESSION['campaignHash']) && isset($_SESSION['subscriberId']) && isset($_SESSION[$url])) {
+        if (isset($_SESSION['campaignHash']) && isset($_SESSION['subscriberHash']) && isset($_SESSION[$url])) {
             return (int)$campaign->linksClicked;
         }
 

@@ -144,6 +144,22 @@ This triple-tracking approach gives you:
 
 Email templates are created using shortcodes and can include HTML content. Templates are processed through WordPress's shortcode system before being sent.
 
+### Template Placeholders
+
+The following placeholders can be used in email templates and will be automatically replaced with actual values:
+
+**Current Naming Convention:**
+- `{campaignHash}` - The campaign's unique hash identifier
+- `{subscriberHash}` - The subscriber's unique hash identifier  
+- `{email}` - The subscriber's email address
+- `%7BcampaignHash%7D` - URL-encoded version of campaignHash
+- `%7BsubscriberHash%7D` - URL-encoded version of subscriberHash
+- `%7Bemail%7D` - URL-encoded version of email
+
+**Shortcode Placeholders:**
+- `[gdlnks_newsletter_title]` - Campaign title
+- `[gdlnks_newsletter_content]` - Campaign content
+
 ## Subscriber Management
 
 ### Audience/Category Management

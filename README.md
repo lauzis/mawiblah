@@ -79,10 +79,12 @@ on all possible configurations and setups.
     - Generates missing hashes for consistency
   - **Improved Function Signature:** `addSubscriber()` now accepts optional `$subscriberHash` parameter with auto-generation fallback
   - **Template Updates:** Updated unsubscribe form to use `subscriberHash` instead of `subscriberId`
-  - **Backward Compatibility:** Template placeholders `{subscriberId}` still work for existing email templates
+  - **Template Placeholders:** Added new naming convention for email template placeholders:
+    - New placeholders: `{campaignHash}`, `{subscriberHash}`, `{email}`
+    - URL-encoded versions: `%7BcampaignHash%7D`, `%7BsubscriberHash%7D`, `%7Bemail%7D`
   - **Consistent Naming Convention:**
-    - Hash values (string): Use `Hash` suffix - `subscriberHash`, `campaignHash`
-    - Post IDs (integer): Use `Id` suffix - `subscriberId` (when int), `audienceId`, `campaignPostId`
+     - Hash values (string): Use `Hash` suffix - `subscriberHash`, `campaignHash`
+     - Post IDs (integer): Use `Id` suffix - `subscriberId` (when int), `audienceId`, `campaignPostId`
 
 ### --- 1.0.15 ---
 - **New Statistics Dashboard:** Added comprehensive activity tracking:

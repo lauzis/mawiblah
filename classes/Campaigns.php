@@ -89,29 +89,29 @@ class Campaigns
     public static function renderStatsMetaBox($post)
     {
         $campaign = self::appendMeta($post);
-        
+
         if (!$campaign->campaignStarted) {
             echo '<p>' . __('Campaign has not started yet.', 'mawiblah') . '</p>';
             return;
         }
 
         \Mawiblah\Templates::loadTemplate('stats/styles.php', []);
-        
+
         $rawStats = self::getStatsForCampaign($campaign);
         $conversionStats = self::getConversionStatsForCampaign($campaign);
-        
+
         $campaignData = [
             'campaign' => $campaign,
             'title' => $campaign->post_title,
             'stats' => $rawStats
         ];
-        
+
         $conversionData = [
             'campaign' => $campaign,
             'title' => $campaign->post_title,
             'stats' => $conversionStats
         ];
-        
+
         echo '<div class="wrap mawiblah">';
         \Mawiblah\Templates::loadTemplate('stats/campaign-raw.php', $campaignData);
         \Mawiblah\Templates::loadTemplate('stats/campaign-conversion.php', $conversionData);
@@ -520,7 +520,6 @@ class Campaigns
         $templateHTML = do_shortcode($templateHTML);
         $templateHTML = str_replace('[gdlnks_newsletter_title]', $campaign->contentTitle ?? $campaign->post_title, $templateHTML);
         $templateHTML = str_replace('[gdlnks_newsletter_content]', $campaign->post_content, $templateHTML);
-        $templateHTML = str_replace('{campaignId}', $campaign->campaignHash, $templateHTML);
         $templateHTML = str_replace('{campaignHash}', $campaign->campaignHash, $templateHTML);
 
         return $templateHTML;
@@ -536,14 +535,11 @@ class Campaigns
 
         $templateHTML = str_replace('[gdlnks_newsletter_content]', get_the_content($campaign->id), $templateHTML);
 
-        $templateHTML = str_replace('{campaignId}', $campaign->campaignHash, $templateHTML);
         $templateHTML = str_replace('{campaignHash}', $campaign->campaignHash, $templateHTML);
-        $templateHTML = str_replace('{subscriberId}', $subscriber->subscriberHash, $templateHTML);
+        $templateHTML = str_replace('{subscriberHash}', $subscriber->subscriberHash, $templateHTML);
         $templateHTML = str_replace('{email}', $email, $templateHTML);
-
-        $templateHTML = str_replace('%7BcampaignId%7D', $campaign->campaignHash, $templateHTML);
         $templateHTML = str_replace('%7BcampaignHash%7D', $campaign->campaignHash, $templateHTML);
-        $templateHTML = str_replace('%7BsubscriberId%7D', $subscriber->subscriberHash, $templateHTML);
+        $templateHTML = str_replace('%7BsubscriberHash%7D', $subscriber->subscriberHash, $templateHTML);
         $templateHTML = str_replace('%7Bemail%7D', $email, $templateHTML);
 
         return $templateHTML;
@@ -993,7 +989,7 @@ class Campaigns
 
         global $wpdb;
         $subscriberPostType = Subscribers::postType();
-        
+
         $query = "
             SELECT 
                 p.ID,
@@ -1007,9 +1003,9 @@ class Campaigns
             AND pm_unsub.meta_key = 'unsubed' 
             AND pm_unsub.meta_value = '1'
         ";
-        
+
         $results = $wpdb->get_results($wpdb->prepare($query, $subscriberPostType));
-        
+
         $cutoff = strtotime("-$months months");
 
         foreach ($results as $row) {
@@ -1017,12 +1013,12 @@ class Campaigns
             if (empty($timestamp)) {
                 $timestamp = $row->last_interaction;
             }
-            
+
             if (!empty($timestamp)) {
                 if (!is_numeric($timestamp)) {
                     $timestamp = strtotime($timestamp);
                 }
-                
+
                 if ($timestamp >= $cutoff) {
                     $ym = date('Y-m', (int)$timestamp);
                     if (isset($stats[$ym])) {

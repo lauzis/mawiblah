@@ -12,19 +12,22 @@ class Visits
 
             $currentUrl = Helpers::getCurrentUrlPath();
             $campaignHash = sanitize_text_field($_GET['campaign']);
-            $subscriberId = sanitize_text_field($_GET['subscriber']);
-            self::visit($campaignHash, $subscriberId, $currentUrl);
+            $subscriberHash = sanitize_text_field($_GET['subscriber']);
+            self::visit($campaignHash, $subscriberHash, $currentUrl);
         }
     }
 
-    public static function visit(string $campaignHash, string $subscriberId, $currentUrl): void
+    public static function visit(string $campaignHash, string $subscriberHash, $currentUrl): void
     {
         if (!session_id()) {
             session_start();
         }
 
+        Campaigns::linkCLicked($campaignHash, $currentUrl);
+        Subscribers::linksClicked($subscriberHash);
+
         $_SESSION['campaignHash'] = $campaignHash;
-        $_SESSION['subscriberHash'] = $subscriberId;
+        $_SESSION['subscriberHash'] = $subscriberHash;
         $_SESSION[$currentUrl] = true;
     }
 }

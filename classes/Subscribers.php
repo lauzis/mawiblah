@@ -542,12 +542,12 @@ class Subscribers
         return self::appendMeta($postsByMeta[0]);
     }
 
-    public static function linksClicked($subscriberId)
+    public static function linksClicked($subscriberHash)
     {
-        $subscriber = self::getSubscriberBySubscriberId($subscriberId);
+        $subscriber = self::getSubscriberBySubscriberId($subscriberHash);
         
         if (!$subscriber) {
-            Logs::addLog('Subscriber not found', '', ['subscriberId' => $subscriberId]);
+            Logs::addLog('Subscriber not found', '', ['subscriberHash' => $subscriberHash]);
             return;
         }
         

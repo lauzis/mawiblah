@@ -135,7 +135,7 @@ class Helpers
         ];
     }
 
-    public static function generateSubscriberId(int $id): string{
+    public static function generateSubscriberHash(int $id): string{
         return md5($id);
     }
 

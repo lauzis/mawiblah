@@ -123,8 +123,8 @@ class Subscribers
                 'key' => 'email',
                 'default_value' => ''
             ],
-            'subscriberId' => [
-                'key' => 'subscriberId',
+            'subscriberHash' => [
+                'key' => 'subscriberHash',
                 'default_value' => ''
             ],
             'unsubToken' => [
@@ -162,7 +162,7 @@ class Subscribers
         
         $post->id = $post->ID ?? $post->id;
         $post->email = get_post_meta($post->id, 'email', true);
-        $post->subscriberId = get_post_meta($post->id, 'subscriberId', true);
+        $post->subscriberHash = get_post_meta($post->id, 'subscriberHash', true);
         $post->unsubToken = get_post_meta($post->id, 'unsubToken', true);
         $post->unsubed = get_post_meta($post->id, 'unsubed', true);
         $post->activity = get_post_meta($post->id, 'activity', true) ?? 0;
@@ -170,8 +170,8 @@ class Subscribers
         $post->lastInteraction = get_post_meta($post->id, 'lastInteraction', true) ?? date("Y-m-d H:i:s", 0);
         $post->firstInteraction = get_post_meta($post->id, 'firstInteraction', true) ?? null;
 
-        if (!$post->subscriberId) {
-            update_post_meta($post->id, 'subscriberId', Helpers::generateSubscriberId($post->id));
+        if (!$post->subscriberHash) {
+            update_post_meta($post->id, 'subscriberHash', Helpers::generateSubscriberHash($post->id));
         }
 
         $post->audiences = get_the_terms($post->id, Subscribers::postType() . '_category');
@@ -279,7 +279,7 @@ class Subscribers
         return $subscribers;
     }
 
-    public static function addSubscriber(string $email, string $subscriberId = ""): object
+    public static function addSubscriber(string $email, string $subscriberHash = ""): object
     {
 
         // Prepare the post data
@@ -296,9 +296,11 @@ class Subscribers
         if (!is_wp_error($post_id)) {
             // Save the email as a meta field
             update_post_meta($post_id, 'email', $email);
-            if (!empty($subscriberId)) {
-                update_post_meta($post_id, 'subscriberId', Helpers::generateSubscriberId($post_id));
+            
+            if (empty($subscriberHash)) {
+                $subscriberHash = Helpers::generateSubscriberHash($post_id);
             }
+            update_post_meta($post_id, 'subscriberHash', $subscriberHash);
         }
 
         return self::getSubscriber($email);
@@ -521,15 +523,15 @@ class Subscribers
         return null;
     }
 
-    public static function getSubscriberBySubscriberId(string $subscriberId)
+    public static function getSubscriberBySubscriberHash(string $subscriberHash)
     {
 
         $postsByMeta = get_posts([
             'post_type' => self::postType(),
             'meta_query' => [
                 [
-                    'key' => 'subscriberId',
-                    'value' => $subscriberId,
+                    'key' => 'subscriberHash',
+                    'value' => $subscriberHash,
                     'compare' => '='
                 ]
             ]
@@ -544,7 +546,7 @@ class Subscribers
 
     public static function linksClicked($subscriberHash)
     {
-        $subscriber = self::getSubscriberBySubscriberId($subscriberHash);
+        $subscriber = self::getSubscriberBySubscriberHash($subscriberHash);
         
         if (!$subscriber) {
             Logs::addLog('Subscriber not found', '', ['subscriberHash' => $subscriberHash]);

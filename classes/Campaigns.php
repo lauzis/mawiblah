@@ -538,12 +538,12 @@ class Campaigns
 
         $templateHTML = str_replace('{campaignId}', $campaign->campaignHash, $templateHTML);
         $templateHTML = str_replace('{campaignHash}', $campaign->campaignHash, $templateHTML);
-        $templateHTML = str_replace('{subscriberId}', $subscriber->subscriberId, $templateHTML);
+        $templateHTML = str_replace('{subscriberId}', $subscriber->subscriberHash, $templateHTML);
         $templateHTML = str_replace('{email}', $email, $templateHTML);
 
         $templateHTML = str_replace('%7BcampaignId%7D', $campaign->campaignHash, $templateHTML);
         $templateHTML = str_replace('%7BcampaignHash%7D', $campaign->campaignHash, $templateHTML);
-        $templateHTML = str_replace('%7BsubscriberId%7D', $subscriber->subscriberId, $templateHTML);
+        $templateHTML = str_replace('%7BsubscriberId%7D', $subscriber->subscriberHash, $templateHTML);
         $templateHTML = str_replace('%7Bemail%7D', $email, $templateHTML);
 
         return $templateHTML;

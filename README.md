@@ -65,6 +65,25 @@ on all possible configurations and setups.
 
 ## Change log
 
+### --- 1.0.16 ---
+- **Code Quality & Naming Consistency:** Major refactoring for better maintainability and clarity:
+  - **Function Naming:** Renamed functions to accurately reflect they work with hash values (not IDs):
+    - `generateSubscriberId()` → `generateSubscriberHash()`
+    - `getSubscriberBySubscriberId()` → `getSubscriberBySubscriberHash()`
+  - **Database Schema:** Updated subscriber meta field naming:
+    - Meta key: `subscriberId` → `subscriberHash`
+    - Object property: `$subscriber->subscriberId` → `$subscriber->subscriberHash`
+  - **Automatic Migration:** Added migration system to automatically update existing data:
+    - `migrateTo1016()` migrates all subscriber records from old to new naming
+    - Handles upgrades seamlessly without data loss
+    - Generates missing hashes for consistency
+  - **Improved Function Signature:** `addSubscriber()` now accepts optional `$subscriberHash` parameter with auto-generation fallback
+  - **Template Updates:** Updated unsubscribe form to use `subscriberHash` instead of `subscriberId`
+  - **Backward Compatibility:** Template placeholders `{subscriberId}` still work for existing email templates
+  - **Consistent Naming Convention:**
+    - Hash values (string): Use `Hash` suffix - `subscriberHash`, `campaignHash`
+    - Post IDs (integer): Use `Id` suffix - `subscriberId` (when int), `audienceId`, `campaignPostId`
+
 ### --- 1.0.15 ---
 - **New Statistics Dashboard:** Added comprehensive activity tracking:
   ![Statistics dashboard](readme-assets/stats.png)

@@ -39,11 +39,20 @@ class Templates
 
     private static function getEmailTemplateDirectories(): array
     {
-        return [
-            trailingslashit(get_stylesheet_directory()) . 'mawiblah/email_templates',
-            trailingslashit(get_template_directory()) . 'mawiblah/email_templates',
-            MAWIBLAH_PLUGIN_DIR . '/email_templates'
-        ];
+        $dirs = [];
+        $child = trailingslashit(get_stylesheet_directory()) . 'mawiblah/email_templates';
+        $parent = trailingslashit(get_template_directory()) . 'mawiblah/email_templates';
+        $plugin = MAWIBLAH_PLUGIN_DIR . '/email_templates';
+
+        if ($child === $parent) {
+            $dirs['Theme'] = $child;
+        } else {
+            $dirs['Child Theme'] = $child;
+            $dirs['Parent Theme'] = $parent;
+        }
+        $dirs['Plugin'] = $plugin;
+
+        return $dirs;
     }
 
     public static function getEmailTemplateByName($templateName)
@@ -67,23 +76,26 @@ class Templates
         $templates = [];
         $dirs = self::getEmailTemplateDirectories();
 
-        foreach ($dirs as $dir) {
+        foreach ($dirs as $label => $dir) {
             if (is_dir($dir)) {
                 $files = scandir($dir);
                 foreach ($files as $file) {
                     if ($file !== '.' && $file !== '..' && !is_dir($dir . '/' . $file)) {
-                        $templates[] = pathinfo($file, PATHINFO_FILENAME);
+                        $filename = pathinfo($file, PATHINFO_FILENAME);
+                        if (!array_key_exists($filename, $templates)) {
+                            $templates[$filename] = $label . ': ' . $filename;
+                        }
                     }
                 }
             }
         }
 
-        return array_unique($templates);
+        return $templates;
     }
 
     public static function validateEmailTemplate(string $emailTemplate): bool
     {
-        return in_array($emailTemplate, self::getArrayOfEmailTemplates());
+        return array_key_exists($emailTemplate, self::getArrayOfEmailTemplates());
     }
 
     public static function copyTemplate(int $campaignPostId, bool $testMode): string|bool

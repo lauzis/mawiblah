@@ -21,13 +21,13 @@
             <label for="template">Template</label>
             <select name="template" id="template">
                 <?php $templates = \Mawiblah\Templates::getArrayOfEmailTemplates(); ?>
-                <?php foreach ($templates as $template): ?>
+                <?php foreach ($templates as $value => $label): ?>
                     <?php $selected = ''; ?>
-                    <?php if (isset($campaign) && $campaign->template === $template) {
+                    <?php if (isset($campaign) && $campaign->template === $value) {
                         $selected = 'selected';
                     } ?>
-                    <option value="<?= $template ?>" <?= $selected ?>>
-                        <?= $template ?>
+                    <option value="<?= $value ?>" <?= $selected ?>>
+                        <?= $label ?>
                     </option>
                 <?php endforeach; ?>
             </select>

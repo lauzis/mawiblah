@@ -37,13 +37,26 @@ class Templates
         return $data->template ?? false;
     }
 
+    private static function getEmailTemplateDirectories(): array
+    {
+        return [
+            trailingslashit(get_stylesheet_directory()) . 'mawiblah/email_templates',
+            trailingslashit(get_template_directory()) . 'mawiblah/email_templates',
+            MAWIBLAH_PLUGIN_DIR . '/email_templates'
+        ];
+    }
+
     public static function getEmailTemplateByName($templateName)
     {
-        $dir = MAWIBLAH_PLUGIN_DIR . '/email_templates';
-        $files = scandir($dir);
-        foreach ($files as $file) {
-            if (pathinfo($file, PATHINFO_FILENAME) === $templateName) {
-                return file_get_contents($dir . '/' . $file);
+        $dirs = self::getEmailTemplateDirectories();
+        foreach ($dirs as $dir) {
+            if (is_dir($dir)) {
+                $files = scandir($dir);
+                foreach ($files as $file) {
+                    if (pathinfo($file, PATHINFO_FILENAME) === $templateName) {
+                        return file_get_contents($dir . '/' . $file);
+                    }
+                }
             }
         }
         return false;
@@ -52,28 +65,25 @@ class Templates
     public static function getArrayOfEmailTemplates(): array
     {
         $templates = [];
-        $dir = MAWIBLAH_PLUGIN_DIR . '/email_templates';
-        $files = scandir($dir);
+        $dirs = self::getEmailTemplateDirectories();
 
-        foreach ($files as $file) {
-            if ($file !== '.' && $file !== '..' && !is_dir($dir . '/' . $file)) {
-                $templates[] = pathinfo($file, PATHINFO_FILENAME);
+        foreach ($dirs as $dir) {
+            if (is_dir($dir)) {
+                $files = scandir($dir);
+                foreach ($files as $file) {
+                    if ($file !== '.' && $file !== '..' && !is_dir($dir . '/' . $file)) {
+                        $templates[] = pathinfo($file, PATHINFO_FILENAME);
+                    }
+                }
             }
         }
 
-        return $templates;
+        return array_unique($templates);
     }
 
     public static function validateEmailTemplate(string $emailTemplate): bool
     {
-        $dir = MAWIBLAH_PLUGIN_DIR . '/email_templates';
-        $files = scandir($dir);
-        foreach ($files as $file) {
-            if ($file === $emailTemplate) {
-                return true;
-            }
-        }
-        return false;
+        return in_array($emailTemplate, self::getArrayOfEmailTemplates());
     }
 
     public static function copyTemplate(int $campaignPostId, bool $testMode): string|bool

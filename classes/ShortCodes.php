@@ -76,12 +76,17 @@ class ShortCodes
         return __('Discover newest articles and printables for parents and kids.', 'mawiblah');
     }
 
-    public static function newestArticles()
+    public static function newestArticles($atts)
     {
+        $atts = shortcode_atts(
+            array(
+                'count' => 5,
+            ), $atts, 'mawiblah_newest_articles'
+        );
 
         $args = [
             'post_type' => 'post',
-            'posts_per_page' => 5,
+            'posts_per_page' => $atts['count'],
             'orderby' => 'date',
             'order' => 'DESC',
         ];

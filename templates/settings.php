@@ -31,7 +31,7 @@ use Mawiblah\Settings;
 
     ?>
 
-    <form method="post" action="<?= esc_url(Settings::get_settings_page_url()) ?>" class="<?= esc_attr(MAWIBLAH_PLUGIN_DIRECTORY_NAME) ?>" autocomplete="off">
+    <form method="post" action="<?= Settings::get_settings_page_url() ?>" class="<?= esc_attr(MAWIBLAH_PLUGIN_DIRECTORY_NAME) ?>" autocomplete="off">
         <?php settings_fields('gae-settings-group'); ?>
         <?php $count_of_sections = count($sections); ?>
         <?php $counter=0; ?>
@@ -122,7 +122,7 @@ use Mawiblah\Settings;
         <section class="<?= MAWIBLAH_PLUGIN_DIRECTORY_NAME ?>-submit">
             <input type="submit" class="button-primary" value="<?= Settings::get_translation('Save Changes') ?>"/>
             <?php if (MAWIBLAH_DEVELOPER): ?>
-                <a href="<?= Settings::get_settings_page_url() ?>&generate-pot-file" class="button-secondary">
+                <a href="<?= esc_url(Settings::get_settings_page_url() . '&generate-pot-file') ?>" class="button-secondary">
                     <?= Settings::get_translation('Generate Translation Template') ?> <?= sprintf(Settings::get_translation("(Collected %s items)"),Settings::get_translation_count()); ?></a>
 
             <?php endif ?>

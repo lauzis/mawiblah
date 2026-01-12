@@ -46,7 +46,7 @@
             <?php esc_html_e('Gravity forms', 'mawiblah'); ?>
         </h2>
         <p>
-            <?php esc_html_e('Syncronize gravityforms with audiences', 'mawiblah'); ?>
+            <?php esc_html_e('Synchronize gravityforms with audiences', 'mawiblah'); ?>
         </p>
         <?php
             if(
@@ -65,7 +65,7 @@
                 }
 
                 if($syncStats['checked'] > 0){
-                    echo '<p>' . esc_html(sprintf(__('Syncronized %s audiences', 'mawiblah'), $syncStats['checked'])) . '</p>';
+                    echo '<p>' . esc_html(sprintf(__('Synchronized %s audiences', 'mawiblah'), $syncStats['checked'])) . '</p>';
                     if($syncStats['skipped'] > 0){
                         echo '<p>' . esc_html(sprintf(__('Skipped %s audiences', 'mawiblah'), $syncStats['skipped'])) . '</p>';
                     }
@@ -88,7 +88,7 @@
             <input type="hidden" name="force" value="force">
             <?php wp_nonce_field('mawiblah_gravity_sync', 'mawiblah_gravity_sync_nonce'); ?>
             <button type="submit" class="button button-primary">
-                <?php esc_html_e('Gravity forms audience sync (froce)', 'mawiblah'); ?>
+                <?php esc_html_e('Gravity forms audience sync (force)', 'mawiblah'); ?>
             </button>
         </form>
 

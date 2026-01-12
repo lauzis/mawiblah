@@ -2,7 +2,7 @@
 Contributors: lauzis
 Tags: email, newsletter, marketing, mailchimp alternative, subscribers
 Requires at least: 5.0
-Tested up to: 6.7
+Tested up to: 6.9
 Stable tag: 1.0.16
 Requires PHP: 8.0
 License: GPLv3

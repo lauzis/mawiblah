@@ -36,11 +36,9 @@
                 <strong>Test finished</strong>
                 <p>Test was already finished. You cannot test it again.</p>
                 <div class="flex flex-row space-between">
-                    <a class="btn btn-secondary" href="<?= esc_url(Helpers::campaignTestResetUrl($campaignPostId)) ?>"
-                       class="btn btn-primary">Retest</a>
+                    <a class="btn btn-secondary" href="<?= esc_url(Helpers::campaignTestResetUrl($campaignPostId)) ?>">Retest</a>
                     <?php if (!$campaign->testApproved) : ?>
-                        <a class="btn btn-primary" href="<?= esc_url(Helpers::campaignTestApproveUrl($campaignPostId)) ?>"
-                           class="btn btn-primary">Approve</a>
+                        <a class="btn btn-primary" href="<?= esc_url(Helpers::campaignTestApproveUrl($campaignPostId)) ?>">Approve</a>
                     <?php endif; ?>
                 </div>
             </div>

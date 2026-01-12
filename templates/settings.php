@@ -101,7 +101,7 @@ use Mawiblah\Settings;
                                     <?php $options = !empty($field["options"]) ? $field["options"] : [] ?>
                                     <?php $description = !empty($field["description"]) ? Settings::get_translation($field["description"]) : "" ?>
                                     <?php if ($id === "gea-debug-ip") {
-                                        $description .= Settings::get_translation("<br/>You current IP address is: ") . esc_html($_SERVER["REMOTE_ADDR"]);
+                                        $description .= Settings::get_translation("<br/>Your current IP address is: ") . esc_html($_SERVER["REMOTE_ADDR"]);
                                     } ?>
                                     <li><?php
                                         $allowed_types = ['text', 'textarea', 'select', 'checkbox', 'switch']; // Add all valid field types

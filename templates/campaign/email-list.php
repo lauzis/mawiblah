@@ -36,10 +36,10 @@
                 <strong>Test finished</strong>
                 <p>Test was already finished. You cannot test it again.</p>
                 <div class="flex flex-row space-between">
-                    <a class="btn btn-secondary" href="<?= Helpers::campaignTestResetUrl($campaignPostId) ?>"
+                    <a class="btn btn-secondary" href="<?= esc_url(Helpers::campaignTestResetUrl($campaignPostId)) ?>"
                        class="btn btn-primary">Retest</a>
                     <?php if (!$campaign->testApproved) : ?>
-                        <a class="btn btn-primary" href="<?= Helpers::campaignTestApproveUrl($campaignPostId) ?>"
+                        <a class="btn btn-primary" href="<?= esc_url(Helpers::campaignTestApproveUrl($campaignPostId)) ?>"
                            class="btn btn-primary">Approve</a>
                     <?php endif; ?>
                 </div>
@@ -87,7 +87,7 @@
 
         ?>
             <div class="progress-wrap">
-                <div class="progress" style="width:100%" data-sleep-before-job="<?= $sleepBeforeJob ?>">
+                <div class="progress" style="width:100%" data-sleep-before-job="<?= esc_attr($sleepBeforeJob) ?>">
                     <div class="progress-bar"
                          style="background-color: #0a4b78; color:#FFF; text-align: center; padding:4px; text-wrap: nowrap">
                     </div>
@@ -141,10 +141,10 @@
                         <td><?= esc_html( date_i18n( 'Y-m-d H:i:s', $subscriber->firstInteraction ) ); ?></td>
                         <td><?= esc_html( date_i18n( 'Y-m-d H:i:s', $subscriber->lastInteraction ) ); ?></td>
                         <td>
-                            <div id="<?= $campaignPostId ?>-<?= $subscriberId ?>"
+                            <div id="<?= esc_attr($campaignPostId . '-' . $subscriberId) ?>"
                                  class="mawiblah-campaign-action test"
-                                 data-campaign-post-id="<?= $campaignPostId ?>"
-                                 data-subscriber-id="<?= $subscriberId ?>"
+                                 data-campaign-post-id="<?= esc_attr($campaignPostId) ?>"
+                                 data-subscriber-id="<?= esc_attr($subscriberId) ?>"
                                  data-subscriber-email="<?= esc_attr($email) ?>">
                                 Status
                             </div>

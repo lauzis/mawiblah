@@ -171,6 +171,14 @@ add_action('wp_dashboard_setup', [Actions::class, 'registerDashboardWidget']);
 - Stores click timestamps for timing analysis
 - Both unique and total click counts
 
+## Recent Changes (Session 2026-01-12)
+
+1. **Repository Standards & Security**
+   - Created `readme.txt` from `README.md` for WordPress.org compliance
+   - Added `license.txt` (GPLv3)
+   - Improved security with output escaping in `add-campaign.php`
+   - Fixed `scandir()` error handling in `Templates.php`
+
 ## Recent Changes (Session 2025-11-30)
 
 1. **Enhanced Statistics Dashboard**
@@ -221,6 +229,7 @@ add_action('wp_dashboard_setup', [Actions::class, 'registerDashboardWidget']);
 
 ### Making Changes
 - **Surgical modifications** - change as few lines as possible
+- **Keep Readmes Synced** - Always update both `README.md` and `readme.txt` when making documentation or version changes
 - Only update counters during actual campaign sends (not tests)
 - Maintain backward compatibility
 - Don't break existing functionality

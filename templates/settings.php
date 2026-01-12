@@ -10,9 +10,6 @@ use Mawiblah\Settings;
     <h1><?= esc_html(Settings::get_translation('MAWIBLAH settings')); ?>
         - <?php print esc_html(MAWIBLAH_PLUGIN_NAME . " " . MAWIBLAH_VERSION); ?></h1>
     <?php Settings::print_all_messages(); ?>
-    <p>
-        <?= esc_html(Settings::get_translation("")); ?>
-    </p>
 
     <?php
         $enabled_values = [
@@ -81,12 +78,12 @@ use Mawiblah\Settings;
 
                         <div class="inside">
 
-                            <p class="<?= esc_attr(MAWIBLAH_PLUGIN_DIR) ?>-description">
+                            <p class="<?= esc_attr(MAWIBLAH_PLUGIN_DIRECTORY_NAME) ?>-description">
                                 <?= wp_kses_post(Settings::get_translation($section["description"])); ?>
                             </p>
 
                             <?php if (!empty($section["example"])): ?>
-                                <code class="<?= esc_attr(MAWIBLAH_PLUGIN_DIR) ?>-code">
+                                <code class="<?= esc_attr(MAWIBLAH_PLUGIN_DIRECTORY_NAME) ?>-code">
                                     <?= esc_html(Settings::get_translation($section["example"])); ?>
                                 </code>
                             <?php endif; ?>

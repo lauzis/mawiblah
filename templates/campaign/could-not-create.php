@@ -21,7 +21,7 @@
             <h1><?php _e('Could not create campaign!'); ?></h1>
             <p><?php _e('Could not create campaign. Missing fields!'); ?></p>
             <pre>
-                <?php print_r($debug); ?>
+                <?php echo esc_html(print_r($debug, true)); ?>
             </pre>
         </div>
 

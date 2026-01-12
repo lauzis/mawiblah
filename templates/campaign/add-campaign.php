@@ -7,27 +7,27 @@
                 <input type="hidden" name="campaignPostId" value="<?= $campaign->id ?>">
             <?php endif; ?>
             <label for="title">Title</label>
-            <input type="text" name="title" id="title" value="<?= isset($campaign) ? $campaign->post_title : ''; ?>">
+            <input type="text" name="title" id="title" value="<?= isset($campaign) ? esc_attr($campaign->post_title) : ''; ?>">
 
             <label for="subject">Subject</label>
-            <input type="text" name="subject" id="subject" value="<?= isset($campaign) ? $campaign->subject : ''; ?>">
+            <input type="text" name="subject" id="subject" value="<?= isset($campaign) ? esc_attr($campaign->subject) : ''; ?>">
 
             <label for="contentTitle">Content Title</label>
-            <input type="text" name="contentTitle" id="contentTitle" value="<?= isset($campaign) ? $campaign->contentTitle : ''; ?>" />
+            <input type="text" name="contentTitle" id="contentTitle" value="<?= isset($campaign) ? esc_attr($campaign->contentTitle) : ''; ?>" />
 
             <label for="content">Content</label>
-            <textarea name="content" id="content"><?= isset($campaign) ? $campaign->post_content : ''; ?></textarea>
+            <textarea name="content" id="content"><?= isset($campaign) ? esc_textarea($campaign->post_content) : ''; ?></textarea>
 
             <label for="template">Template</label>
             <select name="template" id="template">
                 <?php $templates = \Mawiblah\Templates::getArrayOfEmailTemplates(); ?>
-                <?php foreach ($templates as $template): ?>
+                <?php foreach ($templates as $value => $label): ?>
                     <?php $selected = ''; ?>
-                    <?php if (isset($campaign) && $campaign->template === $template) {
+                    <?php if (isset($campaign) && $campaign->template === $value) {
                         $selected = 'selected';
                     } ?>
-                    <option value="<?= $template ?>" <?= $selected ?>>
-                        <?= $template ?>
+                    <option value="<?= esc_attr($value) ?>" <?= $selected ?>>
+                        <?= esc_html($label) ?>
                     </option>
                 <?php endforeach; ?>
             </select>
@@ -42,8 +42,8 @@
                     <?php if (isset($campaign) && is_array($campaign->audiences) && in_array($audience->term_id, $campaign->audiences)) {
                         $selected = 'selected';
                     } ?>
-                    <option <?= $selected ?> value="<?= $audience->term_id ?>">
-                        <?= $audience->name ?>
+                    <option <?= $selected ?> value="<?= esc_attr($audience->term_id) ?>">
+                        <?= esc_html($audience->name) ?>
                     </option>
                 <?php endforeach; ?>
             </select>

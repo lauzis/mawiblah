@@ -15,23 +15,13 @@ class Helpers
 
     public static function getArrayOfEmailTemplates(): array
     {
-        $templates = [];
-        $dir = MAWIBLAH_PLUGIN_DIR . '/email_templates';
-        $files = scandir($dir);
-
-        foreach ($files as $file) {
-            if ($file !== '.' && $file !== '..' && !is_dir($dir . '/' . $file)) {
-                $templates[] = pathinfo($file, PATHINFO_FILENAME);
-            }
-        }
-
-        return $templates;
+        return Templates::getArrayOfEmailTemplates();
     }
 
 
     public static function saveCampaign(string $name, array $audience, string $emailTemplate)
     {
-        if (!self::validateEmailTemplate($emailTemplate)) {
+        if (!Templates::validateEmailTemplate($emailTemplate)) {
             return false;
         }
 
@@ -65,7 +55,7 @@ class Helpers
                 'utm_source' => 'email',
                 'utm_medium' => 'email',
                 'utm_campaign' => 'monthly-email',
-                'subscriberId' => '{subscriberId}',
+                'subscriber' => '{subscriberHash}',
             ],
             $additionalParams
         );
@@ -135,7 +125,7 @@ class Helpers
         ];
     }
 
-    public static function generateSubscriberId(int $id): string{
+    public static function generateSubscriberHash(int $id): string{
         return md5($id);
     }
 

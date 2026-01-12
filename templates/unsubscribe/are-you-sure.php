@@ -65,7 +65,7 @@
                 <textarea id="feedback" name="feedback" ></textarea>
 
                 <input type="hidden" name="email" value="<?= esc_attr($email); ?>"/>
-                <input type="hidden" name="subscriberId" value="<?= esc_attr($subscriberId); ?>"/>
+                <input type="hidden" name="subscriberHash" value="<?= esc_attr($subscriberHash); ?>"/>
                 <input type="hidden" name="unsubToken" value="<?= esc_attr($unsubToken); ?>"/>
                 <button type="submit" name="submit" value="<?php _e('Unsubscribe','mawiblah'); ?>">
                     <?php _e('Unsubscribe','mawiblah'); ?>

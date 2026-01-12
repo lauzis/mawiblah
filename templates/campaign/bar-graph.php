@@ -40,8 +40,8 @@ $oneItem = $arrayItemCount === 1;
                     $max = $oneItem ? $maxOfMax : $maxArray[$k2];
                     $color = $colors[$colorIndex];
                     ?>
-                    <div class="mawiblah-stats-bar <?= $color; ?>" style="height:<?= floor($count / $max * 100); ?>%">
-                        <div><?= $count ?></div>
+                    <div class="mawiblah-stats-bar <?= esc_attr($color); ?>" style="height:<?= floor($count / $max * 100); ?>%">
+                        <div><?= esc_html($count) ?></div>
                     </div>
                 <?php endforeach; ?>
             </div>
@@ -62,14 +62,14 @@ $oneItem = $arrayItemCount === 1;
                     <td>
                         <div>
                             <?php $color = $colors[$colorIndex]; ?>
-                            <span class="mawiblah-stats-square <?= $color ?>"></span><?= $k2; ?>
+                            <span class="mawiblah-stats-square <?= esc_attr($color) ?>"></span><?= esc_html($k2); ?>
                         </div>
                     </td>
                     <td align="right">
-                        <?= $maxArray[$k2] ?>
+                        <?= esc_html($maxArray[$k2]) ?>
                     </td>
                     <td align="right">
-                        <?= round($avgArray[$k2], 2) ?>
+                        <?= esc_html(round($avgArray[$k2], 2)) ?>
                     </td>
                 </tr>
 

@@ -174,7 +174,7 @@ class GravityForms
                             Subscribers::updateLastInteraction($subscriber->id);
                         } else {
                             $syncStats['subscribers_created']++;
-                            $subscriber = Subscribers::addSubscriber($email, $formId);
+                            $subscriber = Subscribers::addSubscriber($email);
                         }
                         Subscribers::addSubscriberToAudience($subscriber->id, $mawiblahAudience->id);
 

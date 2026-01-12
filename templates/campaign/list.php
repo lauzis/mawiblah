@@ -11,7 +11,7 @@ use Mawiblah\Helpers;
     </p>
 
     <div class="btn-row">
-        <a class="btn" href="<?= Helpers::generatePluginUrl(['action' => 'create-campaign']); ?>">Create new campaign</a>
+        <a class="btn" href="<?= esc_url(Helpers::generatePluginUrl(['action' => 'create-campaign'])); ?>"><?= esc_html__('Create new campaign', 'mawiblah') ?></a>
     </div>
 
     <table class="mawiblah-campaign-list wp-list-table widefat striped table-view-list">
@@ -38,10 +38,10 @@ use Mawiblah\Helpers;
 
         foreach ($campaigns as $campaign) {
             echo "<tr>";
-            echo "<td>" . $campaign->id . "</td>";
-            echo "<td>" . $campaign->post_title . "</td>";
-            echo "<td>" . $campaign->subject . "</td>";
-            echo "<td>" . $campaign->template . "</td>";
+            echo "<td>" . esc_html($campaign->id) . "</td>";
+            echo "<td>" . esc_html($campaign->post_title) . "</td>";
+            echo "<td>" . esc_html($campaign->subject) . "</td>";
+            echo "<td>" . esc_html($campaign->template) . "</td>";
             $audienceNames = [];
             if (is_array($campaign->audiences)) {
                 foreach ($campaign->audiences as $audienceId) {
@@ -51,14 +51,14 @@ use Mawiblah\Helpers;
                     }
                 }
             }
-            echo "<td>" . implode(", ", $audienceNames) . "</td>";
-            echo "<td>" . $campaign->status . "</td>";
-            echo "<td>" . $campaign->emailsSend . "</td>";
-            echo "<td>" . $campaign->emailsFailed . "</td>";
-            echo "<td>" . $campaign->emailsSkipped . "</td>";
-            echo "<td>" . $campaign->emailsUnsubed . "</td>";
-            echo "<td>" . $campaign->uniqueUserClicks . "</td>";
-            echo "<td>" . $campaign->linksClicked . "</td>";
+            echo "<td>" . esc_html(implode(", ", $audienceNames)) . "</td>";
+            echo "<td>" . esc_html($campaign->status) . "</td>";
+            echo "<td>" . esc_html($campaign->emailsSend) . "</td>";
+            echo "<td>" . esc_html($campaign->emailsFailed) . "</td>";
+            echo "<td>" . esc_html($campaign->emailsSkipped) . "</td>";
+            echo "<td>" . esc_html($campaign->emailsUnsubed) . "</td>";
+            echo "<td>" . esc_html($campaign->uniqueUserClicks) . "</td>";
+            echo "<td>" . esc_html($campaign->linksClicked) . "</td>";
             $status = $campaign->post_status;
 
             $campaignFinished = false;
@@ -89,16 +89,16 @@ use Mawiblah\Helpers;
                     </td>";
             } else {
                 echo "<td>
-                    <a class='btn link-send campaign-actions' data-type='send' data-href='" . Helpers::generatePluginUrl(['action' => 'test', 'campaignPostId' => $campaign->id]) . "'>" . $testButtonText . "</a>
+                    <a class='btn link-send campaign-actions' data-type='send' data-href='" . esc_url(Helpers::generatePluginUrl(['action' => 'test', 'campaignPostId' => $campaign->id])) . "'>" . esc_html($testButtonText) . "</a>
                 </td>";
                 echo "<td>
-                        <a class='btn btn-danger link-send campaign-actions $sendDisabled' data-type='send' data-href='" . Helpers::generatePluginUrl(['action' => 'campaign-send', 'campaignPostId' => $campaign->id], 'campaignPostId') . "'>Send</a>
+                        <a class='btn btn-danger link-send campaign-actions $sendDisabled' data-type='send' data-href='" . esc_url(Helpers::generatePluginUrl(['action' => 'campaign-send', 'campaignPostId' => $campaign->id], 'campaignPostId')) . "'>" . esc_html__('Send', 'mawiblah') . "</a>
                     </td>";
                 echo "<td>
-                    <a class='btn btn-warning link-delete campaign-actions $deleteDisabled' data-type='delete' data-href='" . Helpers::generatePluginUrl(['action' => 'campaign-delete', 'campaignPostId' => $campaign->id], 'campaignPostId') . "'>Delete</a>
+                    <a class='btn btn-warning link-delete campaign-actions $deleteDisabled' data-type='delete' data-href='" . esc_url(Helpers::generatePluginUrl(['action' => 'campaign-delete', 'campaignPostId' => $campaign->id], 'campaignPostId')) . "'>" . esc_html__('Delete', 'mawiblah') . "</a>
                     </td>";
                 echo "<td>
-                    <a class='btn link-edit campaign-actions $editDisabled' data-type='edit' data-href='" . Helpers::generatePluginUrl(['action' => 'campaign-edit', 'campaignPostId' => $campaign->id], 'campaignPostId') . "'>Edit</a>
+                    <a class='btn link-edit campaign-actions $editDisabled' data-type='edit' data-href='" . esc_url(Helpers::generatePluginUrl(['action' => 'campaign-edit', 'campaignPostId' => $campaign->id], 'campaignPostId')) . "'>" . esc_html__('Edit', 'mawiblah') . "</a>
                 </td>";
             }
 

@@ -16,9 +16,9 @@ $campaign = $data['campaign'];
         <label for="template"><strong><?= __('Template', 'mawiblah') ?></strong></label><br>
         <select name="template" id="template" class="widefat">
             <?php $templates = \Mawiblah\Templates::getArrayOfEmailTemplates(); ?>
-            <?php foreach ($templates as $template): ?>
-                <option value="<?= esc_attr($template) ?>" <?= selected($campaign->template, $template, false) ?>>
-                    <?= esc_html($template) ?>
+            <?php foreach ($templates as $value => $label): ?>
+                <option value="<?= esc_attr($value) ?>" <?= selected($campaign->template, $value, false) ?>>
+                    <?= esc_html($label) ?>
                 </option>
             <?php endforeach; ?>
         </select>

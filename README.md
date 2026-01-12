@@ -66,6 +66,10 @@ on all possible configurations and setups.
 ## Change log
 
 ### --- 1.0.16 ---
+- **Bug Fixes & Features:**
+  - **Fixes #26:** Added default HTML newsletter template (`mawiblah-newsletter-template.html`) that works out of the box
+  - **Addresses #27:** Improved template discovery to support theme-based template overrides (templates can now be placed in the active theme)
+  
 - **Code Quality & Naming Consistency:** Major refactoring for better maintainability and clarity:
   - **Function Naming:** Renamed functions to accurately reflect they work with hash values (not IDs):
     - `generateSubscriberId()` → `generateSubscriberHash()`

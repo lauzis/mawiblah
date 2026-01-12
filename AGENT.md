@@ -160,7 +160,7 @@ add_action('wp_dashboard_setup', [Actions::class, 'registerDashboardWidget']);
 - Shortcode-based template system
 - Dynamic content replacement:
   - `{campaignId}` - Campaign identifier
-  - `{subscriberId}` - Subscriber identifier
+  - `{subscriberHash}` - Subscriber identifier
   - `{email}` - Subscriber email
   - `[gdlnks_newsletter_title]` - Campaign title
   - `[gdlnks_newsletter_content]` - Campaign content

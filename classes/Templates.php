@@ -61,6 +61,9 @@ class Templates
         foreach ($dirs as $dir) {
             if (is_dir($dir)) {
                 $files = scandir($dir);
+                if ($files === false) {
+                    continue;
+                }
                 foreach ($files as $file) {
                     if (pathinfo($file, PATHINFO_FILENAME) === $templateName) {
                         return file_get_contents($dir . '/' . $file);
@@ -79,6 +82,9 @@ class Templates
         foreach ($dirs as $label => $dir) {
             if (is_dir($dir)) {
                 $files = scandir($dir);
+                if ($files === false) {
+                    continue;
+                }
                 foreach ($files as $file) {
                     if ($file !== '.' && $file !== '..' && !is_dir($dir . '/' . $file)) {
                         $filename = pathinfo($file, PATHINFO_FILENAME);

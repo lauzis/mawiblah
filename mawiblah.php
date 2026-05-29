@@ -3,7 +3,7 @@
  * Plugin Name: Mawiblah
  * Plugin URI: https://github.com/lauzis/
  * Description: Fff-ine, will build my own mailchimp... with blackjack and hookers.
- * Version: 1.0.16
+ * Version: 1.0.17
  * Author: Aivars Lauzis
  * Author URI: https://github.com/lauzis/
  * License: GPL3 - http://www.gnu.org/licenses/gpl.html
@@ -11,7 +11,7 @@
  */
 
 if (!defined('MAWIBLAH_VERSION')) {
-    define('MAWIBLAH_VERSION', '1.0.16.' . time());
+    define('MAWIBLAH_VERSION', '1.0.17.' . time());
 }
 
 define('MAWIBLAH_PLUGIN_NAME', 'Mawiblah');
@@ -88,6 +88,7 @@ require(MAWIBLAH_PLUGIN_DIR . '/classes/Visits.php');
 require(MAWIBLAH_PLUGIN_DIR . '/classes/Logs.php');
 require(MAWIBLAH_PLUGIN_DIR . '/classes/Migrations.php');
 require(MAWIBLAH_PLUGIN_DIR . '/classes/Actions.php');
+require(MAWIBLAH_PLUGIN_DIR . '/classes/SubscriptionForm.php');
 
 function mawiblah_init(): void
 {
@@ -101,6 +102,7 @@ function mawiblah_init(): void
     \Mawiblah\Visits::init();
     \Mawiblah\Logs::init();
     \Mawiblah\GravityForms::init();
+    \Mawiblah\SubscriptionForm::init();
 }
 
 add_action('init', 'mawiblah_init');

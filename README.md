@@ -23,6 +23,7 @@ So... "Fine... will do my own Mailchimp... with blackjack and hookers"
 ## What it does
 - Sends out emails to the email list.
 - The email list is collected via Gravity Forms entries, but one can add the mailing list manually.
+- **Native subscription form** — embed a sign-up form anywhere via `[mawiblah_subscribe_form]` shortcode or Gutenberg block, with honeypot + optional reCAPTCHA v3 spam protection.
 - The email template that is sent out is generated via shortcodes.
 - Includes unsubscribe functionality.
 - Imports a list of unsubscribed users from Mailchimp.
@@ -47,7 +48,7 @@ on all possible configurations and setups.
 | **Subscriber Limit**            | Unlimited (practical limits apply)               | 500 (Free), 2,500 (Essentials base)         | Scales with plan                       |
 | **Email Sending**               | One-by-one (slower, lower server load)           | Batch sending via Mailchimp servers         | Batch sending, faster delivery         |
 | **SMTP / Delivery Backend**     | Uses WordPress mail system (SMTP or `wp_mail`)   | Mailchimp’s dedicated infrastructure        | Same                                   |
-| **Form Integration**            | Gravity Forms                                    | Native signup forms                         | Advanced forms, popups                 |
+| **Form Integration**            | Gravity Forms + native subscription form (shortcode & Gutenberg block) | Native signup forms      | Advanced forms, popups                 |
 | **Email Templates**             | Shortcode-based + HTML                           | Drag-and-drop editor                        | Advanced email builder                 |
 | **Automation**                  | ❌ Not available at current version              | ✅ Basic (welcome emails)                   | ✅ Multi-step automation               |
 | **Click Tracking**              | ✅ Basic (clicks & timing logged)                | ✅ Basic reports                             | ✅ Advanced click stats                |
@@ -64,6 +65,18 @@ on all possible configurations and setups.
 
 
 ## Change log
+
+### --- 1.0.17 ---
+- **New:** Native subscription form — add a sign-up form anywhere via `[mawiblah_subscribe_form audiences="hash1,hash2"]` shortcode or Gutenberg block.
+- **New:** Multiple audience support — assign subscribers to one or more audiences from a single form.
+- **New:** `audienceHash` — stable MD5 hash per audience term, consistent with `subscriberHash` / `campaignHash` pattern.
+- **New:** Honeypot spam protection (always active, zero UX impact).
+- **New:** Optional reCAPTCHA v3 support — configure site key and secret key in Settings.
+- **New:** Re-subscribe confirmation flow — previously unsubscribed users receive a confirmation email before being re-added.
+- **New:** reCAPTCHA v3 settings section added to the Settings page.
+- **New:** PHPUnit integration test suite (`composer test`) covering subscription form, subscribers, campaigns, and click tracking.
+- **New:** Jest frontend test suite (`npm test`) covering form payload, DOM state, and honeypot behaviour.
+- **Improved:** Test page refactored — scenarios are now button-triggered (not auto-run on page load) and split into named, self-contained scenarios.
 
 ### --- 1.0.16 ---
 - **Code Quality & Naming Consistency:** Major refactoring for better maintainability and clarity:

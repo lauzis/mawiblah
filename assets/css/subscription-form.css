@@ -1,0 +1,50 @@
+.mawiblah-subscribe-form {
+    display: block;
+    width: 100%;
+}
+
+.mawiblah-subscribe-form__form {
+    display: block;
+}
+
+.mawiblah-subscribe-form__field {
+    display: block;
+    margin-bottom: 0.75em;
+}
+
+.mawiblah-subscribe-form__label {
+    display: block;
+    margin-bottom: 0.25em;
+}
+
+.mawiblah-subscribe-form__input {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.mawiblah-subscribe-form__actions {
+    display: block;
+    margin-top: 0.75em;
+}
+
+.mawiblah-subscribe-form__message {
+    display: block;
+    margin-top: 0.75em;
+}
+
+.mawiblah-subscribe-form__message[hidden] {
+    display: none;
+}
+
+/* Loading state */
+.mawiblah-subscribe-form--loading .mawiblah-subscribe-form__button {
+    opacity: 0.6;
+    pointer-events: none;
+    cursor: default;
+}
+
+/* Submitted state — theme can use this to hide the form */
+.mawiblah-subscribe-form--submitted .mawiblah-subscribe-form__form {
+    display: none;
+}

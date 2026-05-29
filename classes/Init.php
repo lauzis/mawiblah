@@ -22,7 +22,7 @@ class Init
         }
         $this->setup_hooks();
         $this->setup_api_routes();
-
+        add_action('init', [$this, 'registerBlocks']);
     }
 
     public static function getIdsOfPages(){
@@ -76,6 +76,12 @@ class Init
                 }
             ));
 
+            register_rest_route('mawiblah/v1', '/subscribe', array(
+                'methods'             => 'POST',
+                'callback'            => 'Mawiblah\SubscriptionForm::subscribe',
+                'permission_callback' => '__return_true',
+            ));
+
         });
     }
 
@@ -101,6 +107,42 @@ class Init
     public function registerPostsTypesAndTaxamonies()
     {
         Subscribers::registerPostType();
+    }
+
+    public function registerBlocks(): void
+    {
+        register_block_type('mawiblah/subscription-form', [
+            'attributes'      => [
+                'audienceHashes' => ['type' => 'array', 'default' => []],
+            ],
+            'render_callback' => function (array $attrs): string {
+                $hashes = array_map('sanitize_text_field', $attrs['audienceHashes'] ?? []);
+
+                wp_enqueue_style('mawiblah-subscription-form-css', MAWIBLAH_PLUGIN_URL . '/assets/css/subscription-form.css', [], MAWIBLAH_VERSION);
+                wp_enqueue_script('mawiblah-subscription-form-js', MAWIBLAH_PLUGIN_URL . '/assets/js/subscription-form.js', [], MAWIBLAH_VERSION, true);
+                wp_localize_script('mawiblah-subscription-form-js', 'mawiblahSubscribeFormData', [
+                    'restUrl'      => rest_url('mawiblah/v1/subscribe'),
+                    'errorMessage' => __('Something went wrong. Please try again.', 'mawiblah'),
+                ]);
+
+                return SubscriptionForm::renderForm($hashes);
+            },
+            'editor_script'   => 'mawiblah-subscription-form-block-js',
+        ]);
+
+        $audiences = array_map(function ($a) {
+            return ['hash' => $a->audienceHash, 'name' => $a->name];
+        }, Subscribers::getAllAudiences());
+
+        wp_register_script(
+            'mawiblah-subscription-form-block-js',
+            MAWIBLAH_PLUGIN_URL . '/assets/js/block/subscription-form.js',
+            ['wp-blocks', 'wp-element', 'wp-block-editor', 'wp-components'],
+            MAWIBLAH_VERSION
+        );
+        wp_localize_script('mawiblah-subscription-form-block-js', 'mawiblahSubscriptionBlock', [
+            'audiences' => $audiences,
+        ]);
     }
 
     public function my_custom_rest_api_nonce()

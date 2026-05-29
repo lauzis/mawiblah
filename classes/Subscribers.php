@@ -214,7 +214,26 @@ class Subscribers
         $audience->gravityFormsId = get_term_meta($audience->term_id, 'gravityFormsId', true);
         $audience->lastSyncDate = get_term_meta($audience->term_id, 'lastSyncDate', true);
         $audience->id = $audience->term_id;
+
+        $audienceHash = get_term_meta($audience->term_id, 'audienceHash', true);
+        if (!$audienceHash) {
+            $audienceHash = md5((string) $audience->term_id);
+            add_term_meta($audience->term_id, 'audienceHash', $audienceHash, true);
+        }
+        $audience->audienceHash = $audienceHash;
+
         return $audience;
+    }
+
+    public static function getAudienceByHash(string $audienceHash): ?object
+    {
+        $audiences = self::getAllAudiences();
+        foreach ($audiences as $audience) {
+            if ($audience->audienceHash === $audienceHash) {
+                return $audience;
+            }
+        }
+        return null;
     }
 
     public static function getAudience($audienceId)

@@ -79,5 +79,46 @@
         ]
       }
     ]
+  },
+  {
+    "id": "mawiblah-recaptcha",
+    "title": "reCAPTCHA v3 (Subscription Form)",
+    "description": "Optional Google reCAPTCHA v3 protection for the subscription form. Leave disabled to rely on honeypot only. Get your keys at https://www.google.com/recaptcha/admin/",
+    "fields": [
+      {
+        "id": "mawiblah-recaptcha-enabled",
+        "title": "Enable reCAPTCHA v3",
+        "type": "select",
+        "value": "",
+        "placeholder": "",
+        "default_value": "disabled",
+        "options": [
+          {
+            "value": "disabled",
+            "title": "Disabled"
+          },
+          {
+            "value": "enabled",
+            "title": "Enabled"
+          }
+        ]
+      },
+      {
+        "id": "mawiblah-recaptcha-site-key",
+        "title": "Site Key (public)",
+        "type": "text",
+        "value": "",
+        "placeholder": "6Lc...",
+        "default_value": ""
+      },
+      {
+        "id": "mawiblah-recaptcha-secret-key",
+        "title": "Secret Key (private, never expose publicly)",
+        "type": "text",
+        "value": "",
+        "placeholder": "6Lc...",
+        "default_value": ""
+      }
+    ]
   }
 ]

@@ -22,6 +22,19 @@ class Tests
         }
     }
 
+    private static function deleteSubscribersByEmail(string $email): void
+    {
+        $posts = get_posts([
+            'post_type'      => Subscribers::postType(),
+            'title'          => $email,
+            'posts_per_page' => -1,
+            'post_status'    => 'any',
+        ]);
+        foreach ($posts as $p) {
+            wp_delete_post($p->ID, true);
+        }
+    }
+
     public static function scenarios(): array
     {
         return [
@@ -236,6 +249,7 @@ class Tests
         self::echoHeading('Subscriber CRUD & Audience Hash');
 
         $email = 'subscribertest@mawiblah.test';
+        self::deleteSubscribersByEmail($email);
 
         self::echoTitle('addSubscriber creates subscriber');
         $sub = Subscribers::addSubscriber($email);
@@ -286,7 +300,7 @@ class Tests
         self::echoResult(Subscribers::isEmailSent($sub->id, $cId) ? 'Correctly true' : 'Should be true', Subscribers::isEmailSent($sub->id, $cId) ? 'success' : 'error');
 
         Campaigns::deleteCampaign($cId);
-        wp_delete_post($sub->id, true);
+        self::deleteSubscribersByEmail($email);
         self::echoResult('Cleaned up', 'success');
     }
 
@@ -299,6 +313,7 @@ class Tests
         self::echoHeading('Unsubscribe Flow');
 
         $email = 'unsubtest@mawiblah.test';
+        self::deleteSubscribersByEmail($email);
         $sub   = Subscribers::addSubscriber($email);
         $cId   = Campaigns::addCampaign('Unsub Test Campaign', 'Subject', 'Title', 'Content', [], 'test-template');
         $token = Subscribers::getUnsubToken($sub->id, $email);
@@ -326,7 +341,7 @@ class Tests
         self::echoResult($after === $before + 1 ? 'Counter incremented' : 'Not incremented', $after === $before + 1 ? 'success' : 'error');
 
         Campaigns::deleteCampaign($cId);
-        wp_delete_post($sub->id, true);
+        self::deleteSubscribersByEmail($email);
         self::echoResult('Cleaned up', 'success');
     }
 
@@ -397,6 +412,8 @@ class Tests
         self::echoHeading('Subscription Form');
 
         $email = 'formtest@mawiblah.test';
+        self::deleteSubscribersByEmail($email);
+        self::deleteSubscribersByEmail('honeypot@mawiblah.test');
 
         $aud1   = wp_insert_term('Form Test Audience 1', Subscribers::postType() . '_category');
         $aud2   = wp_insert_term('Form Test Audience 2', Subscribers::postType() . '_category');
@@ -461,7 +478,8 @@ class Tests
         self::echoResult($rejected ? 'Correctly rejected' : 'Should be rejected', $rejected ? 'success' : 'error');
 
         // Cleanup
-        wp_delete_post($sub->id, true);
+        self::deleteSubscribersByEmail($email);
+        self::deleteSubscribersByEmail('honeypot@mawiblah.test');
         if ($aud1Id) wp_delete_term($aud1Id, Subscribers::postType() . '_category');
         if ($aud2Id) wp_delete_term($aud2Id, Subscribers::postType() . '_category');
         self::echoResult('Cleaned up', 'success');

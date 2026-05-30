@@ -9,7 +9,14 @@ class Subscribers
     public static function init()
     {
         self::registerPostType();
+        self::ensureDefaultAudiences();
         add_action('add_meta_boxes', [self::class, 'addMetaBoxes']);
+    }
+
+    public static function ensureDefaultAudiences(): void
+    {
+        self::unsubedAudience();
+        self::testerAudience();
     }
 
     public static function addMetaBoxes()

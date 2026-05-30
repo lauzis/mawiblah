@@ -307,16 +307,18 @@ class Subscribers
 
     public static function addSubscriber(string $email, string $subscriberHash = ""): object
     {
+        $existing = self::getSubscriber($email);
+        if ($existing) {
+            return $existing;
+        }
 
-        // Prepare the post data
         $post_data = [
-            'post_title' => $email,
+            'post_title'   => $email,
             'post_content' => '',
-            'post_status' => 'publish',
-            'post_type' => self::postType(), // Replace with your custom post type
+            'post_status'  => 'publish',
+            'post_type'    => self::postType(),
         ];
 
-        // Insert the post into the database
         $post_id = wp_insert_post($post_data);
 
         if (!is_wp_error($post_id)) {

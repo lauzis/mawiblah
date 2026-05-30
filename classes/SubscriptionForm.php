@@ -107,18 +107,28 @@ class SubscriptionForm
         $resubToken     = sanitize_text_field($_GET['resubToken'] ?? '');
         $audienceParam  = sanitize_text_field($_GET['audiences'] ?? '');
 
+        $result = self::confirmResubscribe($subscriberHash, $resubToken, $audienceParam);
+
+        if ($result) {
+            include MAWIBLAH_TEMPLATE_DIR . '/subscription-form/resubscribe-confirm.php';
+        } else {
+            include MAWIBLAH_TEMPLATE_DIR . '/subscription-form/resubscribe-invalid.php';
+        }
+        exit;
+    }
+
+    public static function confirmResubscribe(string $subscriberHash, string $resubToken, string $audienceParam): bool
+    {
         $subscriber = Subscribers::getSubscriberBySubscriberHash($subscriberHash);
 
         if (!$subscriber) {
-            include MAWIBLAH_TEMPLATE_DIR . '/subscription-form/resubscribe-invalid.php';
-            exit;
+            return false;
         }
 
         $expectedToken = Subscribers::getUnsubToken($subscriber->id, $subscriber->email);
 
         if ($resubToken !== $expectedToken) {
-            include MAWIBLAH_TEMPLATE_DIR . '/subscription-form/resubscribe-invalid.php';
-            exit;
+            return false;
         }
 
         // Clear unsubed flag
@@ -141,8 +151,7 @@ class SubscriptionForm
             }
         }
 
-        include MAWIBLAH_TEMPLATE_DIR . '/subscription-form/resubscribe-confirm.php';
-        exit;
+        return true;
     }
 
     private static function verifyRecaptcha(string $token): bool

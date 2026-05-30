@@ -114,7 +114,7 @@ class ShortCodes
     public static function subscribeForm($atts): string
     {
         $atts = shortcode_atts(['audiences' => ''], $atts, 'mawiblah_subscribe_form');
-        $hashes = array_filter(array_map('trim', explode(',', $atts['audiences'])));
+        $hashes = array_values(array_filter(array_map('sanitize_text_field', array_map('trim', explode(',', $atts['audiences'])))));
 
         wp_enqueue_style('mawiblah-subscription-form-css', MAWIBLAH_PLUGIN_URL . '/assets/css/subscription-form.css', [], MAWIBLAH_VERSION);
         wp_enqueue_script('mawiblah-subscription-form-js', MAWIBLAH_PLUGIN_URL . '/assets/js/subscription-form.js', [], MAWIBLAH_VERSION, true);

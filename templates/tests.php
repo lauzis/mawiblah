@@ -6,6 +6,10 @@ use Mawiblah\Settings;
 $scenario  = isset($_GET['run']) ? sanitize_key($_GET['run']) : null;
 $scenarios = Tests::scenarios();
 
+if ($scenario) {
+    check_admin_referer('mawiblah-run-test-' . $scenario);
+}
+
 ?>
 <div class="wrap mawiblah">
     <h1>Self Tests</h1>
@@ -54,10 +58,10 @@ $scenarios = Tests::scenarios();
     <div class="mawiblah-test-scenarios">
         <?php foreach ($scenarios as $key => $label): ?>
             <?php
-            $url = add_query_arg([
-                'page' => 'mawiblah-tests',
-                'run'  => $key,
-            ], admin_url('admin.php'));
+            $url = wp_nonce_url(
+                add_query_arg(['page' => 'mawiblah-tests', 'run' => $key], admin_url('admin.php')),
+                'mawiblah-run-test-' . $key
+            );
             $active = $scenario === $key ? ' mawiblah-test-scenario--active' : '';
             ?>
             <a href="<?= esc_url($url) ?>" class="button mawiblah-test-scenario<?= esc_attr($active) ?>">

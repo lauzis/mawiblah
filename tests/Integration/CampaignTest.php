@@ -47,7 +47,8 @@ class CampaignTest extends WP_UnitTestCase
         $startedAt = Campaigns::getCampaignById($id)->campaignStarted;
         $this->assertNotEmpty($startedAt);
 
-        // Guard: second call does not overwrite
+        // Guard: second call must not overwrite — sleep 1s so time() would differ if guard is broken
+        sleep(1);
         Campaigns::campaignStart($id);
         $this->assertSame($startedAt, Campaigns::getCampaignById($id)->campaignStarted);
 
@@ -94,6 +95,7 @@ class CampaignTest extends WP_UnitTestCase
         Campaigns::campaignStart($id);
         $first = Campaigns::getCampaignById($id)->campaignStarted;
 
+        sleep(1);
         Campaigns::campaignStart($id);
         $second = Campaigns::getCampaignById($id)->campaignStarted;
 

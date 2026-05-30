@@ -19,16 +19,20 @@ class SubscriptionFormTest extends WP_UnitTestCase
         $t1 = wp_insert_term('PHPUnit Audience 1', Subscribers::postType() . '_category');
         $t2 = wp_insert_term('PHPUnit Audience 2', Subscribers::postType() . '_category');
 
-        $this->audienceIds = [
+        $this->audienceIds = array_values(array_filter([
             is_wp_error($t1) ? null : $t1['term_id'],
             is_wp_error($t2) ? null : $t2['term_id'],
-        ];
+        ]));
 
         foreach ($this->audienceIds as $id) {
-            if ($id) {
-                $aud = Subscribers::getAudience($id);
+            $aud = Subscribers::getAudience($id);
+            if ($aud) {
                 $this->hashes[] = $aud->audienceHash;
             }
+        }
+
+        if (count($this->hashes) < 2) {
+            $this->markTestSkipped('Could not create test audiences — skipping.');
         }
     }
 
@@ -40,7 +44,7 @@ class SubscriptionFormTest extends WP_UnitTestCase
             }
         }
         foreach ($this->audienceIds as $id) {
-            if ($id) wp_delete_term($id, Subscribers::postType() . '_category');
+            wp_delete_term($id, Subscribers::postType() . '_category');
         }
         parent::tearDown();
     }
@@ -111,11 +115,10 @@ class SubscriptionFormTest extends WP_UnitTestCase
         $token = Subscribers::getUnsubToken($sub->id, $email);
         update_post_meta($sub->id, 'unsubed', true);
 
-        // Simulate confirmation: valid token match clears flag
-        $this->assertSame($token, Subscribers::getUnsubToken($sub->id, $email));
-        update_post_meta($sub->id, 'unsubed', false);
-        delete_post_meta($sub->id, 'unsub_time');
+        $audienceParam = implode(',', $this->audienceIds);
+        $result        = SubscriptionForm::confirmResubscribe($sub->subscriberHash, $token, $audienceParam);
 
+        $this->assertTrue($result);
         $fresh = Subscribers::getSubscriber($email);
         $this->assertFalse((bool) $fresh->unsubed);
     }
@@ -124,10 +127,14 @@ class SubscriptionFormTest extends WP_UnitTestCase
     {
         $email = 'resubinvalid@mawiblah.test';
         SubscriptionForm::subscribe($this->makeRequest(['email' => $email, 'audienceHashes' => $this->hashes, 'honeypot' => '']));
-        $sub   = Subscribers::getSubscriber($email);
-        $token = Subscribers::getUnsubToken($sub->id, $email);
+        $sub = Subscribers::getSubscriber($email);
+        update_post_meta($sub->id, 'unsubed', true);
 
-        $this->assertNotSame('wrong-token', $token);
+        $result = SubscriptionForm::confirmResubscribe($sub->subscriberHash, 'wrong-token', '');
+
+        $this->assertFalse($result);
+        $fresh = Subscribers::getSubscriber($email);
+        $this->assertTrue((bool) $fresh->unsubed, 'unsubed flag should remain set after rejected token');
     }
 
     public function test_subscriber_added_to_multiple_audiences(): void
@@ -138,20 +145,18 @@ class SubscriptionFormTest extends WP_UnitTestCase
         $terms = wp_get_post_terms($sub->id, Subscribers::postType() . '_category', ['fields' => 'ids']);
 
         foreach ($this->audienceIds as $id) {
-            if ($id) $this->assertContains($id, $terms);
+            $this->assertContains($id, $terms);
         }
     }
 
     public function test_partial_audience_overlap_adds_missing_only(): void
     {
         $email = 'partial@mawiblah.test';
-        // Subscribe to first audience only
         SubscriptionForm::subscribe($this->makeRequest(['email' => $email, 'audienceHashes' => [$this->hashes[0]], 'honeypot' => '']));
         $sub    = Subscribers::getSubscriber($email);
         $before = wp_get_post_terms($sub->id, Subscribers::postType() . '_category', ['fields' => 'ids']);
         $this->assertCount(1, $before);
 
-        // Subscribe to both — should add only the missing second audience
         SubscriptionForm::subscribe($this->makeRequest(['email' => $email, 'audienceHashes' => $this->hashes, 'honeypot' => '']));
         $after = wp_get_post_terms($sub->id, Subscribers::postType() . '_category', ['fields' => 'ids']);
         $this->assertCount(2, $after);

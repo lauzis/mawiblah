@@ -137,7 +137,7 @@ class Init
         wp_register_script(
             'mawiblah-subscription-form-block-js',
             MAWIBLAH_PLUGIN_URL . '/assets/js/block/subscription-form.js',
-            ['wp-blocks', 'wp-element', 'wp-block-editor', 'wp-components'],
+            ['wp-blocks', 'wp-element', 'wp-block-editor', 'wp-components', 'wp-i18n'],
             MAWIBLAH_VERSION
         );
         wp_localize_script('mawiblah-subscription-form-block-js', 'mawiblahSubscriptionBlock', [

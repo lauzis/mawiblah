@@ -20,12 +20,20 @@
     function handleSubmit(wrapper, form, event) {
         event.preventDefault();
 
+        if (wrapper.classList.contains('mawiblah-subscribe-form--loading')) {
+            return;
+        }
+
         var email     = form.querySelector('.mawiblah-subscribe-form__input').value;
         var honeypot  = form.querySelector('input[name="website"]').value;
         var audiences = getAudienceHashes(form);
         var siteKey   = wrapper.dataset.recaptchaSiteKey || '';
 
         wrapper.classList.add('mawiblah-subscribe-form--loading');
+
+        function clearLoading() {
+            wrapper.classList.remove('mawiblah-subscribe-form--loading');
+        }
 
         function doSubmit(recaptchaToken) {
             fetch(mawiblahSubscribeFormData.restUrl, {
@@ -40,7 +48,7 @@
             })
             .then(function (res) { return res.json(); })
             .then(function (data) {
-                wrapper.classList.remove('mawiblah-subscribe-form--loading');
+                clearLoading();
                 if (data.status === 'ok') {
                     wrapper.classList.add('mawiblah-subscribe-form--submitted');
                     showMessage(wrapper, 'success', data.message);
@@ -49,7 +57,7 @@
                 }
             })
             .catch(function () {
-                wrapper.classList.remove('mawiblah-subscribe-form--loading');
+                clearLoading();
                 showMessage(wrapper, 'error', mawiblahSubscribeFormData.errorMessage);
             });
         }
@@ -58,6 +66,9 @@
             grecaptcha.ready(function () {
                 grecaptcha.execute(siteKey, { action: 'subscribe' }).then(function (token) {
                     doSubmit(token);
+                }).catch(function () {
+                    clearLoading();
+                    showMessage(wrapper, 'error', mawiblahSubscribeFormData.errorMessage);
                 });
             });
         } else {

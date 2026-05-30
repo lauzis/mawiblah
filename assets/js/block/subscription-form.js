@@ -1,16 +1,17 @@
-(function (blocks, element, blockEditor, components) {
+(function (blocks, element, blockEditor, components, i18n) {
     'use strict';
 
-    var el          = element.createElement;
-    var useBlockProps = blockEditor.useBlockProps;
+    var el               = element.createElement;
+    var useBlockProps    = blockEditor.useBlockProps;
     var InspectorControls = blockEditor.InspectorControls;
-    var PanelBody   = components.PanelBody;
-    var CheckboxControl = components.CheckboxControl;
+    var PanelBody        = components.PanelBody;
+    var CheckboxControl  = components.CheckboxControl;
+    var __               = i18n.__;
 
     var audiences = mawiblahSubscriptionBlock.audiences || [];
 
     blocks.registerBlockType('mawiblah/subscription-form', {
-        title: 'Mawiblah Subscription Form',
+        title: __('Mawiblah Subscription Form', 'mawiblah'),
         icon: 'email-alt2',
         category: 'widgets',
         attributes: {
@@ -40,9 +41,9 @@
                     null,
                     el(
                         PanelBody,
-                        { title: 'Audiences', initialOpen: true },
+                        { title: __('Audiences', 'mawiblah'), initialOpen: true },
                         audiences.length === 0
-                            ? el('p', null, 'No audiences found. Create one first.')
+                            ? el('p', null, __('No audiences found. Create one first.', 'mawiblah'))
                             : audiences.map(function (audience) {
                                 return el(CheckboxControl, {
                                     key: audience.hash,
@@ -58,10 +59,10 @@
                 el(
                     'div',
                     { className: 'mawiblah-subscribe-form-preview' },
-                    el('p', null, 'Mawiblah Subscription Form'),
+                    el('p', null, __('Mawiblah Subscription Form', 'mawiblah')),
                     audienceHashes.length > 0
-                        ? el('small', null, 'Audiences: ' + audienceHashes.join(', '))
-                        : el('small', null, 'No audiences selected')
+                        ? el('small', null, __('Audiences: ', 'mawiblah') + audienceHashes.join(', '))
+                        : el('small', null, __('No audiences selected', 'mawiblah'))
                 )
             );
         },
@@ -76,5 +77,6 @@
     window.wp.blocks,
     window.wp.element,
     window.wp.blockEditor,
-    window.wp.components
+    window.wp.components,
+    window.wp.i18n
 ));

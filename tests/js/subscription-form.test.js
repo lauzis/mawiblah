@@ -1,6 +1,10 @@
 'use strict';
 
-// ---- Fixtures ---------------------------------------------------------------
+// Load the script once for the whole file — avoids accumulating DOMContentLoaded
+// listeners from repeated require() calls inside each buildForm().
+require('../../assets/js/subscription-form.js');
+
+// ---- Helpers ----------------------------------------------------------------
 
 function buildForm(options = {}) {
     document.body.innerHTML = `
@@ -26,20 +30,16 @@ function buildForm(options = {}) {
         errorMessage: 'Something went wrong. Please try again.',
     };
 
-    // Re-load the script logic after DOM is ready
-    jest.resetModules();
-    require('../../assets/js/subscription-form.js');
-
-    // Fire DOMContentLoaded to bind listeners
+    // Bind submit listeners by firing DOMContentLoaded on the fresh DOM
     document.dispatchEvent(new Event('DOMContentLoaded'));
 
     return {
-        wrapper: document.querySelector('.mawiblah-subscribe-form'),
-        form:    document.querySelector('.mawiblah-subscribe-form__form'),
-        button:  document.querySelector('.mawiblah-subscribe-form__button'),
-        input:   document.querySelector('.mawiblah-subscribe-form__input'),
-        success: document.querySelector('.mawiblah-subscribe-form__message--success'),
-        error:   document.querySelector('.mawiblah-subscribe-form__message--error'),
+        wrapper:  document.querySelector('.mawiblah-subscribe-form'),
+        form:     document.querySelector('.mawiblah-subscribe-form__form'),
+        button:   document.querySelector('.mawiblah-subscribe-form__button'),
+        input:    document.querySelector('.mawiblah-subscribe-form__input'),
+        success:  document.querySelector('.mawiblah-subscribe-form__message--success'),
+        error:    document.querySelector('.mawiblah-subscribe-form__message--error'),
         honeypot: document.querySelector('input[name="website"]'),
     };
 }
@@ -49,6 +49,12 @@ function mockFetch(response) {
         json: jest.fn().mockResolvedValue(response),
     });
 }
+
+afterEach(() => {
+    jest.clearAllMocks();
+    delete global.grecaptcha;
+    document.body.innerHTML = '';
+});
 
 // ---- Honeypot ---------------------------------------------------------------
 
@@ -77,7 +83,7 @@ describe('submit payload', () => {
     });
 
     test('sends email in POST body', async () => {
-        const { form, input } = buildForm({ email: 'test@example.com', audiences: ['hash1'] });
+        const { form } = buildForm({ email: 'test@example.com', audiences: ['hash1'] });
         form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
         await new Promise(r => setTimeout(r, 0));
 
@@ -124,7 +130,15 @@ describe('submit payload', () => {
 
         const body = JSON.parse(global.fetch.mock.calls[0][1].body);
         expect(body.recaptchaToken).toBe('test-token-xyz');
-        delete global.grecaptcha;
+    });
+
+    test('second submit while loading is ignored (no duplicate fetch)', async () => {
+        const { form } = buildForm({ email: 'a@b.com' });
+        form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+        form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+        await new Promise(r => setTimeout(r, 50));
+
+        expect(global.fetch).toHaveBeenCalledTimes(1);
     });
 });
 
@@ -140,7 +154,6 @@ describe('DOM state', () => {
         await new Promise(r => setTimeout(r, 0));
 
         expect(wrapper.classList.contains('mawiblah-subscribe-form--loading')).toBe(true);
-
         resolveFetch({ json: async () => ({ status: 'ok', message: 'OK' }) });
         await new Promise(r => setTimeout(r, 0));
     });

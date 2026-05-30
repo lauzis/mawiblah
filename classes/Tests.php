@@ -33,6 +33,7 @@ class Tests
             'unsubscribe'       => 'Unsubscribe Flow',
             'click-tracking'    => 'Click Tracking (triple-count)',
             'subscription-form' => 'Subscription Form',
+            'default-audiences' => 'Default Audiences (Unsubed + Testers)',
         ];
     }
 
@@ -52,6 +53,7 @@ class Tests
             'unsubscribe'       => self::unsubscribeScenario(),
             'click-tracking'    => self::clickTrackingScenario(),
             'subscription-form' => self::subscriptionFormScenario(),
+            'default-audiences' => self::defaultAudiencesScenario(),
             default             => self::echoResult('Unknown scenario: ' . $scenario, 'error'),
         };
     }
@@ -463,5 +465,41 @@ class Tests
         if ($aud1Id) wp_delete_term($aud1Id, Subscribers::postType() . '_category');
         if ($aud2Id) wp_delete_term($aud2Id, Subscribers::postType() . '_category');
         self::echoResult('Cleaned up', 'success');
+    }
+
+    // -------------------------------------------------------------------------
+    // Default Audiences
+    // -------------------------------------------------------------------------
+
+    public static function defaultAudiencesScenario(): void
+    {
+        self::echoHeading('Default Audiences');
+
+        $taxonomy = Subscribers::postType() . '_category';
+
+        foreach (['Unsubed' => 'unsubedAudience', 'Testers' => 'testerAudience'] as $name => $method) {
+            self::echoTitle($name . ' audience exists');
+            $term = get_term_by('name', $name, $taxonomy);
+            self::echoResult($term ? 'Exists (ID ' . $term->term_id . ')' : 'Missing', $term ? 'success' : 'error');
+
+            self::echoTitle($name . ' — ' . $method . '() returns a term object');
+            $result = Subscribers::$method();
+            $ok = $result && !is_wp_error($result) && isset($result->term_id);
+            self::echoResult($ok ? 'Returns term object (ID ' . $result->term_id . ')' : 'Returned non-object', $ok ? 'success' : 'error', $ok ? null : $result);
+
+            self::echoTitle($name . ' — audienceHash is set');
+            if ($ok) {
+                $hash = get_term_meta($result->term_id, 'audienceHash', true);
+                self::echoResult($hash ? 'Hash: ' . $hash : 'No hash', $hash ? 'success' : 'error');
+            } else {
+                self::echoResult('Skipped — term not found', 'error');
+            }
+        }
+
+        self::echoTitle('Unsubed audience is distinct from Testers');
+        $unsubed = Subscribers::unsubedAudience();
+        $testers = Subscribers::testerAudience();
+        $distinct = $unsubed && $testers && $unsubed->term_id !== $testers->term_id;
+        self::echoResult($distinct ? 'Distinct IDs' : 'Same term or missing', $distinct ? 'success' : 'error');
     }
 }

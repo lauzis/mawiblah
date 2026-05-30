@@ -492,7 +492,11 @@ class Subscribers
     {
         $term = get_term_by('name', 'Testers', Subscribers::postType() . '_category');
         if (!$term) {
-            $term = wp_insert_term('Testers', Subscribers::postType() . '_category');
+            $result = wp_insert_term('Testers', Subscribers::postType() . '_category');
+            if (is_wp_error($result)) {
+                return null;
+            }
+            $term = get_term($result['term_id'], Subscribers::postType() . '_category');
         }
         return $term;
     }

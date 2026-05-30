@@ -7,15 +7,20 @@ class Migrations
     public static function run()
     {
         $currentVersion = get_option('mawiblah_db_version');
-        
+
         if (version_compare($currentVersion, '1.0.15', '<')) {
             self::migrateTo1015();
             update_option('mawiblah_db_version', '1.0.15');
         }
-        
+
         if (version_compare($currentVersion, '1.0.16', '<')) {
             self::migrateTo1016();
             update_option('mawiblah_db_version', '1.0.16');
+        }
+
+        if (version_compare($currentVersion, '1.0.17', '<')) {
+            self::migrateTo1017();
+            update_option('mawiblah_db_version', '1.0.17');
         }
     }
 
@@ -39,6 +44,39 @@ class Migrations
                 // Generate hash if missing entirely (should be handled by appendMeta but good for DB consistency)
                 $hash = Helpers::generateCampaignHash($campaign->ID);
                 update_post_meta($campaign->ID, 'campaignHash', $hash);
+            }
+        }
+    }
+
+    private static function migrateTo1017(): void
+    {
+        // Ensure both system audiences exist and have audienceHash set
+        $defaults = [
+            'Unsubed' => 'Audience for unsubscribed subscribers. Managed automatically.',
+            'Testers' => 'Audience for test campaign recipients. Managed automatically.',
+        ];
+
+        $taxonomy = Subscribers::postType() . '_category';
+
+        foreach ($defaults as $name => $description) {
+            $term = get_term_by('name', $name, $taxonomy);
+
+            if (!$term) {
+                $result = wp_insert_term($name, $taxonomy, ['description' => $description]);
+                if (is_wp_error($result)) {
+                    continue;
+                }
+                $term = get_term($result['term_id'], $taxonomy);
+            }
+
+            if (!$term || is_wp_error($term)) {
+                continue;
+            }
+
+            // Ensure audienceHash is set (same lazy logic as appendAudienceMeta)
+            $hash = get_term_meta($term->term_id, 'audienceHash', true);
+            if (!$hash) {
+                add_term_meta($term->term_id, 'audienceHash', md5((string) $term->term_id), true);
             }
         }
     }

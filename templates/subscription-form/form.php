@@ -3,6 +3,9 @@
  * @var array  $audienceHashes  Audience hashes to subscribe to
  * @var bool   $recaptcha       Whether reCAPTCHA v3 is active
  * @var string $siteKey         reCAPTCHA site key
+ * @var string $label           Email field label
+ * @var string $placeholder     Email input placeholder
+ * @var string $buttonText      Submit button text
  */
 ?>
 <div class="mawiblah-subscribe-form">
@@ -18,21 +21,21 @@
 
         <div class="mawiblah-subscribe-form__field">
             <label class="mawiblah-subscribe-form__label" for="mawiblah-email">
-                <?= esc_html__('Email', 'mawiblah') ?>
+                <?= esc_html($label) ?>
             </label>
             <input
                 class="mawiblah-subscribe-form__input"
                 type="email"
                 id="mawiblah-email"
                 name="email"
-                placeholder="<?= esc_attr__('your@email.com', 'mawiblah') ?>"
+                placeholder="<?= esc_attr($placeholder) ?>"
                 required
             />
         </div>
 
         <div class="mawiblah-subscribe-form__actions">
             <button class="mawiblah-subscribe-form__button" type="submit">
-                <?= esc_html__('Subscribe', 'mawiblah') ?>
+                <?= esc_html($buttonText) ?>
             </button>
         </div>
 

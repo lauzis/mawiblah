@@ -14,10 +14,13 @@ class SubscriptionForm
         }
     }
 
-    public static function renderForm(array $audienceHashes = []): string
+    public static function renderForm(array $audienceHashes = [], array $options = []): string
     {
-        $siteKey    = Settings::recaptchaSiteKey();
-        $recaptcha  = Settings::recaptchaEnabled() && $siteKey;
+        $siteKey     = Settings::recaptchaSiteKey();
+        $recaptcha   = Settings::recaptchaEnabled() && $siteKey;
+        $label       = $options['label']       ?? __('Email', 'mawiblah');
+        $placeholder = $options['placeholder'] ?? __('your@email.com', 'mawiblah');
+        $buttonText  = $options['buttonText']  ?? __('Subscribe', 'mawiblah');
         ob_start();
         include MAWIBLAH_TEMPLATE_DIR . '/subscription-form/form.php';
         return ob_get_clean();

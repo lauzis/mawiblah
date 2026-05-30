@@ -113,8 +113,20 @@ class ShortCodes
 
     public static function subscribeForm($atts): string
     {
-        $atts = shortcode_atts(['audiences' => ''], $atts, 'mawiblah_subscribe_form');
+        $atts = shortcode_atts([
+            'audiences'   => '',
+            'label'       => '',
+            'placeholder' => '',
+            'button'      => '',
+        ], $atts, 'mawiblah_subscribe_form');
+
         $hashes = array_values(array_filter(array_map('sanitize_text_field', array_map('trim', explode(',', $atts['audiences'])))));
+
+        $options = array_filter([
+            'label'       => sanitize_text_field($atts['label']),
+            'placeholder' => sanitize_text_field($atts['placeholder']),
+            'buttonText'  => sanitize_text_field($atts['button']),
+        ]);
 
         wp_enqueue_style('mawiblah-subscription-form-css', MAWIBLAH_PLUGIN_URL . '/assets/css/subscription-form.css', [], MAWIBLAH_VERSION);
         wp_enqueue_script('mawiblah-subscription-form-js', MAWIBLAH_PLUGIN_URL . '/assets/js/subscription-form.js', [], MAWIBLAH_VERSION, true);
@@ -123,7 +135,7 @@ class ShortCodes
             'errorMessage' => __('Something went wrong. Please try again.', 'mawiblah'),
         ]);
 
-        return SubscriptionForm::renderForm($hashes);
+        return SubscriptionForm::renderForm($hashes, $options);
     }
 
     public static function unsubscribe()

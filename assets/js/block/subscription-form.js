@@ -1,12 +1,13 @@
 (function (blocks, element, blockEditor, components, i18n) {
     'use strict';
 
-    var el               = element.createElement;
-    var useBlockProps    = blockEditor.useBlockProps;
+    var el                = element.createElement;
+    var useBlockProps     = blockEditor.useBlockProps;
     var InspectorControls = blockEditor.InspectorControls;
-    var PanelBody        = components.PanelBody;
-    var CheckboxControl  = components.CheckboxControl;
-    var __               = i18n.__;
+    var PanelBody         = components.PanelBody;
+    var CheckboxControl   = components.CheckboxControl;
+    var TextControl       = components.TextControl;
+    var __                = i18n.__;
 
     var audiences = mawiblahSubscriptionBlock.audiences || [];
 
@@ -15,14 +16,15 @@
         icon: 'email-alt2',
         category: 'mawiblah',
         attributes: {
-            audienceHashes: {
-                type: 'array',
-                default: [],
-            },
+            audienceHashes: { type: 'array',  default: [] },
+            label:          { type: 'string', default: '' },
+            placeholder:    { type: 'string', default: '' },
+            buttonText:     { type: 'string', default: '' },
         },
 
         edit: function (props) {
-            var audienceHashes = props.attributes.audienceHashes;
+            var attrs          = props.attributes;
+            var audienceHashes = attrs.audienceHashes;
 
             function toggleAudience(hash, checked) {
                 var next = checked
@@ -39,6 +41,28 @@
                 el(
                     InspectorControls,
                     null,
+                    el(
+                        PanelBody,
+                        { title: __('Form Text', 'mawiblah'), initialOpen: true },
+                        el(TextControl, {
+                            label:       __('Field label', 'mawiblah'),
+                            placeholder: __('Email', 'mawiblah'),
+                            value:       attrs.label,
+                            onChange:    function (val) { props.setAttributes({ label: val }); },
+                        }),
+                        el(TextControl, {
+                            label:       __('Input placeholder', 'mawiblah'),
+                            placeholder: __('your@email.com', 'mawiblah'),
+                            value:       attrs.placeholder,
+                            onChange:    function (val) { props.setAttributes({ placeholder: val }); },
+                        }),
+                        el(TextControl, {
+                            label:       __('Button text', 'mawiblah'),
+                            placeholder: __('Subscribe', 'mawiblah'),
+                            value:       attrs.buttonText,
+                            onChange:    function (val) { props.setAttributes({ buttonText: val }); },
+                        })
+                    ),
                     el(
                         PanelBody,
                         { title: __('Audiences', 'mawiblah'), initialOpen: true },

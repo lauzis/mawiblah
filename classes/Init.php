@@ -129,10 +129,18 @@ class Init
 
         register_block_type('mawiblah/subscription-form', [
             'attributes'      => [
-                'audienceHashes' => ['type' => 'array', 'default' => []],
+                'audienceHashes' => ['type' => 'array',  'default' => []],
+                'label'          => ['type' => 'string', 'default' => ''],
+                'placeholder'    => ['type' => 'string', 'default' => ''],
+                'buttonText'     => ['type' => 'string', 'default' => ''],
             ],
             'render_callback' => function (array $attrs): string {
-                $hashes = array_map('sanitize_text_field', $attrs['audienceHashes'] ?? []);
+                $hashes  = array_map('sanitize_text_field', $attrs['audienceHashes'] ?? []);
+                $options = array_filter([
+                    'label'       => sanitize_text_field($attrs['label'] ?? ''),
+                    'placeholder' => sanitize_text_field($attrs['placeholder'] ?? ''),
+                    'buttonText'  => sanitize_text_field($attrs['buttonText'] ?? ''),
+                ]);
 
                 wp_enqueue_style('mawiblah-subscription-form-css', MAWIBLAH_PLUGIN_URL . '/assets/css/subscription-form.css', [], MAWIBLAH_VERSION);
                 wp_enqueue_script('mawiblah-subscription-form-js', MAWIBLAH_PLUGIN_URL . '/assets/js/subscription-form.js', [], MAWIBLAH_VERSION, true);
@@ -141,7 +149,7 @@ class Init
                     'errorMessage' => __('Something went wrong. Please try again.', 'mawiblah'),
                 ]);
 
-                return SubscriptionForm::renderForm($hashes);
+                return SubscriptionForm::renderForm($hashes, $options);
             },
             'editor_script'   => 'mawiblah-subscription-form-block-js',
         ]);

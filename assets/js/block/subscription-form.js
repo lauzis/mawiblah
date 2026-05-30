@@ -11,9 +11,9 @@
     var audiences = mawiblahSubscriptionBlock.audiences || [];
 
     blocks.registerBlockType('mawiblah/subscription-form', {
-        title: __('Mawiblah Subscription Form', 'mawiblah'),
+        title: __('Mawiblah Subscribe', 'mawiblah'),
         icon: 'email-alt2',
-        category: 'widgets',
+        category: 'mawiblah',
         attributes: {
             audienceHashes: {
                 type: 'array',
@@ -59,7 +59,7 @@
                 el(
                     'div',
                     { className: 'mawiblah-subscribe-form-preview' },
-                    el('p', null, __('Mawiblah Subscription Form', 'mawiblah')),
+                    el('p', null, __('Mawiblah Subscribe', 'mawiblah')),
                     audienceHashes.length > 0
                         ? el('small', null, __('Audiences: ', 'mawiblah') + audienceHashes.join(', '))
                         : el('small', null, __('No audiences selected', 'mawiblah'))

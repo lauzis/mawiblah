@@ -22,7 +22,8 @@ class Init
         }
         $this->setup_hooks();
         $this->setup_api_routes();
-        add_action('init', [$this, 'registerBlocks']);
+        $this->registerBlocks();
+        add_filter('block_categories_all', [$this, 'registerBlockCategories'], 10, 2);
     }
 
     public static function getIdsOfPages(){
@@ -111,6 +112,21 @@ class Init
 
     public function registerBlocks(): void
     {
+        // Script must be registered before register_block_type references it
+        $audiences = array_map(function ($a) {
+            return ['hash' => $a->audienceHash, 'name' => $a->name];
+        }, Subscribers::getAllAudiences());
+
+        wp_register_script(
+            'mawiblah-subscription-form-block-js',
+            MAWIBLAH_PLUGIN_URL . '/assets/js/block/subscription-form.js',
+            ['wp-blocks', 'wp-element', 'wp-block-editor', 'wp-components', 'wp-i18n'],
+            MAWIBLAH_VERSION
+        );
+        wp_localize_script('mawiblah-subscription-form-block-js', 'mawiblahSubscriptionBlock', [
+            'audiences' => $audiences,
+        ]);
+
         register_block_type('mawiblah/subscription-form', [
             'attributes'      => [
                 'audienceHashes' => ['type' => 'array', 'default' => []],
@@ -129,20 +145,16 @@ class Init
             },
             'editor_script'   => 'mawiblah-subscription-form-block-js',
         ]);
+    }
 
-        $audiences = array_map(function ($a) {
-            return ['hash' => $a->audienceHash, 'name' => $a->name];
-        }, Subscribers::getAllAudiences());
-
-        wp_register_script(
-            'mawiblah-subscription-form-block-js',
-            MAWIBLAH_PLUGIN_URL . '/assets/js/block/subscription-form.js',
-            ['wp-blocks', 'wp-element', 'wp-block-editor', 'wp-components', 'wp-i18n'],
-            MAWIBLAH_VERSION
-        );
-        wp_localize_script('mawiblah-subscription-form-block-js', 'mawiblahSubscriptionBlock', [
-            'audiences' => $audiences,
+    public function registerBlockCategories(array $categories): array
+    {
+        array_unshift($categories, [
+            'slug'  => 'mawiblah',
+            'title' => 'Mawiblah',
+            'icon'  => 'email-alt2',
         ]);
+        return $categories;
     }
 
     public function my_custom_rest_api_nonce()

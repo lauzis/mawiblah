@@ -51,14 +51,14 @@
                 clearLoading();
                 if (data.status === 'ok') {
                     wrapper.classList.add('mawiblah-subscribe-form--submitted');
-                    showMessage(wrapper, 'success', data.message);
+                    showMessage(wrapper, 'success', wrapper.dataset.successMessage || data.message);
                 } else {
-                    showMessage(wrapper, 'error', data.message);
+                    showMessage(wrapper, 'error', wrapper.dataset.errorMessage || data.message);
                 }
             })
             .catch(function () {
                 clearLoading();
-                showMessage(wrapper, 'error', mawiblahSubscribeFormData.errorMessage);
+                showMessage(wrapper, 'error', wrapper.dataset.errorMessage || mawiblahSubscribeFormData.errorMessage);
             });
         }
 
@@ -68,7 +68,7 @@
                     doSubmit(token);
                 }).catch(function () {
                     clearLoading();
-                    showMessage(wrapper, 'error', mawiblahSubscribeFormData.errorMessage);
+                    showMessage(wrapper, 'error', wrapper.dataset.errorMessage || mawiblahSubscribeFormData.errorMessage);
                 });
             });
         } else {

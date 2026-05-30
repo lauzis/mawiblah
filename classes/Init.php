@@ -133,13 +133,17 @@ class Init
                 'label'          => ['type' => 'string', 'default' => ''],
                 'placeholder'    => ['type' => 'string', 'default' => ''],
                 'buttonText'     => ['type' => 'string', 'default' => ''],
+                'successMessage' => ['type' => 'string', 'default' => ''],
+                'errorMessage'   => ['type' => 'string', 'default' => ''],
             ],
             'render_callback' => function (array $attrs): string {
                 $hashes  = array_map('sanitize_text_field', $attrs['audienceHashes'] ?? []);
                 $options = array_filter([
-                    'label'       => sanitize_text_field($attrs['label'] ?? ''),
-                    'placeholder' => sanitize_text_field($attrs['placeholder'] ?? ''),
-                    'buttonText'  => sanitize_text_field($attrs['buttonText'] ?? ''),
+                    'label'          => sanitize_text_field($attrs['label'] ?? ''),
+                    'placeholder'    => sanitize_text_field($attrs['placeholder'] ?? ''),
+                    'buttonText'     => sanitize_text_field($attrs['buttonText'] ?? ''),
+                    'successMessage' => sanitize_text_field($attrs['successMessage'] ?? ''),
+                    'errorMessage'   => sanitize_text_field($attrs['errorMessage'] ?? ''),
                 ]);
 
                 wp_enqueue_style('mawiblah-subscription-form-css', MAWIBLAH_PLUGIN_URL . '/assets/css/subscription-form.css', [], MAWIBLAH_VERSION);

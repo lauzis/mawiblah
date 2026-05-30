@@ -20,6 +20,8 @@
             label:          { type: 'string', default: '' },
             placeholder:    { type: 'string', default: '' },
             buttonText:     { type: 'string', default: '' },
+            successMessage: { type: 'string', default: '' },
+            errorMessage:   { type: 'string', default: '' },
         },
 
         edit: function (props) {
@@ -61,6 +63,18 @@
                             placeholder: __('Subscribe', 'mawiblah'),
                             value:       attrs.buttonText,
                             onChange:    function (val) { props.setAttributes({ buttonText: val }); },
+                        }),
+                        el(TextControl, {
+                            label:       __('Success message', 'mawiblah'),
+                            placeholder: __('You are now subscribed!', 'mawiblah'),
+                            value:       attrs.successMessage,
+                            onChange:    function (val) { props.setAttributes({ successMessage: val }); },
+                        }),
+                        el(TextControl, {
+                            label:       __('Error message', 'mawiblah'),
+                            placeholder: __('Something went wrong. Please try again.', 'mawiblah'),
+                            value:       attrs.errorMessage,
+                            onChange:    function (val) { props.setAttributes({ errorMessage: val }); },
                         })
                     ),
                     el(

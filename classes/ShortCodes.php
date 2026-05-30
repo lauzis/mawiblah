@@ -118,14 +118,18 @@ class ShortCodes
             'label'       => '',
             'placeholder' => '',
             'button'      => '',
+            'success'     => '',
+            'error'       => '',
         ], $atts, 'mawiblah_subscribe_form');
 
         $hashes = array_values(array_filter(array_map('sanitize_text_field', array_map('trim', explode(',', $atts['audiences'])))));
 
         $options = array_filter([
-            'label'       => sanitize_text_field($atts['label']),
-            'placeholder' => sanitize_text_field($atts['placeholder']),
-            'buttonText'  => sanitize_text_field($atts['button']),
+            'label'          => sanitize_text_field($atts['label']),
+            'placeholder'    => sanitize_text_field($atts['placeholder']),
+            'buttonText'     => sanitize_text_field($atts['button']),
+            'successMessage' => sanitize_text_field($atts['success']),
+            'errorMessage'   => sanitize_text_field($atts['error']),
         ]);
 
         wp_enqueue_style('mawiblah-subscription-form-css', MAWIBLAH_PLUGIN_URL . '/assets/css/subscription-form.css', [], MAWIBLAH_VERSION);

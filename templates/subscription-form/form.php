@@ -3,12 +3,17 @@
  * @var array  $audienceHashes  Audience hashes to subscribe to
  * @var bool   $recaptcha       Whether reCAPTCHA v3 is active
  * @var string $siteKey         reCAPTCHA site key
- * @var string $label           Email field label
- * @var string $placeholder     Email input placeholder
- * @var string $buttonText      Submit button text
+ * @var string $label          Email field label
+ * @var string $placeholder    Email input placeholder
+ * @var string $buttonText     Submit button text
+ * @var string $successMessage Custom success message (empty = use server message)
+ * @var string $errorMessage   Custom error message (empty = use server message)
  */
 ?>
-<div class="mawiblah-subscribe-form">
+<div class="mawiblah-subscribe-form"
+    <?php if ($successMessage): ?>data-success-message="<?= esc_attr($successMessage) ?>"<?php endif; ?>
+    <?php if ($errorMessage):   ?>data-error-message="<?= esc_attr($errorMessage) ?>"<?php endif; ?>
+>
 
     <form class="mawiblah-subscribe-form__form">
 

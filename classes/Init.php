@@ -112,20 +112,28 @@ class Init
 
     public function registerBlocks(): void
     {
-        // Script must be registered before register_block_type references it
-        $audiences = array_map(function ($a) {
-            return ['hash' => $a->audienceHash, 'name' => $a->name];
-        }, Subscribers::getAllAudiences());
-
+        // Register the script early (before register_block_type references it)
         wp_register_script(
             'mawiblah-subscription-form-block-js',
             MAWIBLAH_PLUGIN_URL . '/assets/js/block/subscription-form.js',
             ['wp-blocks', 'wp-element', 'wp-block-editor', 'wp-components', 'wp-i18n'],
             MAWIBLAH_VERSION
         );
-        wp_localize_script('mawiblah-subscription-form-block-js', 'mawiblahSubscriptionBlock', [
-            'audiences' => $audiences,
-        ]);
+
+        // Localize audiences on enqueue_block_editor_assets so the taxonomy
+        // is already registered by Subscribers::init() when we query it.
+        add_action('enqueue_block_editor_assets', function () {
+            $systemAudiences = ['Unsubed', 'Testers'];
+            $audiences = array_values(array_map(function ($a) {
+                return ['hash' => $a->audienceHash, 'name' => $a->name];
+            }, array_filter(Subscribers::getAllAudiences(), function ($a) use ($systemAudiences) {
+                return !in_array($a->name, $systemAudiences, true);
+            })));
+
+            wp_localize_script('mawiblah-subscription-form-block-js', 'mawiblahSubscriptionBlock', [
+                'audiences' => $audiences,
+            ]);
+        });
 
         register_block_type('mawiblah/subscription-form', [
             'attributes'      => [

@@ -44,7 +44,67 @@
     cursor: default;
 }
 
-/* Submitted state — theme can use this to hide the form */
+/* Submitted state — hide the form */
 .mawiblah-subscribe-form--submitted .mawiblah-subscribe-form__form {
     display: none;
+}
+
+/* Shared alert box style */
+.mawiblah-subscribe-form__message--success,
+.mawiblah-subscribe-form__message--error {
+    display: flex;
+    align-items: center;
+    gap: 0.75em;
+    padding: 0.875em 1.125em;
+    border-radius: 4px;
+    font-size: 0.95rem;
+    line-height: 1.4;
+    margin-top: 0.75em;
+}
+
+.mawiblah-subscribe-form__message--success[hidden],
+.mawiblah-subscribe-form__message--error[hidden] {
+    display: none;
+}
+
+/* Success */
+.mawiblah-subscribe-form__message--success {
+    background: #f0faf4;
+    border: 1px solid #6fcf97;
+    border-left: 4px solid #27ae60;
+    color: #1a5c35;
+}
+
+.mawiblah-subscribe-form__message--success::before {
+    content: '';
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+    background-color: #27ae60;
+    border-radius: 50%;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3E%3Cpath d='M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z'/%3E%3C/svg%3E");
+    background-size: 14px 14px;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+/* Error */
+.mawiblah-subscribe-form__message--error {
+    background: #fdf3f3;
+    border: 1px solid #f1a9a9;
+    border-left: 4px solid #e74c3c;
+    color: #7b1a1a;
+}
+
+.mawiblah-subscribe-form__message--error::before {
+    content: '';
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+    background-color: #e74c3c;
+    border-radius: 50%;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3E%3Cpath d='M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z'/%3E%3C/svg%3E");
+    background-size: 14px 14px;
+    background-repeat: no-repeat;
+    background-position: center;
 }

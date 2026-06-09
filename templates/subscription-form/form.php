@@ -11,6 +11,7 @@
  */
 ?>
 <div class="mawiblah-subscribe-form"
+    <?php if ($recaptcha):      ?>data-recaptcha-site-key="<?= esc_attr($siteKey) ?>"<?php endif; ?>
     <?php if ($successMessage): ?>data-success-message="<?= esc_attr($successMessage) ?>"<?php endif; ?>
     <?php if ($errorMessage):   ?>data-error-message="<?= esc_attr($errorMessage) ?>"<?php endif; ?>
 >

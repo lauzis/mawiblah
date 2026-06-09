@@ -17,7 +17,7 @@ class SubscriptionForm
     public static function renderForm(array $audienceHashes = [], array $options = []): string
     {
         $siteKey        = Settings::recaptchaSiteKey();
-        $recaptcha      = Settings::recaptchaEnabled() && $siteKey;
+        $recaptcha      = Settings::recaptchaReady();
         $label          = $options['label']          ?? __('Email', 'mawiblah');
         $placeholder    = $options['placeholder']    ?? __('your@email.com', 'mawiblah');
         $buttonText     = $options['buttonText']     ?? __('Subscribe', 'mawiblah');
@@ -42,7 +42,7 @@ class SubscriptionForm
         }
 
         // reCAPTCHA v3
-        if (Settings::recaptchaEnabled()) {
+        if (Settings::recaptchaReady()) {
             if (!self::verifyRecaptcha($recaptchaToken)) {
                 return ['status' => 'error', 'message' => __('Verification failed. Please try again.', 'mawiblah')];
             }

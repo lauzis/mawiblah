@@ -325,7 +325,7 @@ if ( $result['status'] === 'ok' ) {
         <tbody>
             <tr>
                 <td><?php esc_html_e('Enable reCAPTCHA v3', 'mawiblah'); ?></td>
-                <td><?php esc_html_e('Disabled / Enabled. When enabled, the subscription form verifies each submission with Google. Submissions with a score below 0.5 are rejected.', 'mawiblah'); ?></td>
+                <td><?php esc_html_e('Disabled / Enabled. reCAPTCHA only activates when this is set to Enabled AND both keys are filled in. If either key is missing the feature stays inactive regardless of this toggle. When active, submissions with a score below 0.5 are rejected.', 'mawiblah'); ?></td>
             </tr>
             <tr>
                 <td><?php esc_html_e('Site Key (public)', 'mawiblah'); ?></td>

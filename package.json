@@ -1,0 +1,16 @@
+{
+  "name": "mawiblah",
+  "version": "1.0.17",
+  "private": true,
+  "scripts": {
+    "test": "jest"
+  },
+  "devDependencies": {
+    "jest": "^29",
+    "jest-environment-jsdom": "^29"
+  },
+  "jest": {
+    "testEnvironment": "jsdom",
+    "testMatch": ["**/tests/js/**/*.test.js"]
+  }
+}

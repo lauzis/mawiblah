@@ -804,8 +804,8 @@ class Campaigns
         $campaign = self::getCampaignById($campaignPostId);
         if ($campaign && !$campaign->campaignStarted) {
             self::resetCounters($campaignPostId);
+            update_post_meta($campaignPostId, 'campaignStarted', time());
         }
-        update_post_meta($campaignPostId, 'campaignStarted', time());
     }
 
     public static function campaignFinish(int $campaignPostId): void

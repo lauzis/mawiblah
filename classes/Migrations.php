@@ -7,16 +7,17 @@ class Migrations
     public static function run()
     {
         $currentVersion = get_option('mawiblah_db_version');
-        
+
         if (version_compare($currentVersion, '1.0.15', '<')) {
             self::migrateTo1015();
             update_option('mawiblah_db_version', '1.0.15');
         }
-        
+
         if (version_compare($currentVersion, '1.0.16', '<')) {
             self::migrateTo1016();
             update_option('mawiblah_db_version', '1.0.16');
         }
+
     }
 
     private static function migrateTo1015()

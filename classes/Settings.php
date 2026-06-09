@@ -348,6 +348,28 @@ msgstr ""
         return self::getOption('mawiblah-dont-disturb-threshold');
     }
 
+    public static function recaptchaEnabled(): bool
+    {
+        return self::getOption('mawiblah-recaptcha-enabled') === 'enabled';
+    }
+
+    public static function recaptchaSiteKey(): string
+    {
+        return (string) self::getOption('mawiblah-recaptcha-site-key');
+    }
+
+    public static function recaptchaSecretKey(): string
+    {
+        return (string) self::getOption('mawiblah-recaptcha-secret-key');
+    }
+
+    public static function recaptchaReady(): bool
+    {
+        return self::recaptchaEnabled()
+            && self::recaptchaSiteKey() !== ''
+            && self::recaptchaSecretKey() !== '';
+    }
+
     public static function getOption($optionId)
     {
         // TODO: return default value if option not set

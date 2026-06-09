@@ -3,7 +3,7 @@ Contributors: lauzis
 Tags: email, newsletter, marketing, mailchimp alternative, subscribers
 Requires at least: 5.0
 Tested up to: 6.9
-Stable tag: 1.0.16
+Stable tag: 1.0.17
 Requires PHP: 8.0
 License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl.html
@@ -26,6 +26,7 @@ It is not suited for sending out 100k emails. It sends "individual" emails via W
 *   Tracks click timing for optimization.
 *   Action logging.
 *   Detailed statistics dashboard (Subscriber growth, Activity rating, etc.).
+*   Native subscription form (shortcode & Gutenberg block) with honeypot + optional reCAPTCHA v3 spam protection.
 
 **Who is it for?**
 
@@ -66,6 +67,16 @@ Technically yes, but it is not recommended. The plugin sends emails individually
 8. MVP version
 
 == Changelog ==
+
+= 1.0.17 =
+*   New: Native subscription form via `[mawiblah_subscribe_form]` shortcode and Gutenberg block.
+*   New: Multiple audience support per form.
+*   New: audienceHash — stable identifier for audiences (consistent with subscriberHash / campaignHash).
+*   New: Honeypot spam protection (always active).
+*   New: Optional reCAPTCHA v3 support with Settings page integration.
+*   New: Re-subscribe confirmation flow for previously unsubscribed users.
+*   New: PHPUnit integration test suite and Jest frontend test suite.
+*   Improved: Test page refactored — button-triggered scenarios, no auto-run.
 
 = 1.0.16 =
 *   **Code Quality & Naming Consistency:** Major refactoring for better maintainability and clarity.

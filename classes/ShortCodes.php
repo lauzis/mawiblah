@@ -7,6 +7,7 @@ class ShortCodes
 
     public static function register()
     {
+        add_shortcode('mawiblah_subscribe_form', [ShortCodes::class, 'subscribeForm']);
         add_shortcode('mawiblah_title', [ShortCodes::class, 'title']);
         add_shortcode('mawiblah_content', [ShortCodes::class, 'content']);
 
@@ -108,6 +109,37 @@ class ShortCodes
     public static function endContent()
     {
         return __('We hope you enjoyed our monthly newsletter. If you have any questions or suggestions, feel free to contact us.', 'mawiblah');
+    }
+
+    public static function subscribeForm($atts): string
+    {
+        $atts = shortcode_atts([
+            'audiences'   => '',
+            'label'       => '',
+            'placeholder' => '',
+            'button'      => '',
+            'success'     => '',
+            'error'       => '',
+        ], $atts, 'mawiblah_subscribe_form');
+
+        $hashes = array_values(array_filter(array_map('sanitize_text_field', array_map('trim', explode(',', $atts['audiences'])))));
+
+        $options = array_filter([
+            'label'          => sanitize_text_field($atts['label']),
+            'placeholder'    => sanitize_text_field($atts['placeholder']),
+            'buttonText'     => sanitize_text_field($atts['button']),
+            'successMessage' => sanitize_text_field($atts['success']),
+            'errorMessage'   => sanitize_text_field($atts['error']),
+        ]);
+
+        wp_enqueue_style('mawiblah-subscription-form-css', MAWIBLAH_PLUGIN_URL . '/assets/css/subscription-form.css', [], MAWIBLAH_VERSION);
+        wp_enqueue_script('mawiblah-subscription-form-js', MAWIBLAH_PLUGIN_URL . '/assets/js/subscription-form.js', [], MAWIBLAH_VERSION, true);
+        wp_localize_script('mawiblah-subscription-form-js', 'mawiblahSubscribeFormData', [
+            'restUrl'      => rest_url('mawiblah/v1/subscribe'),
+            'errorMessage' => __('Something went wrong. Please try again.', 'mawiblah'),
+        ]);
+
+        return SubscriptionForm::renderForm($hashes, $options);
     }
 
     public static function unsubscribe()

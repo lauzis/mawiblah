@@ -2,6 +2,10 @@
 
 ## Table of Contents
 - [Features Overview](#features-overview)
+- [User Flow Diagrams](#user-flow-diagrams)
+  - [Subscription Form](#subscription-form)
+  - [Campaign Lifecycle](#campaign-lifecycle)
+  - [Unsubscribe Flow](#unsubscribe-flow)
 - [Campaign Fields & Counters](#campaign-fields--counters)
 - [Click Tracking](#click-tracking)
 - [Email Templates](#email-templates)
@@ -11,6 +15,126 @@
 ## Features Overview
 
 MAWIBLAH is a WordPress email campaign plugin that provides basic email marketing functionality without recurring costs.
+
+## User Flow Diagrams
+
+### Subscription Form
+
+Shows how the shortcode / Gutenberg block renders a subscribe form and processes submissions. Includes honeypot spam protection, optional reCAPTCHA v3, multiple audience support, and re-subscribe confirmation for previously unsubscribed users.
+
+```mermaid
+flowchart TD
+    A[Editor adds block or shortcode\naudiencces='hash1,hash2'] --> B[Page renders HTML form\nemail input · hidden honeypot · submit]
+    B --> C{reCAPTCHA v3\nenabled in Settings?}
+    C -- Yes --> D[Load reCAPTCHA v3 script\nattach token on submit]
+    C -- No --> E[Plain form submit]
+    D & E --> F[JS POST /wp-json/mawiblah/v1/subscribe\nemail · audienceHashes · honeypot · recaptchaToken]
+
+    F --> G{Honeypot\nhas a value?}
+    G -- Yes --> H[Silently return success\nbot rejected]
+    G -- No --> I{reCAPTCHA\nenabled?}
+    I -- Yes --> J[Verify token via\nGoogle reCAPTCHA API]
+    J -- Score too low --> K[Return error:\nverification failed]
+    J -- Score OK --> L{Valid\nemail format?}
+    I -- No --> L
+    L -- No --> M[Return error:\ninvalid email]
+    L -- Yes --> N{Subscriber\nexists?}
+
+    N -- No --> O[Create subscriber\ngenerate subscriberHash]
+    O --> P[Add to all\ntarget audiences]
+    P --> Q[Return success\nnewly subscribed]
+
+    N -- Yes, unsubed --> R[Generate resubToken\nor reuse existing unsubToken]
+    R --> S[Send re-subscribe\nconfirmation email with link\naudiences encoded in URL]
+    S --> T[Return success\ncheck inbox to confirm]
+
+    N -- Yes, active --> U{Already in\nall target audiences?}
+    U -- Yes --> V[Return success\nsilently — no error]
+    U -- No --> W[Add to missing\naudiences only]
+    W --> X[Return success]
+
+    H & K & M & Q & T & V & X --> Y[JS swaps form\nfor success or error message]
+
+    T -.->|user clicks link| Z[GET confirmation URL\nresubToken · subscriberHash · audienceHashes]
+    Z --> AA{resubToken\nvalid?}
+    AA -- No --> AB[Show: invalid or\nexpired link page]
+    AA -- Yes --> AC[Clear unsubed flag\nrestore unsub_time=null\nadd to target audiences]
+    AC --> AD[Show: resubscribed\nsuccess page]
+```
+
+### Campaign Lifecycle
+
+From creation through test, approval, and final send to all subscribers.
+
+```mermaid
+flowchart TD
+    A[Admin creates campaign\ntitle · subject · template · audiences] --> B[Campaign saved as WP post]
+    B --> C[testStart\nsets testStarted timestamp]
+    C --> D[JS calls REST API per subscriber]
+    D --> E{testMode?\ntestStarted AND NOT testApproved}
+    E -- Yes --> F{Subscriber is a tester?}
+    F -- No --> G[Skip: not a tester]
+    F -- Yes --> H[Send test email via wp_mail]
+    G & H --> I{Last subscriber?}
+    I -- No --> D
+    I -- Yes --> J[testFinish\nsets testFinished timestamp]
+    J --> K{Admin reviews test emails}
+    K -- Redo --> L[testReset\nclears all test timestamps]
+    L --> C
+    K -- Approve --> M[testApprove\nsets testApproved timestamp]
+    M --> N[campaignStart\nsets campaignStarted\nstatus = sending-in-progress]
+    N --> O[JS calls REST API per subscriber\nfor all audiences]
+    O --> P{Unsubscribed?}
+    P -- Yes --> Q[Skip\nincrement emailsUnsubed]
+    P -- No --> R{Already sent?}
+    R -- Yes --> S[Skip: already sent]
+    R -- No --> T{Do-not-disturb\nthreshold active?}
+    T -- Yes --> U[Skip\nincrement emailsSkipped]
+    T -- No --> V{Email sending\nenabled in settings?}
+    V -- No --> W[Skip: emails disabled]
+    V -- Yes --> X[Lock template\nFill placeholders\ncampaignHash · subscriberHash · email]
+    X --> Y[wp_mail]
+    Y -- Success --> Z[Mark subscriber as sent\nincrement emailsSent\nupdateCounters]
+    Y -- Failed --> AA[Mark failed\nincrement emailsFailed\nupdateCounters]
+    Q & S & U & W & Z & AA --> AB{Last subscriber?}
+    AB -- No --> O
+    AB -- Yes --> AC[campaignFinish\nsets campaignFinished timestamp]
+```
+
+### Unsubscribe Flow
+
+Triggered when a subscriber clicks the unsubscribe link in a campaign email. The flow is a two-step confirmation: first shows a confirmation page, then processes the actual unsubscribe after the subscriber confirms.
+
+```mermaid
+flowchart TD
+    A[Subscriber clicks unsubscribe link\n?subscriber=hash&unsubscribe=email&campaign=hash] --> B{unsubToken\nin URL?}
+    B -- No --> C[unsubscribe called]
+    C --> D{Found in Subscribers\nor Gravity Forms?}
+    D -- No --> E[Show: not-found page]
+    D -- Yes --> F{Exists in\nSubscribers table?}
+    F -- No --> G[Add subscriber to DB]
+    F -- Yes --> H[Get unsubToken]
+    G --> H
+    H --> I[Show: are-you-sure\nconfirmation page]
+    I --> J[Subscriber submits confirmation\noptional feedback field]
+    J --> B
+    B -- Yes --> K[unsubscribeAprooved called]
+    K --> L{Subscriber found?}
+    L -- No --> M[Show: not-found page]
+    L -- Yes --> N{Already\nunsubscribed?}
+    N -- Yes --> O[Show: already-unsubed page]
+    N -- No --> P{unsubToken valid?}
+    P -- No --> Q[Show: not-found page]
+    P -- Yes --> R[Mark unsubed=true\nstore unsub_time]
+    R --> S[Add to Unsubbed audience]
+    S --> T{Feedback\nsubmitted?}
+    T -- Yes --> U[Store unsubed_feedback\non subscriber post]
+    T -- No --> V{campaignHash\npresent?}
+    U --> V
+    V -- Yes --> W[Increment emailsNewlyUnsubed\non campaign]
+    V -- No --> X[Show: unsubed success page]
+    W --> X
+```
 
 ## Campaign Fields & Counters
 
@@ -236,6 +360,80 @@ Shows which specific links in the campaign received the most clicks.
 ### Activity Timing
 - **Activity by Day:** Shows which days of the week generated the most engagement for this campaign.
 - **Activity by Hour:** Shows the time of day when subscribers were most active.
+
+## Subscription Form
+
+### Shortcode
+
+```
+[mawiblah_subscribe_form audiences="hash1,hash2"]
+```
+
+- `audiences` — comma-separated `audienceHash` values (plural, matches campaign field naming). Omit to subscribe without audience assignment.
+- Audience hashes are visible in the admin under **Mawiblah → Settings → reCAPTCHA** or via `Subscribers::getAllAudiences()`.
+
+### Gutenberg Block
+
+Block name: `mawiblah/subscription-form`. Add via the block inserter under **Widgets**. Select target audiences in the block settings panel (Inspector Controls). The block is server-side rendered — identical output to the shortcode.
+
+### HTML Structure & Class Reference
+
+```html
+<div class="mawiblah-subscribe-form">
+  <form class="mawiblah-subscribe-form__form">
+    <input type="text" name="website" style="display:none" tabindex="-1" autocomplete="off" />
+    <div class="mawiblah-subscribe-form__field">
+      <label class="mawiblah-subscribe-form__label" for="mawiblah-email">Email</label>
+      <input class="mawiblah-subscribe-form__input" type="email" id="mawiblah-email" />
+    </div>
+    <div class="mawiblah-subscribe-form__actions">
+      <button class="mawiblah-subscribe-form__button" type="submit">Subscribe</button>
+    </div>
+  </form>
+  <div class="mawiblah-subscribe-form__message mawiblah-subscribe-form__message--success" hidden></div>
+  <div class="mawiblah-subscribe-form__message mawiblah-subscribe-form__message--error"   hidden></div>
+</div>
+```
+
+**JS state modifiers on wrapper:**
+- `mawiblah-subscribe-form--loading` — while fetch is in flight
+- `mawiblah-subscribe-form--submitted` — after success (theme can hide the form with `.mawiblah-subscribe-form--submitted .mawiblah-subscribe-form__form { display: none }`)
+
+### Settings — reCAPTCHA v3
+
+| Option key | Type | Purpose |
+|---|---|---|
+| `mawiblah-recaptcha-enabled` | select (`enabled`/`disabled`) | Toggle reCAPTCHA v3 |
+| `mawiblah-recaptcha-site-key` | text | Google site key (public) |
+| `mawiblah-recaptcha-secret-key` | text | Google secret key (private) |
+
+PHP getters: `Settings::recaptchaEnabled()`, `Settings::recaptchaSiteKey()`, `Settings::recaptchaSecretKey()`
+
+### REST Endpoint
+
+`POST /wp-json/mawiblah/v1/subscribe` — public, no authentication required.
+
+**Request body:**
+```json
+{
+  "email": "user@example.com",
+  "audienceHashes": ["hash1", "hash2"],
+  "honeypot": "",
+  "recaptchaToken": "..."
+}
+```
+
+**Responses:**
+```json
+{ "status": "ok",    "message": "You are now subscribed!" }
+{ "status": "ok",    "message": "Check your inbox to confirm your subscription." }
+{ "status": "error", "message": "Invalid email address." }
+{ "status": "error", "message": "Verification failed. Please try again." }
+```
+
+### Audience Hash
+
+Each audience (taxonomy term) has a stable `audienceHash` — an MD5 of its `term_id`, stored as term meta. Generated lazily on first access via `Subscribers::appendAudienceMeta()`. Use `Subscribers::getAudienceByHash(string $hash)` to resolve a hash back to an audience object.
 
 ## API Functions
 

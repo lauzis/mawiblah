@@ -9,7 +9,14 @@ class Subscribers
     public static function init()
     {
         self::registerPostType();
+        self::ensureDefaultAudiences();
         add_action('add_meta_boxes', [self::class, 'addMetaBoxes']);
+    }
+
+    public static function ensureDefaultAudiences(): void
+    {
+        self::unsubedAudience();
+        self::testerAudience();
     }
 
     public static function addMetaBoxes()
@@ -214,7 +221,26 @@ class Subscribers
         $audience->gravityFormsId = get_term_meta($audience->term_id, 'gravityFormsId', true);
         $audience->lastSyncDate = get_term_meta($audience->term_id, 'lastSyncDate', true);
         $audience->id = $audience->term_id;
+
+        $audienceHash = get_term_meta($audience->term_id, 'audienceHash', true);
+        if (!$audienceHash) {
+            $audienceHash = md5((string) $audience->term_id);
+            add_term_meta($audience->term_id, 'audienceHash', $audienceHash, true);
+        }
+        $audience->audienceHash = $audienceHash;
+
         return $audience;
+    }
+
+    public static function getAudienceByHash(string $audienceHash): ?object
+    {
+        $audiences = self::getAllAudiences();
+        foreach ($audiences as $audience) {
+            if ($audience->audienceHash === $audienceHash) {
+                return $audience;
+            }
+        }
+        return null;
     }
 
     public static function getAudience($audienceId)
@@ -281,16 +307,18 @@ class Subscribers
 
     public static function addSubscriber(string $email, string $subscriberHash = ""): object
     {
+        $existing = self::getSubscriber($email);
+        if ($existing) {
+            return $existing;
+        }
 
-        // Prepare the post data
         $post_data = [
-            'post_title' => $email,
+            'post_title'   => $email,
             'post_content' => '',
-            'post_status' => 'publish',
-            'post_type' => self::postType(), // Replace with your custom post type
+            'post_status'  => 'publish',
+            'post_type'    => self::postType(),
         ];
 
-        // Insert the post into the database
         $post_id = wp_insert_post($post_data);
 
         if (!is_wp_error($post_id)) {
@@ -473,7 +501,11 @@ class Subscribers
     {
         $term = get_term_by('name', 'Testers', Subscribers::postType() . '_category');
         if (!$term) {
-            $term = wp_insert_term('Testers', Subscribers::postType() . '_category');
+            $result = wp_insert_term('Testers', Subscribers::postType() . '_category');
+            if (is_wp_error($result)) {
+                return null;
+            }
+            $term = get_term($result['term_id'], Subscribers::postType() . '_category');
         }
         return $term;
     }

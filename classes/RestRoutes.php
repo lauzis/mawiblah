@@ -272,7 +272,20 @@ class RestRoutes
         }
         $emailBody = Campaigns::fillTemplate($template, $campaign, $subscriber);
 
-        $emailSendingResult = wp_mail($email, $campaign->subject, $emailBody);
+        $unsubToken = Subscribers::getUnsubToken($subscriber->id, $subscriber->email);
+        $unsubUrl   = add_query_arg([
+            'subscriber' => $subscriber->subscriberHash,
+            'token'      => $unsubToken,
+            'campaign'   => $campaign->campaignHash,
+        ], rest_url('mawiblah/v1/unsubscribe'));
+
+        $emailHeaders = [
+            'Content-Type: text/html; charset=UTF-8',
+            'List-Unsubscribe: <' . $unsubUrl . '>',
+            'List-Unsubscribe-Post: List-Unsubscribe=One-Click',
+        ];
+
+        $emailSendingResult = wp_mail($email, $campaign->subject, $emailBody, $emailHeaders);
 
         if ($emailSendingResult) {
 

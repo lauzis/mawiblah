@@ -85,6 +85,12 @@ class Init
                 'permission_callback' => '__return_true',
             ));
 
+            register_rest_route('mawiblah/v1', '/unsubscribe', array(
+                'methods'             => \WP_REST_Server::ALLMETHODS,
+                'callback'            => 'Mawiblah\Unsubscribe::oneClickEndpoint',
+                'permission_callback' => '__return_true',
+            ));
+
         });
     }
 

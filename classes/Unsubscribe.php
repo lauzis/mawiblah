@@ -52,6 +52,59 @@ class Unsubscribe
         }
     }
 
+    /**
+     * REST endpoint for List-Unsubscribe header.
+     * GET  → redirect to the human-readable confirmation page.
+     * POST → RFC 8058 one-click: immediately unsubscribe, no UI.
+     */
+    public static function oneClickEndpoint(\WP_REST_Request $request): \WP_REST_Response
+    {
+        $subscriberHash = sanitize_text_field($request->get_param('subscriber') ?? '');
+        $unsubToken     = sanitize_text_field($request->get_param('token') ?? '');
+        $campaignHash   = sanitize_text_field($request->get_param('campaign') ?? '');
+
+        $subscriber = Subscribers::getSubscriberBySubscriberHash($subscriberHash);
+
+        if (!$subscriber) {
+            return new \WP_REST_Response(['status' => 'not_found'], 404);
+        }
+
+        if ($request->get_method() === 'GET') {
+            $redirectUrl = add_query_arg([
+                'subscriber'  => $subscriberHash,
+                'unsubscribe' => $subscriber->email,
+                'unsubToken'  => $unsubToken,
+                'campaign'    => $campaignHash ?: null,
+            ], get_site_url());
+            wp_redirect(esc_url_raw($redirectUrl));
+            exit;
+        }
+
+        // POST — one-click unsubscribe
+        if ($subscriber->unsubToken !== $unsubToken) {
+            return new \WP_REST_Response(['status' => 'invalid_token'], 403);
+        }
+
+        if (!$subscriber->unsubed) {
+            update_post_meta($subscriber->id, 'unsubed', true);
+            update_post_meta($subscriber->id, 'unsub_time', time());
+
+            $audience = Subscribers::unsubedAudience();
+            if ($audience) {
+                Subscribers::addSubscriberToAudience($subscriber->id, $audience->term_id);
+            }
+
+            if ($campaignHash) {
+                $campaign = Campaigns::getCampaignByHash($campaignHash);
+                if ($campaign) {
+                    Campaigns::incrementNewlyUnsubed($campaign->id);
+                }
+            }
+        }
+
+        return new \WP_REST_Response(['status' => 'ok'], 200);
+    }
+
     public static function unsubscribeLink(string $subscriberHash, string $email)
     {
         return Helpers::trackingParams([

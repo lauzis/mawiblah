@@ -53,7 +53,7 @@ on all possible configurations and setups.
 | **Automation**                  | ❌ Not available at current version              | ✅ Basic (welcome emails)                   | ✅ Multi-step automation               |
 | **Click Tracking**              | ✅ Basic (clicks & timing logged)                | ✅ Basic reports                             | ✅ Advanced click stats                |
 | **Open Tracking**               | ❌ No tracking at current version                | ✅                                           | ✅                                      |
-| **Unsubscribe Support**         | ✅ Simple unsubscribe                            | ✅ Compliant unsubscribe handling            | ✅                                      |
+| **Unsubscribe Support**         | ✅ RFC 8058 one-click + confirmation flow        | ✅ Compliant unsubscribe handling            | ✅                                      |
 | **Import/Export Subscribers**   | ✅ Manual + Gravity Forms                        | ✅                                           | ✅                                      |
 | **List Segmentation**           | ✅ Basic segmentation                            | ✅ Basic segmentation                        | ✅ Advanced targeting                   |
 | **Analytics & Reports**         | ✅ Basic logging                                  | ✅ Basic dashboard                           | ✅ Detailed analytics                   |
@@ -65,6 +65,11 @@ on all possible configurations and setups.
 
 
 ## Change log
+
+### --- 1.0.18 ---
+- **New:** `List-Unsubscribe` and `List-Unsubscribe-Post: List-Unsubscribe=One-Click` headers added to every campaign email — enables one-click unsubscribe in Gmail, Apple Mail, and other RFC 8058-compliant clients.
+- **New:** `GET|POST /wp-json/mawiblah/v1/unsubscribe` REST endpoint — `POST` immediately unsubscribes (RFC 8058 one-click, used by mail clients); `GET` redirects to the existing confirmation page (used when a human clicks the header link).
+- **Fixed:** `Content-Type: text/html; charset=UTF-8` header was missing from campaign emails — HTML templates now render correctly in all mail clients.
 
 ### --- 1.0.17 ---
 - **New:** Native subscription form — add a sign-up form anywhere via `[mawiblah_subscribe_form audiences="hash1,hash2"]` shortcode or Gutenberg block.

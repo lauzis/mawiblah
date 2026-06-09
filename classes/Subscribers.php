@@ -80,18 +80,19 @@ class Subscribers
         ];
 
         $args = [
-            'labels' => $labels,
-            'public' => false,
+            'labels'          => $labels,
+            'public'          => false,
             'publicly_queryable' => false,
-            'show_ui' => true,
-            'show_in_menu' => true,
-            'query_var' => true,
-            'rewrite' => ['slug' => 'mawiblah-subscriber'],
+            'show_ui'         => true,
+            'show_in_menu'    => true,
+            'query_var'       => true,
+            'rewrite'         => ['slug' => 'mawiblah-subscriber'],
             'capability_type' => 'post',
-            'has_archive' => false,
-            'hierarchical' => false,
-            'menu_position' => null,
-            'supports' => ['title'],
+            'has_archive'     => false,
+            'hierarchical'    => false,
+            'menu_position'   => null,
+            'menu_icon'       => 'dashicons-groups',
+            'supports'        => ['title'],
         ];
 
         register_post_type(Subscribers::postType(), $args);

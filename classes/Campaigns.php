@@ -212,18 +212,19 @@ class Campaigns
         ];
 
         $args = [
-            'labels' => $labels,
-            'public' => false,
+            'labels'          => $labels,
+            'public'          => false,
             'publicly_queryable' => false,
-            'show_ui' => true,
-            'show_in_menu' => true,
-            'query_var' => true,
-            'rewrite' => ['slug' => 'mawiblah-campaigns'],
+            'show_ui'         => true,
+            'show_in_menu'    => true,
+            'query_var'       => true,
+            'rewrite'         => ['slug' => 'mawiblah-campaigns'],
             'capability_type' => 'post',
-            'has_archive' => false,
-            'hierarchical' => false,
-            'menu_position' => null,
-            'supports' => ['title', 'editor'],
+            'has_archive'     => false,
+            'hierarchical'    => false,
+            'menu_position'   => null,
+            'menu_icon'       => 'dashicons-megaphone',
+            'supports'        => ['title', 'editor'],
         ];
 
         register_post_type(Campaigns::postType(), $args);

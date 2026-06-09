@@ -161,13 +161,19 @@ class Settings
         $sectionsFile = MAWIBLAH_CONFIG_PATH . "/sections.json";
         $sections = json_decode(file_get_contents($sectionsFile), true);
 
+        $is_post = !empty($_POST);
+        if ($is_post) {
+            check_admin_referer('gae-settings-group-options');
+        }
+
         foreach ($sections as $sk => $s) {
 
             foreach ($s["fields"] as $fk => $f) {
 
-                if (isset($_POST[$f["id"]])) {
-                    update_option($f["id"], $_POST[$f["id"]]);
-                    $sections[$sk]["fields"][$fk]["value"] = $_POST[$f["id"]];
+                if ($is_post && isset($_POST[$f["id"]])) {
+                    $value = sanitize_text_field(wp_unslash($_POST[$f["id"]]));
+                    update_option($f["id"], $value);
+                    $sections[$sk]["fields"][$fk]["value"] = $value;
                     $options_updated = true;
                 } else {
                     $sections[$sk]["fields"][$fk]["value"] = get_option($f["id"]);

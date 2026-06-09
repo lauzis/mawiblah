@@ -56,33 +56,54 @@ class Init
 
         add_action('rest_api_init', function () {
             register_rest_route('mawiblah/v1', '/get-html-template', array(
-                'methods' => 'POST',
-                'callback' => 'Mawiblah\RestRoutes::getHtmlTemplate',
+                'methods'             => \WP_REST_Server::CREATABLE,
+                'callback'            => 'Mawiblah\RestRoutes::getHtmlTemplate',
                 'permission_callback' => function () {
                     return current_user_can('edit_others_posts');
-                }
+                },
             ));
 
             register_rest_route('mawiblah/v1', '/test', array(
-                'methods' => 'GET',
-                'callback' => 'Mawiblah\RestRoutes::test',
+                'methods'             => \WP_REST_Server::READABLE,
+                'callback'            => 'Mawiblah\RestRoutes::test',
                 'permission_callback' => function () {
                     return current_user_can('edit_others_posts');
-                }
+                },
             ));
 
             register_rest_route('mawiblah/v1', '/send-email', array(
-                'methods' => 'POST',
-                'callback' => 'Mawiblah\RestRoutes::sendEmail',
+                'methods'             => \WP_REST_Server::CREATABLE,
+                'callback'            => 'Mawiblah\RestRoutes::sendEmail',
                 'permission_callback' => function () {
                     return current_user_can('edit_others_posts');
-                }
+                },
             ));
 
             register_rest_route('mawiblah/v1', '/subscribe', array(
-                'methods'             => 'POST',
+                'methods'             => \WP_REST_Server::CREATABLE,
                 'callback'            => 'Mawiblah\SubscriptionForm::subscribe',
                 'permission_callback' => '__return_true',
+                'args'                => [
+                    'email'          => [
+                        'type'              => 'string',
+                        'required'          => true,
+                        'sanitize_callback' => 'sanitize_email',
+                    ],
+                    'audienceHashes' => [
+                        'type'    => 'array',
+                        'default' => [],
+                        'items'   => ['type' => 'string'],
+                    ],
+                    'honeypot'       => [
+                        'type'    => 'string',
+                        'default' => '',
+                    ],
+                    'recaptchaToken' => [
+                        'type'              => 'string',
+                        'default'           => '',
+                        'sanitize_callback' => 'sanitize_text_field',
+                    ],
+                ],
             ));
 
             register_rest_route('mawiblah/v1', '/unsubscribe', array(

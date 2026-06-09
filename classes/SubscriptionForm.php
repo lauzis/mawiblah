@@ -28,27 +28,28 @@ class SubscriptionForm
         return ob_get_clean();
     }
 
-    public static function subscribe(\WP_REST_Request $request): array
+    public static function subscribe(\WP_REST_Request $request): \WP_REST_Response
     {
-        $body           = $request->get_json_params();
-        $email          = sanitize_email($body['email'] ?? '');
-        $audienceHashes = array_map('sanitize_text_field', (array) ($body['audienceHashes'] ?? []));
-        $honeypot       = $body['honeypot'] ?? '';
-        $recaptchaToken = sanitize_text_field($body['recaptchaToken'] ?? '');
+        $email          = sanitize_email($request->get_param('email') ?? '');
+        $audienceHashes = array_map('sanitize_text_field', (array) ($request->get_param('audienceHashes') ?? []));
+        $honeypot       = $request->get_param('honeypot') ?? '';
+        $recaptchaToken = sanitize_text_field($request->get_param('recaptchaToken') ?? '');
 
         // Honeypot — silently succeed so bots think it worked
         if (!empty($honeypot)) {
-            return ['status' => 'ok', 'message' => __('You are now subscribed!', 'mawiblah')];
+            return new \WP_REST_Response(['status' => 'ok', 'message' => __('You are now subscribed!', 'mawiblah')], 200);
         }
 
         // reCAPTCHA v3
         if (Settings::recaptchaReady()) {
             if (!self::verifyRecaptcha($recaptchaToken)) {
-                return ['status' => 'error', 'message' => __('Verification failed. Please try again.', 'mawiblah')];
+                return new \WP_REST_Response(['status' => 'error', 'message' => __('Verification failed. Please try again.', 'mawiblah')], 400);
             }
         }
 
-        return self::subscribeByEmail($email, $audienceHashes);
+        $result = self::subscribeByEmail($email, $audienceHashes);
+        $status = $result['status'] === 'error' ? 400 : 200;
+        return new \WP_REST_Response($result, $status);
     }
 
     /**
@@ -89,9 +90,9 @@ class SubscriptionForm
         }
 
         // Add to audiences (only those not already assigned)
+        $existingTerms = wp_get_post_terms($subscriber->id, Subscribers::postType() . '_category', ['fields' => 'ids']);
         foreach ($audienceIds as $audienceId) {
-            $terms = wp_get_post_terms($subscriber->id, Subscribers::postType() . '_category', ['fields' => 'ids']);
-            if (!in_array($audienceId, $terms)) {
+            if (!in_array($audienceId, $existingTerms)) {
                 Subscribers::addSubscriberToAudience($subscriber->id, $audienceId);
             }
         }

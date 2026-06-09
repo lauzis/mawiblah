@@ -13,13 +13,14 @@ MAWIBLAH is a WordPress plugin that provides Mailchimp-like functionality for se
 - **Init.php** - Plugin initialization
 - **Logs.php** - Action logging for debugging
 - **Renderer.php** - Template rendering
-- **RestRoutes.php** - REST API endpoints for email sending
-- **Settings.php** - Plugin settings management
-- **ShortCodes.php** - WordPress shortcode handlers
-- **Subscribers.php** - Subscriber management
-- **Templates.php** - Email template management
-- **Tests.php** - Testing functionality
-- **Unsubscribe.php** - Unsubscribe functionality
+- **RestRoutes.php** - REST API endpoint for sending individual campaign emails (`/send-email`)
+- **Settings.php** - Plugin settings management; includes `recaptchaReady()` for safe reCAPTCHA gate
+- **ShortCodes.php** - WordPress shortcode handlers including `[mawiblah_subscribe_form]`
+- **Subscribers.php** - Subscriber management, audience taxonomy, audience hash generation
+- **SubscriptionForm.php** - Subscription form rendering, REST `/subscribe` endpoint, re-subscribe flow, programmatic `subscribeByEmail()`
+- **Templates.php** - Email template management with child/parent theme override support
+- **Tests.php** - In-browser integration test scenarios (button-triggered, self-contained)
+- **Unsubscribe.php** - Unsubscribe confirmation flow + RFC 8058 one-click REST endpoint (`/unsubscribe`)
 - **Visits.php** - Click tracking for campaigns
 
 ### Admin Interface (`/admin/`)
@@ -171,53 +172,16 @@ add_action('wp_dashboard_setup', [Actions::class, 'registerDashboardWidget']);
 - Stores click timestamps for timing analysis
 - Both unique and total click counts
 
-## Recent Changes (Session 2026-01-12)
 
-1. **Repository Standards & Security**
-   - Created `readme.txt` from `README.md` for WordPress.org compliance
-   - Added `license.txt` (GPLv3)
-   - Improved security with output escaping in `add-campaign.php`
-   - Fixed `scandir()` error handling in `Templates.php`
+## Documentation Files
 
-## Recent Changes (Session 2025-11-30)
-
-1. **Enhanced Statistics Dashboard**
-   - Added Subscriber Growth and Unsubscribe Growth graphs
-   - Added Activity Rating and Overall Active Hours metrics
-   - Visualized campaign performance with bar graphs
-
-2. **Individual Campaign Statistics**
-   - Added detailed stats to campaign view (Raw, Conversion, Links, Days, Hours)
-   - Implemented `Campaigns::getStatsForCampaign()` and `Campaigns::getConversionStatsForCampaign()`
-
-3. **Refactoring**
-   - Split dashboard templates into modular components (`templates/stats/`)
-   - Improved graph rendering with `templates/campaign/bar-graph.php`
-   - Refactored `campaignId` (hash) to `campaignHash` to distinguish from post ID (`campaignPostId`)
-
-4. **Bug Fixes & Improvements**
-   - Fixed null-safety bug in `campaignStart()`
-   - Fixed variable shadowing in stats templates
-   - Internationalized "Weekdays", "Hours", "Max", "Avg" and table headers
-   - Fixed typo in `classes/Tests.php`
-   - Preserved `campaignId` in unsubscribe flow to fix `emailsNewlyUnsubed` counter
-
-## Recent Changes (Session 2025-10-24)
-
-1. **Added `getLastCampaigns()` method** in Campaigns.php
-   - Returns most recent campaigns ordered by date (DESC)
-   - Accepts optional limit parameter (default: 5)
-
-2. **Moved dashboard widget to Actions.php**
-   - Registration: `Actions::registerDashboardWidget()`
-   - Rendering: `Actions::renderDashboardWidget()`
-   - Uses new `getLastCampaigns()` method
-
-3. **Fixed campaign counter updates**
-   - Counters now properly update in database via `updateCounters()`
-   - Only updates during actual campaigns (not test mode)
-   - Proper handling of sent/failed/skipped/unsubscribed counts
-   - Excludes "already sent" from new counts (avoids double counting)
+| File | Audience | Purpose |
+|---|---|---|
+| `README.md` | GitHub / developers | Feature overview, comparison table, full changelog (`### --- X.Y.Z ---`) |
+| `readme.txt` | WordPress.org | Plugin directory listing, `Stable tag`, short changelog (`= X.Y.Z =`) |
+| `DOCUMENTATION.md` | Developers | Architecture, flow diagrams, field references, API docs, REST endpoints |
+| `AGENT.md` | AI agent (this file) | Codebase map, dev rules, documentation obligations |
+| `templates/help.php` | Site admin (in-plugin) | End-user help page: form usage, settings, template overriding, developer integration |
 
 ## Development Guidelines
 
@@ -228,12 +192,32 @@ add_action('wp_dashboard_setup', [Actions::class, 'registerDashboardWidget']);
 - Minimal comments (code should be self-explanatory)
 
 ### Making Changes
-- **Surgical modifications** - change as few lines as possible
-- **Keep Readmes Synced** - Always update both `README.md` and `readme.txt` when making documentation or version changes
+- **Surgical modifications** — change as few lines as possible
 - Only update counters during actual campaign sends (not tests)
 - Maintain backward compatibility
 - Don't break existing functionality
 - Validate changes don't affect unrelated features
+
+### Versioning & Documentation Checklist
+
+Run through this checklist whenever a version-worthy change is complete (new feature, fix, or behaviour change):
+
+1. **`mawiblah.php`** — bump `Version:` in the plugin header and `define('MAWIBLAH_VERSION', ...)`.
+2. **`README.md`** — add `### --- X.Y.Z ---` block at the top of the changelog with bullet points for every change.
+3. **`readme.txt`** — update `Stable tag: X.Y.Z` and add `= X.Y.Z =` block to the changelog.
+4. **`DOCUMENTATION.md`** — update any section that describes changed behaviour:
+   - Flow diagrams (mermaid) if a flow changed
+   - REST endpoint tables if an endpoint was added or changed
+   - Field/counter reference tables if new fields were added
+   - API function list if public methods were added or renamed
+5. **`templates/help.php`** — update the in-plugin Help page if the change affects anything an admin configures or embeds (shortcode attributes, block settings, settings fields, template overriding, developer hooks).
+
+**What belongs in each changelog:**
+- `README.md` — full human-readable description, including context ("why" not just "what")
+- `readme.txt` — concise WordPress.org-style bullets (one line per item)
+- `DOCUMENTATION.md` — no changelog; keep it current and accurate, not historical
+
+**Do not** add session-log "Recent Changes" sections to this file. The git log and changelog files are the authoritative history.
 
 ### Counter Logic Rules
 1. Never increment counters in test mode

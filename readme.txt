@@ -3,7 +3,7 @@ Contributors: lauzis
 Tags: email, newsletter, marketing, mailchimp alternative, subscribers
 Requires at least: 5.0
 Tested up to: 6.9
-Stable tag: 1.0.17
+Stable tag: 1.0.18
 Requires PHP: 8.0
 License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl.html
@@ -27,6 +27,7 @@ It is not suited for sending out 100k emails. It sends "individual" emails via W
 *   Action logging.
 *   Detailed statistics dashboard (Subscriber growth, Activity rating, etc.).
 *   Native subscription form (shortcode & Gutenberg block) with honeypot + optional reCAPTCHA v3 spam protection.
+*   RFC 8058 List-Unsubscribe headers on campaign emails for one-click unsubscribe in Gmail and other modern mail clients.
 
 **Who is it for?**
 
@@ -67,6 +68,11 @@ Technically yes, but it is not recommended. The plugin sends emails individually
 8. MVP version
 
 == Changelog ==
+
+= 1.0.18 =
+*   New: List-Unsubscribe and List-Unsubscribe-Post headers on campaign emails (RFC 8058 one-click unsubscribe).
+*   New: GET|POST /wp-json/mawiblah/v1/unsubscribe endpoint — POST for mail-client one-click, GET for human redirect.
+*   Fixed: Content-Type: text/html header was missing from campaign emails.
 
 = 1.0.17 =
 *   New: Native subscription form via `[mawiblah_subscribe_form]` shortcode and Gutenberg block.

@@ -5,36 +5,35 @@ namespace Mawiblah;
 class RestRoutes
 {
 
-    public static function getHtmlTemplate(\WP_REST_Request $request)
+    public static function getHtmlTemplate(\WP_REST_Request $request): \WP_REST_Response
     {
-        $post = $request->get_json_params();
-
-        $template = $post['template'];
+        $template        = sanitize_text_field($request->get_param('template') ?? '');
         $templateContent = Templates::getEmailTemplateByName($template);
         $templateContent = do_shortcode($templateContent);
 
-        return [
-            'status' => 'ok',
-            'template' => $templateContent,
-            'templateName' => $template
-        ];
+        return new \WP_REST_Response([
+            'status'       => 'ok',
+            'template'     => $templateContent,
+            'templateName' => $template,
+        ], 200);
     }
 
-    public static function test(\WP_REST_Request $request)
+    public static function test(\WP_REST_Request $request): \WP_REST_Response
     {
-        return [
-            'status' => 'ok'
-        ];
+        return new \WP_REST_Response(['status' => 'ok'], 200);
     }
 
-    public static function sendEmail(\WP_REST_Request $request)
+    public static function sendEmail(\WP_REST_Request $request): \WP_REST_Response
     {
-        $post = $request->get_json_params();
+        return rest_ensure_response(self::processSendEmail($request));
+    }
 
-        $campaignPostId = $post['campaignPostId'];
-        $subscriberId = $post['subscriberId'];
-        $email = $post['email'];
-        $lastItem = $post['lastItem'] ?? false;
+    private static function processSendEmail(\WP_REST_Request $request): array
+    {
+        $campaignPostId = absint($request->get_param('campaignPostId'));
+        $subscriberId   = absint($request->get_param('subscriberId'));
+        $email          = sanitize_email($request->get_param('email') ?? '');
+        $lastItem       = (bool) $request->get_param('lastItem');
 
         // Initialize or retrieve current counters
         $currentCounters = Campaigns::getCounters((object)['id' => $campaignPostId]);
@@ -43,11 +42,11 @@ class RestRoutes
         $emailsSkipped = (int)($currentCounters->emailsSkipped ?? 0);
         $emailsUnsubed = (int)($currentCounters->emailsUnsubed ?? 0);
 
-        if (!is_numeric($campaignPostId) || !is_numeric($subscriberId)) {
+        if (!$campaignPostId || !$subscriberId) {
             return [
-                'stats' => Helpers::emailSendingStats(skipped:1),
-                'status' => 'error',
-                'message' => 'Campaign or subscriber missing'
+                'stats'   => Helpers::emailSendingStats(skipped: 1),
+                'status'  => 'error',
+                'message' => 'Campaign or subscriber missing',
             ];
         }
 

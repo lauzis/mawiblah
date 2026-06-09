@@ -103,11 +103,26 @@ flowchart TD
 
 ### Unsubscribe Flow
 
-Triggered when a subscriber clicks the unsubscribe link in a campaign email. The flow is a two-step confirmation: first shows a confirmation page, then processes the actual unsubscribe after the subscriber confirms.
+Two separate entry points share the same end state: subscriber marked `unsubed`, added to the Unsubed audience, campaign counter incremented.
+
+**Entry 1 — Mail client one-click (RFC 8058)**
+
+Every campaign email includes `List-Unsubscribe` and `List-Unsubscribe-Post: List-Unsubscribe=One-Click` headers. Gmail, Apple Mail, and other RFC 8058-compliant clients use these to show a native "Unsubscribe" button that sends a `POST` directly to the endpoint — no browser, no confirmation page.
+
+**Entry 2 — Human click (link in email body)**
+
+The `[mawiblah_unsubscribe]` shortcode in the email body renders a link with `?subscriber=hash&unsubscribe=email&campaign=hash`. Clicking it opens a confirmation page in the browser.
 
 ```mermaid
 flowchart TD
-    A[Subscriber clicks unsubscribe link\n?subscriber=hash&unsubscribe=email&campaign=hash] --> B{unsubToken\nin URL?}
+    MC[Mail client sends\nPOST /wp-json/mawiblah/v1/unsubscribe\nsubscriber · token · campaign] --> V1{subscriberHash\nfound?}
+    V1 -- No --> E1[Return 404]
+    V1 -- Yes --> V2{unsubToken\nvalid?}
+    V2 -- No --> E2[Return 403]
+    V2 -- Yes --> UNS[Mark unsubed\nadd to Unsubed audience\nincrement emailsNewlyUnsubed]
+    UNS --> OK[Return 200 OK]
+
+    HL[Subscriber clicks link in email\n?subscriber=hash&unsubscribe=email] --> B{unsubToken\nin URL?}
     B -- No --> C[unsubscribe called]
     C --> D{Found in Subscribers\nor Gravity Forms?}
     D -- No --> E[Show: not-found page]
@@ -299,7 +314,8 @@ Subscribers are organized using WordPress taxonomy (`mawiblah_subscriber_categor
 - **Mailchimp Import**: Import unsubscribed users from Mailchimp
 
 ### Subscriber Features
-- Unsubscribe functionality with confirmation
+- Unsubscribe functionality with confirmation page (human click) and RFC 8058 one-click (mail client)
+- `List-Unsubscribe` + `List-Unsubscribe-Post` headers on every campaign email
 - Last interaction tracking (first and last interaction timestamps)
 - Email throttling (configurable time between emails to same subscriber)
 - Duplicate detection (case-insensitive email matching)
@@ -409,7 +425,7 @@ Block name: `mawiblah/subscription-form`. Add via the block inserter under **Wid
 
 PHP getters: `Settings::recaptchaEnabled()`, `Settings::recaptchaSiteKey()`, `Settings::recaptchaSecretKey()`
 
-### REST Endpoint
+### REST Endpoints
 
 `POST /wp-json/mawiblah/v1/subscribe` — public, no authentication required.
 
@@ -430,6 +446,20 @@ PHP getters: `Settings::recaptchaEnabled()`, `Settings::recaptchaSiteKey()`, `Se
 { "status": "error", "message": "Invalid email address." }
 { "status": "error", "message": "Verification failed. Please try again." }
 ```
+
+`GET|POST /wp-json/mawiblah/v1/unsubscribe` — public, no authentication required.
+
+| Method | Used by | Behaviour |
+|---|---|---|
+| `POST` | Mail client (RFC 8058 one-click) | Validates `subscriber` + `token` query params, immediately unsubscribes, returns `200 OK`. |
+| `GET` | Human clicking header link | Redirects to `?subscriber=...&unsubscribe=...&unsubToken=...` confirmation page. |
+
+**Query parameters (both methods):**
+- `subscriber` — `subscriberHash` of the recipient
+- `token` — `unsubToken` of the recipient
+- `campaign` — `campaignHash` of the campaign (used to increment `emailsNewlyUnsubed`)
+
+These parameters are automatically included in the `List-Unsubscribe` header attached to every campaign email.
 
 ### Audience Hash
 

@@ -185,4 +185,10 @@ class Renderer
         require MAWIBLAH_PLUGIN_DIR . "/templates/actions.php";
         exit;
     }
+
+    public static function help()
+    {
+        require MAWIBLAH_PLUGIN_DIR . "/templates/help.php";
+        exit;
+    }
 }

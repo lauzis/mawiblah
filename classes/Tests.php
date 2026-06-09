@@ -46,7 +46,8 @@ class Tests
             'unsubscribe'       => 'Unsubscribe Flow',
             'click-tracking'    => 'Click Tracking (triple-count)',
             'subscription-form' => 'Subscription Form',
-            'default-audiences' => 'Default Audiences (Unsubed + Testers)',
+            'default-audiences'          => 'Default Audiences (Unsubed + Testers)',
+            'programmatic-subscribe'     => 'Programmatic Subscribe (mawiblah_subscribe hook)',
         ];
     }
 
@@ -66,8 +67,9 @@ class Tests
             'unsubscribe'       => self::unsubscribeScenario(),
             'click-tracking'    => self::clickTrackingScenario(),
             'subscription-form' => self::subscriptionFormScenario(),
-            'default-audiences' => self::defaultAudiencesScenario(),
-            default             => self::echoResult('Unknown scenario: ' . $scenario, 'error'),
+            'default-audiences'          => self::defaultAudiencesScenario(),
+            'programmatic-subscribe'     => self::programmaticSubscribeScenario(),
+            default                      => self::echoResult('Unknown scenario: ' . $scenario, 'error'),
         };
     }
 
@@ -519,5 +521,102 @@ class Tests
         $testers = Subscribers::testerAudience();
         $distinct = $unsubed && $testers && $unsubed->term_id !== $testers->term_id;
         self::echoResult($distinct ? 'Distinct IDs' : 'Same term or missing', $distinct ? 'success' : 'error');
+    }
+
+    // -------------------------------------------------------------------------
+    // Programmatic Subscribe
+    // -------------------------------------------------------------------------
+
+    public static function programmaticSubscribeScenario(): void
+    {
+        self::echoHeading('Programmatic Subscribe');
+
+        $email    = 'hooktest@mawiblah.test';
+        $taxonomy = Subscribers::postType() . '_category';
+        self::deleteSubscribersByEmail($email);
+
+        $t1 = wp_insert_term('Hook Test Audience 1', $taxonomy);
+        $t2 = wp_insert_term('Hook Test Audience 2', $taxonomy);
+
+        $aud1Id = is_wp_error($t1) ? null : $t1['term_id'];
+        $aud2Id = is_wp_error($t2) ? null : $t2['term_id'];
+        $aud1   = $aud1Id ? Subscribers::getAudience($aud1Id) : null;
+        $aud2   = $aud2Id ? Subscribers::getAudience($aud2Id) : null;
+        $hash1  = $aud1->audienceHash ?? null;
+        $hash2  = $aud2->audienceHash ?? null;
+        $hashes = array_values(array_filter([$hash1, $hash2]));
+
+        // --- invalid email -------------------------------------------------------
+        self::echoTitle('Invalid email returns error');
+        $res = mawiblah_subscribe('not-an-email');
+        self::echoResult($res['status'] === 'error' ? 'Correctly returned error' : 'Should be error', $res['status'] === 'error' ? 'success' : 'error');
+
+        // --- new subscriber ------------------------------------------------------
+        self::echoTitle('New email → subscriber created, added to both audiences');
+        $res = mawiblah_subscribe($email, $hashes);
+        $sub = Subscribers::getSubscriber($email);
+        $ok  = $res['status'] === 'ok' && $sub !== null;
+        self::echoResult($ok ? 'Subscriber created' : 'Failed — ' . $res['message'], $ok ? 'success' : 'error');
+
+        if ($sub && $aud1Id && $aud2Id) {
+            $terms = wp_get_post_terms($sub->id, $taxonomy, ['fields' => 'ids']);
+            $inBoth = in_array($aud1Id, $terms) && in_array($aud2Id, $terms);
+            self::echoResult($inBoth ? 'Added to both audiences' : 'Missing audience (terms: ' . implode(',', $terms) . ')', $inBoth ? 'success' : 'error');
+        }
+
+        // --- no duplicate --------------------------------------------------------
+        self::echoTitle('Same email again → ok, no duplicate subscriber');
+        $res  = mawiblah_subscribe($email, $hashes);
+        $dups = get_posts(['post_type' => Subscribers::postType(), 'title' => $email, 'posts_per_page' => -1]);
+        $ok   = $res['status'] === 'ok' && count($dups) === 1;
+        self::echoResult($ok ? 'No duplicate' : 'Failed (' . count($dups) . ' records)', $ok ? 'success' : 'error');
+
+        // --- mawiblah_subscribed action hook -------------------------------------
+        self::echoTitle('mawiblah_subscribed action fires with correct arguments');
+        self::deleteSubscribersByEmail($email);
+
+        $hookFired      = false;
+        $hookEmail      = null;
+        $hookHashes     = null;
+        $hookSubscriber = null;
+
+        $listener = function (string $e, array $h, object $s) use (&$hookFired, &$hookEmail, &$hookHashes, &$hookSubscriber) {
+            $hookFired      = true;
+            $hookEmail      = $e;
+            $hookHashes     = $h;
+            $hookSubscriber = $s;
+        };
+        add_action('mawiblah_subscribed', $listener, 10, 3);
+
+        mawiblah_subscribe($email, $hashes);
+
+        remove_action('mawiblah_subscribed', $listener, 10);
+
+        $ok = $hookFired && $hookEmail === $email && $hookHashes === $hashes && $hookSubscriber !== null;
+        self::echoResult($ok ? 'Hook fired with correct args' : 'Hook not fired or wrong args', $ok ? 'success' : 'error');
+
+        // --- partial overlap — only missing audience added -----------------------
+        self::echoTitle('Partial overlap → only missing audience added');
+        $sub = Subscribers::getSubscriber($email);
+        if ($sub && $aud1Id && $aud2Id) {
+            // Remove aud2 so subscriber is only in aud1
+            $currentTerms = wp_get_post_terms($sub->id, $taxonomy, ['fields' => 'ids']);
+            wp_set_post_terms($sub->id, array_diff($currentTerms, [$aud2Id]), $taxonomy);
+
+            // Re-subscribe to both
+            mawiblah_subscribe($email, $hashes);
+
+            $terms  = wp_get_post_terms($sub->id, $taxonomy, ['fields' => 'ids']);
+            $inBoth = in_array($aud1Id, $terms) && in_array($aud2Id, $terms);
+            self::echoResult($inBoth ? 'Both audiences present' : 'Missing audience after re-subscribe', $inBoth ? 'success' : 'error');
+        } else {
+            self::echoResult('Skipped — subscriber or audiences missing', 'error');
+        }
+
+        // --- cleanup -------------------------------------------------------------
+        self::deleteSubscribersByEmail($email);
+        if ($aud1Id) wp_delete_term($aud1Id, $taxonomy);
+        if ($aud2Id) wp_delete_term($aud2Id, $taxonomy);
+        self::echoResult('Cleaned up', 'success');
     }
 }

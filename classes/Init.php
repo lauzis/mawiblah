@@ -14,6 +14,7 @@ class Init
     const MAWIBLAH_SETTINGS = 'mawiblah-settings';
 
     const MAWIBLAH_ACTIONS = 'mawiblah-actions';
+    const MAWIBLAH_HELP    = 'mawiblah-help';
     public function init(): void
     {
         Migrations::run();
@@ -33,7 +34,8 @@ class Init
             self::MAWIBLAH_EMAIL_TEMPLATES,
             self::MAWIBLAH_TESTS,
             self::MAWIBLAH_SETTINGS,
-            self::MAWIBLAH_ACTIONS
+            self::MAWIBLAH_ACTIONS,
+            self::MAWIBLAH_HELP,
         ];
     }
 
@@ -257,6 +259,15 @@ class Init
             self::MAWIBLAH_SETTINGS,
             [$this, 'settings']
         );
+
+        add_submenu_page(
+            'mawiblah',
+            'Help',
+            'Help',
+            'manage_options',
+            self::MAWIBLAH_HELP,
+            [$this, 'help']
+        );
     }
 
     public function emailTemplates() {
@@ -282,5 +293,9 @@ class Init
 
     public function actions() {
         Renderer::actions();
+    }
+
+    public function help() {
+        Renderer::help();
     }
 }

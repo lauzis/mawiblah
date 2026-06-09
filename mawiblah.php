@@ -116,3 +116,15 @@ function mawiblah_load_textdomain()
 }
 
 add_action('plugins_loaded', 'mawiblah_load_textdomain');
+
+/**
+ * Subscribe an email address to one or more Mawiblah audiences.
+ *
+ * @param string   $email          Email address to subscribe.
+ * @param string[] $audienceHashes Optional array of audienceHash values.
+ * @return array{status: string, message: string}
+ */
+function mawiblah_subscribe(string $email, array $audienceHashes = []): array
+{
+    return \Mawiblah\SubscriptionForm::subscribeByEmail($email, $audienceHashes);
+}

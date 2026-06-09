@@ -48,7 +48,20 @@ class SubscriptionForm
             }
         }
 
-        // Email validation
+        return self::subscribeByEmail($email, $audienceHashes);
+    }
+
+    /**
+     * Subscribe an email address to one or more audiences.
+     *
+     * Safe to call from any PHP code (Gravity Forms callbacks, WP-CLI, etc.).
+     * Returns ['status' => 'ok'|'error', 'message' => string].
+     *
+     * Fires the `mawiblah_subscribed` action on success:
+     *   do_action('mawiblah_subscribed', string $email, array $audienceHashes, object $subscriber)
+     */
+    public static function subscribeByEmail(string $email, array $audienceHashes = []): array
+    {
         if (!is_email($email)) {
             return ['status' => 'error', 'message' => __('Invalid email address.', 'mawiblah')];
         }
@@ -82,6 +95,8 @@ class SubscriptionForm
                 Subscribers::addSubscriberToAudience($subscriber->id, $audienceId);
             }
         }
+
+        do_action('mawiblah_subscribed', $email, $audienceHashes, $subscriber);
 
         return ['status' => 'ok', 'message' => __('You are now subscribed!', 'mawiblah')];
     }

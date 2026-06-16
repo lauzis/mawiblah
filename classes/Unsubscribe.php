@@ -69,7 +69,9 @@ class Unsubscribe
             return new \WP_REST_Response(['status' => 'not_found'], 404);
         }
 
-        if ($request->get_method() === 'GET') {
+        $method = $request->get_method();
+
+        if ($method === 'GET') {
             $redirectUrl = add_query_arg([
                 'subscriber'  => $subscriberHash,
                 'unsubscribe' => $subscriber->email,
@@ -80,7 +82,11 @@ class Unsubscribe
             exit;
         }
 
-        // POST — one-click unsubscribe
+        if ($method !== 'POST') {
+            return new \WP_REST_Response(['status' => 'method_not_allowed'], 405);
+        }
+
+        // POST — one-click unsubscribe (RFC 8058)
         if ($subscriber->unsubToken !== $unsubToken) {
             return new \WP_REST_Response(['status' => 'invalid_token'], 403);
         }

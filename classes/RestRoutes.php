@@ -33,7 +33,7 @@ class RestRoutes
         $campaignPostId = absint($request->get_param('campaignPostId'));
         $subscriberId   = absint($request->get_param('subscriberId'));
         $email          = sanitize_email($request->get_param('email') ?? '');
-        $lastItem       = (bool) $request->get_param('lastItem');
+        $lastItem       = $request->get_param('lastItem');
 
         // Initialize or retrieve current counters
         $currentCounters = Campaigns::getCounters((object)['id' => $campaignPostId]);

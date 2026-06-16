@@ -171,7 +171,10 @@ class Settings
             foreach ($s["fields"] as $fk => $f) {
 
                 if ($is_post && isset($_POST[$f["id"]])) {
-                    $value = sanitize_text_field(wp_unslash($_POST[$f["id"]]));
+                    $raw   = wp_unslash($_POST[$f["id"]]);
+                    $value = $f['type'] === 'textarea'
+                        ? sanitize_textarea_field($raw)
+                        : sanitize_text_field($raw);
                     update_option($f["id"], $value);
                     $sections[$sk]["fields"][$fk]["value"] = $value;
                     $options_updated = true;

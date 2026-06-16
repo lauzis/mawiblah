@@ -77,6 +77,25 @@ class Init
                 'permission_callback' => function () {
                     return current_user_can('edit_others_posts');
                 },
+                'args'                => [
+                    'campaignPostId' => [
+                        'type'     => 'integer',
+                        'required' => true,
+                    ],
+                    'subscriberId'   => [
+                        'type'     => 'integer',
+                        'required' => true,
+                    ],
+                    'email'          => [
+                        'type'              => 'string',
+                        'required'          => true,
+                        'sanitize_callback' => 'sanitize_email',
+                    ],
+                    'lastItem'       => [
+                        'type'    => 'boolean',
+                        'default' => false,
+                    ],
+                ],
             ));
 
             register_rest_route('mawiblah/v1', '/subscribe', array(
@@ -107,7 +126,7 @@ class Init
             ));
 
             register_rest_route('mawiblah/v1', '/unsubscribe', array(
-                'methods'             => \WP_REST_Server::ALLMETHODS,
+                'methods'             => [ \WP_REST_Server::READABLE, \WP_REST_Server::CREATABLE ],
                 'callback'            => 'Mawiblah\Unsubscribe::oneClickEndpoint',
                 'permission_callback' => '__return_true',
             ));

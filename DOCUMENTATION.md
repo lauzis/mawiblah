@@ -447,7 +447,7 @@ PHP getters: `Settings::recaptchaEnabled()`, `Settings::recaptchaSiteKey()`, `Se
 { "status": "error", "message": "Verification failed. Please try again." }
 ```
 
-`GET|POST /wp-json/mawiblah/v1/unsubscribe` — public, no authentication required.
+`GET|POST /wp-json/mawiblah/v1/unsubscribe` — public, no authentication required. Only `GET` and `POST` are accepted; other verbs return `405`.
 
 | Method | Used by | Behaviour |
 |---|---|---|

@@ -5,6 +5,14 @@ namespace Mawiblah;
 class RestRoutes
 {
 
+    /**
+     * Returns a processed email template with all shortcodes evaluated.
+     *
+     * Requires editor capabilities. Used by the campaign editor to preview template output.
+     *
+     * @param \WP_REST_Request $request JSON body containing 'template' (template name string).
+     * @return \WP_REST_Response Template HTML content and template name.
+     */
     public static function getHtmlTemplate(\WP_REST_Request $request): \WP_REST_Response
     {
         $template        = sanitize_text_field($request->get_param('template') ?? '');
@@ -18,16 +26,36 @@ class RestRoutes
         ], 200);
     }
 
+    /** Connectivity smoke-test endpoint. Returns {"status":"ok"} with HTTP 200. */
     public static function test(\WP_REST_Request $request): \WP_REST_Response
     {
         return new \WP_REST_Response(['status' => 'ok'], 200);
     }
 
+    /**
+     * Sends one campaign email to one subscriber and updates campaign counters.
+     *
+     * This is the callback for the JS-driven per-subscriber send loop. It delegates
+     * to processSendEmail() and wraps the result in a WP_REST_Response.
+     *
+     * @param \WP_REST_Request $request JSON body: campaignPostId, subscriberId, email, lastItem.
+     * @return \WP_REST_Response Result payload with status, message, and emailSendingStats.
+     */
     public static function sendEmail(\WP_REST_Request $request): \WP_REST_Response
     {
         return rest_ensure_response(self::processSendEmail($request));
     }
 
+    /**
+     * Core send-email logic: validates inputs, applies all skip rules, sends via wp_mail(),
+     * and updates campaign counters.
+     *
+     * Skip rules (in order): unsubscribed, already sent, do-not-disturb threshold,
+     * email sending disabled in settings, not a tester in test mode, template unavailable.
+     *
+     * @param \WP_REST_Request $request
+     * @return array Result array consumed by sendEmail().
+     */
     private static function processSendEmail(\WP_REST_Request $request): array
     {
         $campaignPostId = absint($request->get_param('campaignPostId'));

@@ -3,32 +3,65 @@
 namespace Mawiblah;
 class Renderer
 {
+    /**
+     * Renders the main plugin dashboard page and exits.
+     *
+     * @param array|null $debug Optional debug data passed to the template.
+     */
     public static function start(array|null $debug = null)
     {
         include(MAWIBLAH_PLUGIN_DIR . "/templates/start.php");
         exit;
     }
 
+    /**
+     * Renders the "campaign already exists" notice partial.
+     *
+     * @param array|null $debug Optional debug data passed to the template.
+     */
     public static function campaign_already_exists(array|null $debug = null)
     {
         include_once MAWIBLAH_PLUGIN_DIR . "/templates/campaign/already-exists.php";
     }
 
+    /**
+     * Renders the "campaign validation failed" notice partial.
+     *
+     * @param array|null $debug Optional debug data passed to the template.
+     */
     public static function campaign_invalid(array|null $debug = null)
     {
         include_once MAWIBLAH_PLUGIN_DIR . "/templates/campaign/could-not-create.php";
     }
 
+    /**
+     * Renders the "campaign created successfully" notice partial.
+     *
+     * @param array|null $debug Optional debug data passed to the template.
+     */
     public static function campaign_created(array|null $debug = null)
     {
         include_once MAWIBLAH_PLUGIN_DIR . "/templates/campaign/created.php";
     }
 
+    /**
+     * Renders the "campaign could not be created" error partial.
+     *
+     * @param array|null $debug Optional debug data passed to the template.
+     */
     public static function campaign_could_not_create(array|null $debug = null)
     {
         include_once MAWIBLAH_PLUGIN_DIR . "/templates/campaign/could-not-create.php";
     }
 
+    /**
+     * Renders the campaigns admin page, dispatching to the correct sub-template based on the
+     * 'action' query parameter (list, create, edit, save, delete, test, approve, send, reset).
+     *
+     * Nonce and capability checks are applied to all write actions.
+     *
+     * @param array|null $debug Optional debug data passed to the template.
+     */
     public static function campaigns(array|null $debug = null)
     {
 
@@ -168,24 +201,28 @@ class Renderer
         }
     }
 
+    /** Renders the test scenarios page and exits. */
     public static function tests()
     {
         require MAWIBLAH_PLUGIN_DIR . "/templates/tests.php";
         exit;
     }
 
+    /** Renders the plugin settings page and exits. */
     public static function settings()
     {
         require MAWIBLAH_PLUGIN_DIR . "/templates/settings.php";
         exit;
     }
 
+    /** Renders the actions/tools admin page and exits. */
     public static function actions()
     {
         require MAWIBLAH_PLUGIN_DIR . "/templates/actions.php";
         exit;
     }
 
+    /** Renders the in-plugin help page and exits. */
     public static function help()
     {
         require MAWIBLAH_PLUGIN_DIR . "/templates/help.php";

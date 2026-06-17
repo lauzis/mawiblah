@@ -7,6 +7,7 @@ class SubscriptionForm
     const RECAPTCHA_VERIFY_URL = 'https://www.google.com/recaptcha/api/siteverify';
     const RECAPTCHA_THRESHOLD  = 0.5;
 
+    /** Intercepts the re-subscribe confirmation URL on WordPress init and processes the token. */
     public static function init(): void
     {
         if (isset($_GET['mawiblah-resubscribe'])) {
@@ -14,6 +15,13 @@ class SubscriptionForm
         }
     }
 
+    /**
+     * Renders the subscription form HTML, conditionally loading reCAPTCHA v3 if fully configured.
+     *
+     * @param string[] $audienceHashes Audience hashes to embed as hidden inputs.
+     * @param array    $options        Optional overrides: label, placeholder, buttonText, successMessage, errorMessage.
+     * @return string Rendered form HTML.
+     */
     public static function renderForm(array $audienceHashes = [], array $options = []): string
     {
         $siteKey        = Settings::recaptchaSiteKey();
@@ -28,6 +36,15 @@ class SubscriptionForm
         return ob_get_clean();
     }
 
+    /**
+     * REST endpoint callback for POST /wp-json/mawiblah/v1/subscribe.
+     *
+     * Applies honeypot and reCAPTCHA checks before delegating to subscribeByEmail().
+     * Returns HTTP 400 on validation or spam-check failure, HTTP 200 otherwise.
+     *
+     * @param \WP_REST_Request $request JSON body: email, audienceHashes, honeypot, recaptchaToken.
+     * @return \WP_REST_Response
+     */
     public static function subscribe(\WP_REST_Request $request): \WP_REST_Response
     {
         $email          = sanitize_email($request->get_param('email') ?? '');
@@ -102,6 +119,12 @@ class SubscriptionForm
         return ['status' => 'ok', 'message' => __('You are now subscribed!', 'mawiblah')];
     }
 
+    /**
+     * Sends a re-subscribe confirmation email containing a token-bearing URL.
+     *
+     * @param object $subscriber  Subscriber object with email, subscriberHash, and id.
+     * @param int[]  $audienceIds Audience term IDs to restore on confirmation.
+     */
     private static function sendResubscribeEmail(object $subscriber, array $audienceIds): void
     {
         $token        = Subscribers::getUnsubToken($subscriber->id, $subscriber->email);
@@ -122,6 +145,7 @@ class SubscriptionForm
         wp_mail($subscriber->email, $subject, $body);
     }
 
+    /** Reads resubscribe URL parameters, calls confirmResubscribe(), and renders the result template. Exits. */
     private static function handleResubscribeConfirmation(): void
     {
         $subscriberHash = sanitize_text_field($_GET['subscriber'] ?? '');
@@ -138,6 +162,14 @@ class SubscriptionForm
         exit;
     }
 
+    /**
+     * Validates a re-subscribe token and, if valid, clears the unsubed flag and restores audience memberships.
+     *
+     * @param string $subscriberHash Subscriber identifier hash from the confirmation URL.
+     * @param string $resubToken     Token to validate against the stored unsubToken.
+     * @param string $audienceParam  Comma-separated audience term IDs to restore.
+     * @return bool True if resubscription succeeded, false if subscriber not found or token invalid.
+     */
     public static function confirmResubscribe(string $subscriberHash, string $resubToken, string $audienceParam): bool
     {
         $subscriber = Subscribers::getSubscriberBySubscriberHash($subscriberHash);
@@ -175,6 +207,14 @@ class SubscriptionForm
         return true;
     }
 
+    /**
+     * Verifies a reCAPTCHA v3 token against the Google siteverify API.
+     *
+     * Returns false immediately for empty tokens. Requires a score >= RECAPTCHA_THRESHOLD (0.5).
+     *
+     * @param string $token reCAPTCHA v3 token from the browser.
+     * @return bool True if verification passed, false otherwise.
+     */
     private static function verifyRecaptcha(string $token): bool
     {
         if (empty($token)) {

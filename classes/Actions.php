@@ -8,11 +8,13 @@ use Mawiblah\Templates;
 class Actions
 {
 
+    /** Registers WordPress dashboard widgets via the wp_dashboard_setup action. */
     public static function init()
     {
         add_action('wp_dashboard_setup', [self::class, 'registerDashboardWidget']);
     }
 
+    /** Registers the campaign stats and activity rating widgets on the WordPress dashboard. */
     public static function registerDashboardWidget()
     {
         wp_add_dashboard_widget(
@@ -28,6 +30,7 @@ class Actions
         );
     }
 
+    /** Renders the campaign stats bar chart (sent, unique visitors, links opened) for the last 3 campaigns. */
     public static function renderDashboardWidget()
     {
         $data = Campaigns::getDataForDashBoard(3);
@@ -40,6 +43,12 @@ class Actions
         Templates::loadTemplate('campaign/bar-graph.php', $dataForDisplay);
     }
 
+    /**
+     * Renders the activity rating bar chart showing clicks-per-campaign-send-day ratio by weekday.
+     *
+     * A rating above 1 means subscribers click more on that day than campaigns are sent on it,
+     * indicating an optimal send day.
+     */
     public static function renderActivityRatingWidget()
     {
         $activeDays = Campaigns::getClickTimesByDayOfWeekForLastCampaigns(12);

@@ -4,6 +4,15 @@ namespace Mawiblah;
 class Templates
 {
 
+    /**
+     * Fetches a processed email template via an internal REST request.
+     *
+     * Used during campaign sending to retrieve templates with WPML-aware shortcode evaluation,
+     * because the REST call ensures WPML is fully initialised before shortcodes run.
+     *
+     * @param string $templateName Template filename without extension.
+     * @return string|bool Processed HTML string, or false on failure.
+     */
     public static function getTemplateByNameViaRest($templateName): string | bool
     {
         $cookies = [];
@@ -37,6 +46,14 @@ class Templates
         return $data->template ?? false;
     }
 
+    /**
+     * Returns the ordered list of directories to search for email templates.
+     *
+     * Search order: child theme → parent theme → plugin. This allows themes to override
+     * plugin-bundled templates by placing HTML files in their mawiblah/email_templates/ directory.
+     *
+     * @return array<string, string> Map of label to directory path.
+     */
     private static function getEmailTemplateDirectories(): array
     {
         $dirs = [];
@@ -55,6 +72,14 @@ class Templates
         return $dirs;
     }
 
+    /**
+     * Returns the raw HTML content of an email template by name.
+     *
+     * Searches child theme, parent theme, then plugin directories in order.
+     *
+     * @param string $templateName Template filename without extension.
+     * @return string|false Raw HTML content, or false if not found.
+     */
     public static function getEmailTemplateByName($templateName)
     {
         $dirs = self::getEmailTemplateDirectories();
@@ -74,6 +99,13 @@ class Templates
         return false;
     }
 
+    /**
+     * Returns all available email templates with their source label as the display value.
+     *
+     * Deduplicates by template name so child-theme overrides shadow plugin templates.
+     *
+     * @return array<string, string> Map of template name to "Source: name" display string.
+     */
     public static function getArrayOfEmailTemplates(): array
     {
         $templates = [];
@@ -99,11 +131,28 @@ class Templates
         return $templates;
     }
 
+    /**
+     * Returns true if the given template name exists in any of the template directories.
+     *
+     * @param string $emailTemplate Template filename without extension.
+     * @return bool
+     */
     public static function validateEmailTemplate(string $emailTemplate): bool
     {
         return array_key_exists($emailTemplate, self::getArrayOfEmailTemplates());
     }
 
+    /**
+     * Fetches a campaign's email template via REST and archives a copy to disk.
+     *
+     * Archives are stored in email_templates/archived/ so campaign emails can be re-sent
+     * with the exact template snapshot that existed at send time. In test mode the archive
+     * is always refreshed; in production mode it is written only once.
+     *
+     * @param int  $campaignPostId Campaign post ID.
+     * @param bool $testMode       When true, always overwrites the archived copy.
+     * @return string|false Processed template HTML, or false if retrieval failed.
+     */
     public static function copyTemplate(int $campaignPostId, bool $testMode): string|bool
     {
         $templateName = get_post_meta($campaignPostId, 'template', true);
@@ -130,6 +179,12 @@ class Templates
         return $template;
     }
 
+    /**
+     * Resolves a PHP template path using the child-theme → parent-theme → plugin override chain.
+     *
+     * @param string $templatePath Relative path (e.g. 'stats/subscriber-growth.php').
+     * @return string Absolute path to the first matching file, or path to missingTemplate.php.
+     */
     public static function getTemplatePath( string $templatePath ):string {
         $theme_template_paths = array(
             trailingslashit( get_stylesheet_directory() ) .'mawiblah/'. $templatePath , // Child/Active Theme
@@ -146,16 +201,34 @@ class Templates
         return MAWIBLAH_TEMPLATES_PATH. '/missingTemplate.php';
     }
 
+    /**
+     * Includes a PHP template, resolving it through the theme override chain.
+     *
+     * @param string $templatePath Relative path to the template.
+     * @param mixed  $data         Data made available to the template as $data.
+     */
     public static function loadTemplate(string $templatePath, mixed $data) {
         include self::getTemplatePath($templatePath);
     }
 
+    /**
+     * Renders a styled HTML data table using the campaign/table-stats.php partial.
+     *
+     * @param array $headers Column header labels.
+     * @param array $rows    Array of row arrays, each containing one value per column.
+     */
     public static function renderTable(array $headers, array $rows): void
     {
         $data = ['headers' => $headers, 'rows' => $rows];
         self::loadTemplate('campaign/table-stats.php',$data);
     }
 
+    /**
+     * Returns the translated name of a weekday.
+     *
+     * @param string $day English day name (e.g. 'Monday').
+     * @return string Translated day name, or the original string if unrecognised.
+     */
     public static function getDayTranslation($day){
         return match ($day) {
             'Monday' => __('Monday', 'mawiblah'),

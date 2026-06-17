@@ -5,6 +5,7 @@ namespace Mawiblah;
 class ShortCodes
 {
 
+    /** Registers all Mawiblah shortcodes with WordPress. */
     public static function register()
     {
         add_shortcode('mawiblah_subscribe_form', [ShortCodes::class, 'subscribeForm']);
@@ -29,6 +30,7 @@ class ShortCodes
         add_shortcode('mawiblah_unsubscribe', [ShortCodes::class, 'unsubscribe']);
     }
 
+    /** Returns the current post title, falling back to a month-based default. */
     public static function title()
     {
         $title = get_the_title();
@@ -38,6 +40,7 @@ class ShortCodes
         return sprintf(__('Summary for the %s', 'mawiblah'), date("F"));
     }
 
+    /** Returns the current post content, falling back to a default monthly newsletter message. */
     public static function content()
     {
         $content = get_the_content();
@@ -47,36 +50,48 @@ class ShortCodes
         return __('This is our montly report to you, hoepfully you will find something usefull', 'mawiblah');
     }
 
+    /** Returns the site URL for use in email templates. */
     public static function websiteUrl()
     {
         return get_site_url();
     }
 
+    /** Returns the site name for use as the logo alt text in email templates. */
     public static function logoAlt()
     {
         return get_bloginfo('name');
     }
 
+    /** Returns the custom logo HTML for use in email templates. */
     public static function logoSrc()
     {
         return get_custom_logo();
     }
 
+    /** Returns social profile links HTML for use in email templates. */
     public static function socialProfiles()
     {
         return '<a href="https://www.facebook.com/">Facebook</a>';
     }
 
+    /** Returns the default heading for the newest articles section in email templates. */
     public static function newestArticlesTitle()
     {
         return __('Check Out Our Latest Articles!', 'mawiblah');
     }
 
+    /** Returns the default introductory paragraph for the newest articles section. */
     public static function newestArticlesParagraph()
     {
         return __('Discover newest articles and printables for parents and kids.', 'mawiblah');
     }
 
+    /**
+     * Returns an HTML list of the most recent posts with campaign tracking links appended.
+     *
+     * @param array $atts Shortcode attributes; supports 'count' (default 5).
+     * @return string HTML <li> items for each recent post.
+     */
     public static function newestArticles($atts)
     {
         $atts = shortcode_atts(
@@ -101,16 +116,26 @@ class ShortCodes
         return $output;
     }
 
+    /** Returns the default sign-off heading for email templates. */
     public static function endTitle()
     {
         return __('Thank you for reading!', 'mawiblah');
     }
 
+    /** Returns the default sign-off paragraph for email templates. */
     public static function endContent()
     {
         return __('We hope you enjoyed our monthly newsletter. If you have any questions or suggestions, feel free to contact us.', 'mawiblah');
     }
 
+    /**
+     * Renders the subscription form HTML for the [mawiblah_subscribe_form] shortcode.
+     *
+     * Enqueues the form CSS and JS, then delegates rendering to SubscriptionForm::renderForm().
+     *
+     * @param array $atts Shortcode attributes: audiences, label, placeholder, button, success, error.
+     * @return string Rendered form HTML.
+     */
     public static function subscribeForm($atts): string
     {
         $atts = shortcode_atts([
@@ -142,6 +167,7 @@ class ShortCodes
         return SubscriptionForm::renderForm($hashes, $options);
     }
 
+    /** Returns an unsubscribe anchor tag with subscriber and campaign tracking parameters pre-filled as template placeholders. */
     public static function unsubscribe()
     {
 

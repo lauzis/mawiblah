@@ -111,6 +111,11 @@ class Renderer
                     }
                     check_admin_referer('campaign-send_' . $campaignPostId);
 
+                    $campaign = Campaigns::getCampaignById($campaignPostId);
+                    if (!$campaign || !$campaign->testApproved) {
+                        wp_die(__('Campaign must be approved before sending.', 'mawiblah'), 403);
+                    }
+
                     $result = Campaigns::campaignStart($campaignPostId);
 
                     require MAWIBLAH_PLUGIN_DIR . "/templates/campaign/email-list.php";

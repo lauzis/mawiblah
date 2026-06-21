@@ -54,9 +54,20 @@
             exit;
         }
 
-        Campaigns::testStart($campaignPostId);
-
         $audiences = $campaign->audiences;
+
+        if ($testMode && !Subscribers::hasTestersInAudiences($audiences)) {
+            ?>
+            <div class="alert alert-danger">
+                <strong>Cannot start test</strong>
+                <p>No testers found in the campaign's audiences. Add at least one subscriber to the <strong>Testers</strong> audience before running a test.</p>
+                <a class="btn btn-secondary" href="<?= esc_url(Helpers::generatePluginUrl(['action' => 'campaign-edit', 'campaignPostId' => $campaignPostId])) ?>">Back to campaign</a>
+            </div>
+            <?php
+            exit;
+        }
+
+        Campaigns::testStart($campaignPostId);
         $template = Campaigns::lockTemplate($campaign, $testMode);
 
         $counters = Campaigns::getCounters($campaign);

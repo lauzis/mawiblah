@@ -640,6 +640,25 @@ class Subscribers
         return $testerFlag || $inTesterAudience;
     }
 
+    /**
+     * Returns true if at least one subscriber in any of the given audience IDs is a tester.
+     *
+     * @param int[] $audienceIds Array of audience term IDs to search.
+     * @return bool
+     */
+    public static function hasTestersInAudiences(array $audienceIds): bool
+    {
+        foreach ($audienceIds as $audienceId) {
+            $subscribers = self::getSubscribersByAudience((int) $audienceId);
+            foreach ($subscribers as $subscriber) {
+                if (self::isTester($subscriber)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     /** Returns the "Testers" system audience term, creating it if it does not exist. */
     public static function testerAudience()
     {

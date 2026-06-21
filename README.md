@@ -70,6 +70,10 @@ The initial version was built by hand. From version 1.0.9 onward, most changes h
 
 ## Change log
 
+### --- 1.0.20 ---
+- **New:** "Failing Email" system audience — after a subscriber's email fails to deliver N times (configurable threshold in Settings, default 3), they are automatically added to the Failing Email audience and skipped in all future campaign sends.
+- **New:** PHPMailer exceptions enabled around `wp_mail()` to capture the actual error reason (e.g. SMTP rejection message). Stored in `sent_{campaignId}_error` subscriber meta and included in the activity log.
+
 ### --- 1.0.19 ---
 - **New:** Test start is now blocked when none of the campaign's audiences contain a tester subscriber. A clear error message is shown with a link back to the campaign, preventing an empty test run from being recorded.
 

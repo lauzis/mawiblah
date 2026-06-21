@@ -392,6 +392,9 @@ class Tests
         self::echoResult($total === 0 && $unique === 0 && $users === 0 ? 'All zero' : "Not zero (total=$total unique=$unique users=$users)", $total === 0 && $unique === 0 && $users === 0 ? 'success' : 'error');
 
         self::echoTitle('First visit — all three increment');
+        // Start the session first so any existing store data is loaded, then wipe it.
+        // Doing $_SESSION = [] before session_start() would be overwritten by the store restore.
+        if ( ! session_id() ) { session_start(); }
         $_SESSION = [];
         Visits::visit($c->campaignHash, $sub1->subscriberHash, $url);
         $total  = (int) get_post_meta($cId, 'linksClickedTotal', true);
@@ -456,32 +459,35 @@ class Tests
             $req->set_header('content-type', 'application/json');
             return $req;
         };
+        $call = function (array $body) use ($makeRequest): array {
+            return SubscriptionForm::subscribe($makeRequest($body))->get_data();
+        };
 
         self::echoTitle('New email → subscriber created, added to both audiences');
-        $res = SubscriptionForm::subscribe($makeRequest(['email' => $email, 'audienceHashes' => $hashes, 'honeypot' => '']));
+        $res = $call(['email' => $email, 'audienceHashes' => $hashes, 'honeypot' => '']);
         $sub = Subscribers::getSubscriber($email);
         $ok  = $res['status'] === 'ok' && $sub;
         self::echoResult($ok ? 'OK' : 'Failed', $ok ? 'success' : 'error');
 
         self::echoTitle('Same active email → silent ok, no duplicate');
-        $res  = SubscriptionForm::subscribe($makeRequest(['email' => $email, 'audienceHashes' => $hashes, 'honeypot' => '']));
+        $res  = $call(['email' => $email, 'audienceHashes' => $hashes, 'honeypot' => '']);
         $dups = get_posts(['post_type' => Subscribers::postType(), 'title' => $email, 'posts_per_page' => -1]);
         $ok   = $res['status'] === 'ok' && count($dups) === 1;
         self::echoResult($ok ? 'OK, no duplicate' : 'Failed (' . count($dups) . ' records)', $ok ? 'success' : 'error');
 
         self::echoTitle('Honeypot filled → silent ok, no subscriber created');
-        $res   = SubscriptionForm::subscribe($makeRequest(['email' => 'honeypot@mawiblah.test', 'audienceHashes' => [], 'honeypot' => 'bot-value']));
+        $res   = $call(['email' => 'honeypot@mawiblah.test', 'audienceHashes' => [], 'honeypot' => 'bot-value']);
         $noSub = Subscribers::getSubscriber('honeypot@mawiblah.test');
         $ok    = $res['status'] === 'ok' && !$noSub;
         self::echoResult($ok ? 'Correctly rejected' : 'Failed', $ok ? 'success' : 'error');
 
         self::echoTitle('Invalid email → error returned');
-        $res = SubscriptionForm::subscribe($makeRequest(['email' => 'not-an-email', 'audienceHashes' => [], 'honeypot' => '']));
+        $res = $call(['email' => 'not-an-email', 'audienceHashes' => [], 'honeypot' => '']);
         self::echoResult($res['status'] === 'error' ? 'Error returned' : 'Should be error', $res['status'] === 'error' ? 'success' : 'error');
 
         self::echoTitle('Unsubscribed email → check inbox response, flag unchanged');
         update_post_meta($sub->id, 'unsubed', true);
-        $res = SubscriptionForm::subscribe($makeRequest(['email' => $email, 'audienceHashes' => $hashes, 'honeypot' => '']));
+        $res   = $call(['email' => $email, 'audienceHashes' => $hashes, 'honeypot' => '']);
         $fresh = Subscribers::getSubscriber($email);
         $ok    = $res['status'] === 'ok' && $fresh->unsubed;
         self::echoResult($ok ? 'Check inbox returned, still unsubed' : 'Failed', $ok ? 'success' : 'error');

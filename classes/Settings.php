@@ -415,6 +415,12 @@ msgstr ""
         return self::getOption('mawiblah-dont-disturb-threshold');
     }
 
+    /** Returns the failing-email failure threshold (default 3). */
+    public static function failingEmailThreshold(): int
+    {
+        return max(1, (int) self::getOption('mawiblah-failing-email-threshold'));
+    }
+
     /** Returns true when reCAPTCHA v3 is set to "enabled" in settings (keys may still be missing). */
     public static function recaptchaEnabled(): bool
     {

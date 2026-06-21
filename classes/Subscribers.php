@@ -19,6 +19,7 @@ class Subscribers
     {
         self::unsubedAudience();
         self::testerAudience();
+        self::failingEmailAudience();
     }
 
     /** Registers the subscriber metadata meta box on the subscriber edit screen. */
@@ -191,7 +192,8 @@ class Subscribers
         $post->email = get_post_meta($post->id, 'email', true);
         $post->subscriberHash = get_post_meta($post->id, 'subscriberHash', true);
         $post->unsubToken = get_post_meta($post->id, 'unsubToken', true);
-        $post->unsubed = get_post_meta($post->id, 'unsubed', true);
+        $post->unsubed        = get_post_meta($post->id, 'unsubed', true);
+        $post->emailFailCount = (int) get_post_meta($post->id, 'email_fail_count', true);
         $post->activity = get_post_meta($post->id, 'activity', true) ?? 0;
         $post->activityTotal = get_post_meta($post->id, 'activityTotal', true) ?? 0;
         $post->lastInteraction = get_post_meta($post->id, 'lastInteraction', true) ?? date("Y-m-d H:i:s", 0);
@@ -724,12 +726,45 @@ class Subscribers
     /**
      * Marks an email send as failed for a subscriber/campaign pair.
      *
-     * @param int $subscriberId   Subscriber post ID.
-     * @param int $campaignPostId Campaign post ID.
+     * Increments the lifetime failure counter and, once it reaches the
+     * configured threshold, adds the subscriber to the "Failing Email"
+     * audience so future sends are skipped automatically.
+     *
+     * @param int    $subscriberId   Subscriber post ID.
+     * @param int    $campaignPostId Campaign post ID.
+     * @param string $reason         Optional error message from the mailer.
      */
-    public static function sentEmailFailed(int $subscriberId, int $campaignPostId): void
+    public static function sentEmailFailed(int $subscriberId, int $campaignPostId, string $reason = ''): void
     {
         update_post_meta($subscriberId, 'sent_' . $campaignPostId, 'failed');
+        if ($reason !== '') {
+            update_post_meta($subscriberId, 'sent_' . $campaignPostId . '_error', $reason);
+        }
+
+        $failCount = (int) get_post_meta($subscriberId, 'email_fail_count', true) + 1;
+        update_post_meta($subscriberId, 'email_fail_count', $failCount);
+
+        $threshold = Settings::failingEmailThreshold();
+        if ($failCount >= $threshold) {
+            $audience = self::failingEmailAudience();
+            if ($audience && !has_term($audience->term_id, self::postType() . '_category', $subscriberId)) {
+                self::addSubscriberToAudience($subscriberId, $audience->term_id);
+            }
+        }
+    }
+
+    /** Returns the "Failing Email" system audience term, creating it if it does not exist. */
+    public static function failingEmailAudience()
+    {
+        $term = get_term_by('name', 'Failing Email', self::postType() . '_category');
+        if (!$term) {
+            $result = wp_insert_term('Failing Email', self::postType() . '_category');
+            if (is_wp_error($result)) {
+                return null;
+            }
+            $term = get_term($result['term_id'], self::postType() . '_category');
+        }
+        return $term;
     }
 
     /**

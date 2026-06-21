@@ -137,4 +137,67 @@ class SubscriberTest extends WP_UnitTestCase
 
         Campaigns::deleteCampaign($cId);
     }
+
+    public function test_failing_email_audience_is_created(): void
+    {
+        $audience = Subscribers::failingEmailAudience();
+        $this->assertNotNull($audience);
+        $this->assertSame('Failing Email', $audience->name);
+    }
+
+    public function test_sent_email_failed_increments_fail_count(): void
+    {
+        $cId = Campaigns::addCampaign('Fail Count Test', 'Subj', 'Title', 'Content', [], 'test');
+
+        Subscribers::sentEmailFailed($this->sub->id, $cId);
+        $this->assertSame(1, (int) get_post_meta($this->sub->id, 'email_fail_count', true));
+
+        Subscribers::sentEmailFailed($this->sub->id, $cId);
+        $this->assertSame(2, (int) get_post_meta($this->sub->id, 'email_fail_count', true));
+
+        Campaigns::deleteCampaign($cId);
+    }
+
+    public function test_sent_email_failed_stores_error_reason(): void
+    {
+        $cId = Campaigns::addCampaign('Fail Reason Test', 'Subj', 'Title', 'Content', [], 'test');
+
+        Subscribers::sentEmailFailed($this->sub->id, $cId, 'SMTP: Could not connect');
+        $this->assertSame('SMTP: Could not connect', get_post_meta($this->sub->id, 'sent_' . $cId . '_error', true));
+
+        Campaigns::deleteCampaign($cId);
+    }
+
+    public function test_subscriber_added_to_failing_email_audience_at_threshold(): void
+    {
+        $threshold = \Mawiblah\Settings::failingEmailThreshold();
+        $cId = Campaigns::addCampaign('Threshold Test', 'Subj', 'Title', 'Content', [], 'test');
+
+        for ($i = 0; $i < $threshold - 1; $i++) {
+            Subscribers::sentEmailFailed($this->sub->id, $cId);
+        }
+
+        $failingAudience = Subscribers::failingEmailAudience();
+        $this->assertFalse(has_term($failingAudience->term_id, Subscribers::postType() . '_category', $this->sub->id));
+
+        Subscribers::sentEmailFailed($this->sub->id, $cId);
+        $this->assertTrue(has_term($failingAudience->term_id, Subscribers::postType() . '_category', $this->sub->id));
+
+        Campaigns::deleteCampaign($cId);
+    }
+
+    public function test_subscriber_not_added_to_failing_email_before_threshold(): void
+    {
+        $threshold = \Mawiblah\Settings::failingEmailThreshold();
+        $cId = Campaigns::addCampaign('Below Threshold Test', 'Subj', 'Title', 'Content', [], 'test');
+
+        for ($i = 0; $i < $threshold - 1; $i++) {
+            Subscribers::sentEmailFailed($this->sub->id, $cId);
+        }
+
+        $failingAudience = Subscribers::failingEmailAudience();
+        $this->assertFalse(has_term($failingAudience->term_id, Subscribers::postType() . '_category', $this->sub->id));
+
+        Campaigns::deleteCampaign($cId);
+    }
 }

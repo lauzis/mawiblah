@@ -81,6 +81,21 @@
     ]
   },
   {
+    "id": "mawiblah-failing-email",
+    "title": "Failing Email",
+    "description": "If sending to a subscriber fails this many times across all campaigns, they are automatically added to the 'Failing Email' audience and skipped in future sends.",
+    "fields": [
+      {
+        "id": "mawiblah-failing-email-threshold",
+        "title": "Failure threshold (number of failed sends before marking as Failing Email)",
+        "type": "text",
+        "value": "",
+        "placeholder": "3",
+        "default_value": "3"
+      }
+    ]
+  },
+  {
     "id": "mawiblah-recaptcha",
     "title": "reCAPTCHA v3 (Subscription Form)",
     "description": "Optional Google reCAPTCHA v3 protection for the subscription form. Leave disabled to rely on honeypot only. Get your keys at https://www.google.com/recaptcha/admin/",

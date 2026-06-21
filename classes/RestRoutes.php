@@ -144,6 +144,29 @@ class RestRoutes
             ];
         }
         //-----------------------------------------------------
+        // --------------- Failing email address --------------
+        //----------------------------------------------------
+        $failingEmailAudience = Subscribers::failingEmailAudience();
+        $isFailingEmail = $failingEmailAudience
+            && has_term($failingEmailAudience->term_id, Subscribers::postType() . '_category', $subscriberId);
+
+        if ($isFailingEmail) {
+            $emailsSkipped++;
+            Campaigns::updateCounters($campaign, $emailsSent, $emailsFailed, $emailsSkipped, $emailsUnsubed);
+            return [
+                'stats'   => Helpers::emailSendingStats(skipped: 1),
+                'data'    => [
+                    'campaignPostId'  => $campaignPostId,
+                    'subscriberId'    => $subscriberId,
+                    'email'           => $email,
+                    'emailFailCount'  => $subscriber->emailFailCount,
+                ],
+                'status'  => 'ok',
+                'message' => 'Skip, subscriber is in Failing Email audience',
+            ];
+        }
+
+        //-----------------------------------------------------
         // --------------- Already sent email -----------------
         //----------------------------------------------------
         $alreadySent = Subscribers::isEmailSent($subscriberId, $campaignPostId);
@@ -312,7 +335,22 @@ class RestRoutes
             'List-Unsubscribe-Post: List-Unsubscribe=One-Click',
         ];
 
-        $emailSendingResult = wp_mail($email, $campaign->subject, $emailBody, $emailHeaders);
+        $mailerError = '';
+        $enableExceptions = function (\PHPMailer\PHPMailer\PHPMailer $phpmailer) {
+            $phpmailer->SMTPDebug  = 0;
+            $phpmailer->Debugoutput = 'error_log';
+            $phpmailer->exceptions = true;
+        };
+        add_action('phpmailer_init', $enableExceptions);
+
+        try {
+            $emailSendingResult = wp_mail($email, $campaign->subject, $emailBody, $emailHeaders);
+        } catch (\PHPMailer\PHPMailer\Exception $e) {
+            $emailSendingResult = false;
+            $mailerError        = $e->getMessage();
+        } finally {
+            remove_action('phpmailer_init', $enableExceptions);
+        }
 
         if ($emailSendingResult) {
 
@@ -355,16 +393,20 @@ class RestRoutes
             ];
         }
 
-
-        Subscribers::sentEmailFailed($subscriber->id, $campaign->id);
+        Subscribers::sentEmailFailed($subscriber->id, $campaign->id, $mailerError);
         $emailsFailed++;
         Campaigns::updateCounters($campaign, $emailsSent, $emailsFailed, $emailsSkipped, $emailsUnsubed);
 
-        Logs::addLog("Email sending to {$email} failed!", "Email sending to {$email} failed!", [
+        $failMessage = $mailerError
+            ? "Email sending to {$email} failed: {$mailerError}"
+            : "Email sending to {$email} failed!";
+
+        Logs::addLog($failMessage, $failMessage, [
             'campaign' => $campaign,
             'subscriber' => $subscriber,
             'testMode' => $testMode,
             'emailSendingResult' => $emailSendingResult,
+            'mailerError' => $mailerError,
             'isTester' => $isTester,
             'campaignPostId' => $campaignPostId,
             'subscriberId' => $subscriberId,
@@ -388,10 +430,11 @@ class RestRoutes
                 'timeDiff' => $timeDiff,
                 'doNotDisturbThreshold' => $doNotDisturbThreshold,
                 'alreadySent' => $alreadySent,
-                'lastItem' => $lastItem
+                'lastItem' => $lastItem,
+                'mailerError' => $mailerError,
             ],
             'status' => 'error',
-            'message' => "Email sending to {$email} failed!"
+            'message' => $failMessage,
         ];
     }
 }

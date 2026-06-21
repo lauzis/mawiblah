@@ -724,12 +724,19 @@ class Subscribers
     /**
      * Marks an email send as failed for a subscriber/campaign pair.
      *
-     * @param int $subscriberId   Subscriber post ID.
-     * @param int $campaignPostId Campaign post ID.
+     * Stores 'failed' in the sent meta and, when a reason is provided,
+     * saves it to 'sent_{campaignPostId}_error' for later inspection.
+     *
+     * @param int    $subscriberId   Subscriber post ID.
+     * @param int    $campaignPostId Campaign post ID.
+     * @param string $reason         Optional error message from the mailer.
      */
-    public static function sentEmailFailed(int $subscriberId, int $campaignPostId): void
+    public static function sentEmailFailed(int $subscriberId, int $campaignPostId, string $reason = ''): void
     {
         update_post_meta($subscriberId, 'sent_' . $campaignPostId, 'failed');
+        if ($reason !== '') {
+            update_post_meta($subscriberId, 'sent_' . $campaignPostId . '_error', $reason);
+        }
     }
 
     /**

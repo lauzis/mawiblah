@@ -18,8 +18,8 @@
     <section class="message">
 
         <div>
-            <h1><?php _e('You have been unsubscribed!'); ?></h1>
-            <p><?php _e('We hate to see you go. But thanks for beeing with us. And good luck!.'); ?></p>
+            <h1><?php esc_html_e('You have been unsubscribed!', 'mawiblah'); ?></h1>
+            <p><?php esc_html_e('We hate to see you go. But thanks for beeing with us. And good luck!.', 'mawiblah'); ?></p>
         </div>
 
     </section>

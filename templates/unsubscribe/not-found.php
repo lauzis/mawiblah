@@ -18,8 +18,8 @@
     <section class="message">
 
         <div>
-            <h1><?php _e('Could not unsubscribe you!'); ?></h1>
-            <p><?php _e('We could not find you in subscribers list.'); ?></p>
+            <h1><?php esc_html_e('Could not unsubscribe you!', 'mawiblah'); ?></h1>
+            <p><?php esc_html_e('We could not find you in subscribers list.', 'mawiblah'); ?></p>
             <?php if (is_admin()): ?>
                 <pre>
                     <?php print_r($debug); ?>

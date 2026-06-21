@@ -228,4 +228,11 @@ class Renderer
         require MAWIBLAH_PLUGIN_DIR . "/templates/help.php";
         exit;
     }
+
+    /** Renders the log viewer page and exits. */
+    public static function logs()
+    {
+        require MAWIBLAH_PLUGIN_DIR . "/templates/logs.php";
+        exit;
+    }
 }

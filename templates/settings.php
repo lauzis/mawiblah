@@ -18,7 +18,8 @@ use Mawiblah\Settings;
             "analytics",
             "enable-php-log",
             "enable-console-log",
-            "enable-show-on-front"
+            "enable-show-on-front",
+            "enable-file-log",
         ];
 
         $disabled_values = [

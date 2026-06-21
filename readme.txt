@@ -3,7 +3,7 @@ Contributors: lauzis
 Tags: email, newsletter, marketing, mailchimp alternative, subscribers
 Requires at least: 5.0
 Tested up to: 6.9
-Stable tag: 1.0.20
+Stable tag: 1.0.21
 Requires PHP: 8.0
 License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl.html
@@ -68,6 +68,16 @@ Technically yes, but it is not recommended. The plugin sends emails individually
 8. MVP version
 
 == Changelog ==
+
+= 1.0.21 =
+*   Improved: Test page redesigned with WordPress admin UI — postbox layout, checkbox scenario selection, single "Run Tests" button.
+*   Improved: Help page rebuilt with WordPress admin UI — postbox cards, native WP tables, notice callouts.
+*   Improved: Campaigns, Subscribers, and Logs post types moved under the Mawiblah admin menu with full sub-item navigation.
+*   Changed: Logging switched from custom post type to daily log files (mawiblah-YYYY-MM-DD.log) in the uploads directory.
+*   Migration: Existing log post type entries are exported to daily files and deleted from the database on first load after update.
+*   Fixed: Subscription form test scenario incorrectly accessed `WP_REST_Response` as an array; now unwrapped correctly.
+*   Fixed: Click tracking test scenario cleared the PHP session before starting it, causing session store to be restored and first-visit counters to be off by one.
+
 
 = 1.0.20 =
 *   New: "Failing Email" system audience — subscribers are automatically moved here after N failed sends (configurable threshold, default 3) and skipped in all future campaigns.

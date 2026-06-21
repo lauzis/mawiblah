@@ -27,9 +27,24 @@
         }
     ?>
     <p>
-        <?php esc_html_e('Clear all logs, not reversible changes', 'mawiblah'); ?>
-        <?php echo esc_html(sprintf(__('Currently there is %s log entries', 'mawiblah'), \Mawiblah\Logs::getLogCount())); ?>
-    </p>
+        <?php esc_html_e('Deletes all daily log files. Not reversible.', 'mawiblah'); ?>
+        <?php
+        $logFiles = \Mawiblah\Logs::getLogFiles();
+        if ($logFiles) {
+            echo '<ul style="margin-top:8px;">';
+            foreach ($logFiles as $f) {
+                printf(
+                    '<li><code>mawiblah-%s.log</code> — %s %s</li>',
+                    esc_html($f['date']),
+                    esc_html($f['count']),
+                    esc_html__('entries', 'mawiblah')
+                );
+            }
+            echo '</ul>';
+        } else {
+            echo '<p><em>' . esc_html__('No log files found.', 'mawiblah') . '</em></p>';
+        }
+        ?></p>
 
     <form method="post" action="" class="<?= esc_attr(MAWIBLAH_PLUGIN_DIRECTORY_NAME) ?>" autocomplete="off">
         <?php wp_nonce_field('mawiblah_clear_logs', 'mawiblah_clear_logs_nonce'); ?>

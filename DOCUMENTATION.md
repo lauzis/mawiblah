@@ -359,7 +359,7 @@ Control the minimum time between emails sent to the same subscriber to avoid ove
 ### Debugging
 - Enable debugging with IP restrictions
 - Skip actual email sending for testing
-- Database logging toggle
+- **File logging** — when enabled (`enable-db-log` option value, kept for backwards compatibility), log entries are written to daily files at `{uploads}/gae-logs/mawiblah-YYYY-MM-DD.log`. Each entry is a single line: `[timestamp] [action] message | {json context}`. Use the **Actions** page to view file list and clear all logs. Files can also be read directly via SSH or the hosting file manager.
 
 ### Click Timing
 Campaign click times are logged to analyze when subscribers are most active, helping optimize send times.

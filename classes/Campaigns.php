@@ -271,7 +271,7 @@ class Campaigns
             'public'          => false,
             'publicly_queryable' => false,
             'show_ui'         => true,
-            'show_in_menu'    => true,
+            'show_in_menu'    => false,
             'query_var'       => true,
             'rewrite'         => ['slug' => 'mawiblah-campaigns'],
             'capability_type' => 'post',

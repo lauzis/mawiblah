@@ -69,7 +69,9 @@ From creation through test, approval, and final send to all subscribers.
 ```mermaid
 flowchart TD
     A[Admin creates campaign\ntitle · subject · template · audiences] --> B[Campaign saved as WP post]
-    B --> C[testStart\nsets testStarted timestamp]
+    B --> B1{Any testers in\ncampaign audiences?}
+    B1 -- No --> B2[Show error:\nno testers found\nblock test start]
+    B1 -- Yes --> C[testStart\nsets testStarted timestamp]
     C --> D[JS calls REST API per subscriber]
     D --> E{testMode?\ntestStarted AND NOT testApproved}
     E -- Yes --> F{Subscriber is a tester?}

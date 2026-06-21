@@ -144,6 +144,29 @@ class RestRoutes
             ];
         }
         //-----------------------------------------------------
+        // --------------- Failing email address --------------
+        //----------------------------------------------------
+        $failingEmailAudience = Subscribers::failingEmailAudience();
+        $isFailingEmail = $failingEmailAudience
+            && has_term($failingEmailAudience->term_id, Subscribers::postType() . '_category', $subscriberId);
+
+        if ($isFailingEmail) {
+            $emailsSkipped++;
+            Campaigns::updateCounters($campaign, $emailsSent, $emailsFailed, $emailsSkipped, $emailsUnsubed);
+            return [
+                'stats'   => Helpers::emailSendingStats(skipped: 1),
+                'data'    => [
+                    'campaignPostId'  => $campaignPostId,
+                    'subscriberId'    => $subscriberId,
+                    'email'           => $email,
+                    'emailFailCount'  => $subscriber->emailFailCount,
+                ],
+                'status'  => 'ok',
+                'message' => 'Skip, subscriber is in Failing Email audience',
+            ];
+        }
+
+        //-----------------------------------------------------
         // --------------- Already sent email -----------------
         //----------------------------------------------------
         $alreadySent = Subscribers::isEmailSent($subscriberId, $campaignPostId);

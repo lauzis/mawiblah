@@ -264,7 +264,10 @@ class Init
 
         $nonce = wp_create_nonce('wp_rest');
         $inline_script = '
-        var mawiblahNonce = ' . json_encode(['mawiblahNonce' => $nonce]) . ';';
+        var mawiblahNonce = ' . json_encode([
+            'mawiblahNonce'   => $nonce,
+            'campaignListUrl' => esc_url(admin_url('admin.php?page=' . self::MAWIBLAH_CAMPAIGNS)),
+        ]) . ';';
 
         wp_register_script( 'mawiblah-js', '',);
         wp_enqueue_script( 'mawiblah-js' );

@@ -152,8 +152,11 @@ function MAWIBLAH_sendEmail(item, list, totalCount, startingTime) {
     httpPost(url, null, data, function (data) {
       item.innerHTML = data.message;
       if (!lastItem) {
-        item = list.shift()
+        item = list.shift();
         MAWIBLAH_sendEmail(item, list, totalCount, startingTime);
+      } else {
+        var listUrl = mawiblahNonce.campaignListUrl;
+        document.location.href = listUrl;
       }
     }, function () {
       alert("Critical error, will not continue");

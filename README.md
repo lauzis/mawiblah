@@ -70,6 +70,9 @@ The initial version was built by hand. From version 1.0.9 onward, most changes h
 
 ## Change log
 
+### --- 1.0.19 ---
+- **New:** Test start is now blocked when none of the campaign's audiences contain a tester subscriber. A clear error message is shown with a link back to the campaign, preventing an empty test run from being recorded.
+
 ### --- 1.0.18 ---
 - **New:** `List-Unsubscribe` and `List-Unsubscribe-Post: List-Unsubscribe=One-Click` headers added to every campaign email — enables one-click unsubscribe in Gmail, Apple Mail, and other RFC 8058-compliant clients.
 - **New:** `GET|POST /wp-json/mawiblah/v1/unsubscribe` REST endpoint — `POST` immediately unsubscribes (RFC 8058 one-click, used by mail clients); `GET` redirects to the existing confirmation page (used when a human clicks the header link).

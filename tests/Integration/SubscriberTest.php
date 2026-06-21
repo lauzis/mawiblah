@@ -82,6 +82,51 @@ class SubscriberTest extends WP_UnitTestCase
         $this->assertSame($token1, $token2);
     }
 
+    public function test_has_testers_returns_false_with_no_testers(): void
+    {
+        $term = wp_insert_term('No Testers Audience', Subscribers::postType() . '_category');
+        if (is_wp_error($term)) $this->markTestSkipped('Could not create term');
+        $audienceId = $term['term_id'];
+
+        wp_set_object_terms($this->sub->id, $audienceId, Subscribers::postType() . '_category');
+
+        $this->assertFalse(Subscribers::hasTestersInAudiences([$audienceId]));
+
+        wp_delete_term($audienceId, Subscribers::postType() . '_category');
+    }
+
+    public function test_has_testers_returns_true_with_tester_meta(): void
+    {
+        $term = wp_insert_term('Meta Tester Audience', Subscribers::postType() . '_category');
+        if (is_wp_error($term)) $this->markTestSkipped('Could not create term');
+        $audienceId = $term['term_id'];
+
+        wp_set_object_terms($this->sub->id, $audienceId, Subscribers::postType() . '_category');
+        update_post_meta($this->sub->id, 'tester', true);
+
+        $this->assertTrue(Subscribers::hasTestersInAudiences([$audienceId]));
+
+        delete_post_meta($this->sub->id, 'tester');
+        wp_delete_term($audienceId, Subscribers::postType() . '_category');
+    }
+
+    public function test_has_testers_returns_true_via_testers_audience(): void
+    {
+        $testerAudience = Subscribers::testerAudience();
+        $this->assertNotNull($testerAudience);
+
+        wp_set_object_terms($this->sub->id, $testerAudience->term_id, Subscribers::postType() . '_category');
+
+        $this->assertTrue(Subscribers::hasTestersInAudiences([$testerAudience->term_id]));
+
+        wp_remove_object_terms($this->sub->id, $testerAudience->term_id, Subscribers::postType() . '_category');
+    }
+
+    public function test_has_testers_returns_false_for_empty_audience_list(): void
+    {
+        $this->assertFalse(Subscribers::hasTestersInAudiences([]));
+    }
+
     public function test_is_email_sent_flag(): void
     {
         $cId = Campaigns::addCampaign('Sent Flag Test', 'Subj', 'Title', 'Content', [], 'test');

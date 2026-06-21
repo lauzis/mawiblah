@@ -613,11 +613,12 @@ class Subscribers
      * @param int $campaignPostId Campaign post ID.
      * @return bool
      */
-    public static function isEmailSent(int $subscriberId, int $campaignPostId): bool
+    public static function isEmailSent(int $subscriberId, int $campaignPostId, bool $testMode = false): bool
     {
-        $sent = get_post_meta($subscriberId, 'sent_' . $campaignPostId, true);
+        $key  = $testMode ? 'sent_test_' . $campaignPostId : 'sent_' . $campaignPostId;
+        $sent = get_post_meta($subscriberId, $key, true);
 
-        return (bool)$sent;
+        return (bool) $sent;
     }
 
     /**
@@ -717,10 +718,17 @@ class Subscribers
      * @param int $subscriberId   Subscriber post ID.
      * @param int $campaignPostId Campaign post ID.
      */
-    public static function sentEmail(int $subscriberId, int $campaignPostId): void
+    public static function sentEmail(int $subscriberId, int $campaignPostId, bool $testMode = false): void
     {
-        update_post_meta($subscriberId, 'sent_' . $campaignPostId, 'sent');
+        $key = $testMode ? 'sent_test_' . $campaignPostId : 'sent_' . $campaignPostId;
+        update_post_meta($subscriberId, $key, 'sent');
         self::updateLastInteraction($subscriberId);
+    }
+
+    /** Clears the test-send flag for all subscribers for a given campaign. Called by testReset(). */
+    public static function resetTestSent(int $campaignPostId): void
+    {
+        delete_metadata('post', 0, 'sent_test_' . $campaignPostId, '', true);
     }
 
     /**

@@ -13,6 +13,7 @@ class Campaigns
     const STAT_LINKS_CLICKED = 'linksClicked';
 
     // exampel http://gudlenieks.test/?utm_source=email&utm_medium=email&utm_campaign=monthly-email&mawiblahId=%7BmawiblahId%7D&unsubscribe=%7Bemail%7D
+    /** Registers the campaign post type and hooks campaign meta boxes and save handlers. */
     public static function init()
     {
         self::registerPostType();
@@ -20,6 +21,7 @@ class Campaigns
         add_action('save_post', [self::class, 'saveMetaBoxData']);
     }
 
+    /** Registers the Campaign Details and Campaign Statistics meta boxes on the campaign edit screen. */
     public static function addMetaBoxes()
     {
         add_meta_box(
@@ -41,6 +43,11 @@ class Campaigns
         );
     }
 
+    /**
+     * Renders the Campaign Details meta box (audiences, template, subject).
+     *
+     * @param \WP_Post $post The campaign post being edited.
+     */
     public static function renderDetailsMetaBox($post)
     {
         $campaign = self::appendMeta($post);
@@ -48,6 +55,14 @@ class Campaigns
         \Mawiblah\Templates::loadTemplate('campaign/edit-fields.php', $data);
     }
 
+    /**
+     * Saves campaign meta box field values on post save.
+     *
+     * Validates the nonce, skips autosaves and insufficient-capability saves.
+     * Persists subject, contentTitle, template, and audiences as post meta.
+     *
+     * @param int $post_id The post ID being saved.
+     */
     public static function saveMetaBoxData($post_id)
     {
         if (!isset($_POST['mawiblah_campaign_details_nonce'])) {
@@ -86,6 +101,13 @@ class Campaigns
         }
     }
 
+    /**
+     * Renders the Campaign Statistics meta box with raw, conversion, link, day, and hour charts.
+     *
+     * Shows a placeholder message if the campaign has not yet started.
+     *
+     * @param \WP_Post $post The campaign post being viewed.
+     */
     public static function renderStatsMetaBox($post)
     {
         $campaign = self::appendMeta($post);
@@ -121,16 +143,41 @@ class Campaigns
         echo '</div>';
     }
 
+    /**
+     * Permanently deletes a campaign post.
+     *
+     * @param int $campaignPostId Campaign post ID to delete.
+     * @return \WP_Post|false|null Deleted post on success, false or null on failure.
+     */
     public static function deleteCampaign($campaignPostId)
     {
         return wp_delete_post($campaignPostId);
     }
 
+    /**
+     * Returns true if no campaign with the given title exists.
+     *
+     * @param string $title Campaign title to check.
+     * @return bool
+     */
     public static function isUnique($title): bool
     {
         return self::getCampaign($title) == null;
     }
 
+    /**
+     * Validates all required campaign fields.
+     *
+     * Checks that title, subject, audiences, and template are non-empty, that the template
+     * file exists, and that all audience IDs are valid taxonomy terms. Prints an error
+     * message and returns false on the first failure.
+     *
+     * @param string   $title     Campaign title.
+     * @param string   $subject   Email subject line.
+     * @param int[]    $audiences Array of audience term IDs.
+     * @param string   $template  Email template filename.
+     * @return bool True if valid, false otherwise.
+     */
     public static function validateCampaign(string $title, string $subject, array $audiences, string $template): bool
     {
         if (empty($title)) {
@@ -166,6 +213,12 @@ class Campaigns
         return true;
     }
 
+    /**
+     * Returns true if the named email template file exists in any template directory.
+     *
+     * @param string $emailTemplate Template filename without extension.
+     * @return bool
+     */
     public static function validateEmailTemplate(string $emailTemplate): bool
     {
         $template = Templates::getEmailTemplateByName($emailTemplate);
@@ -176,11 +229,13 @@ class Campaigns
         return false;
     }
 
+    /** Returns the custom post type slug for campaigns. */
     public static function postType()
     {
         return MAWIBLAH_POST_TYPE_PREFIX . 'campaigns';
     }
 
+    /** Registers the campaign custom post type with WordPress (admin-only, not public). */
     public static function registerPostType()
     {
 
@@ -212,23 +267,32 @@ class Campaigns
         ];
 
         $args = [
-            'labels' => $labels,
-            'public' => false,
+            'labels'          => $labels,
+            'public'          => false,
             'publicly_queryable' => false,
-            'show_ui' => true,
-            'show_in_menu' => true,
-            'query_var' => true,
-            'rewrite' => ['slug' => 'mawiblah-campaigns'],
+            'show_ui'         => true,
+            'show_in_menu'    => true,
+            'query_var'       => true,
+            'rewrite'         => ['slug' => 'mawiblah-campaigns'],
             'capability_type' => 'post',
-            'has_archive' => false,
-            'hierarchical' => false,
-            'menu_position' => null,
-            'supports' => ['title', 'editor'],
+            'has_archive'     => false,
+            'hierarchical'    => false,
+            'menu_position'   => null,
+            'menu_icon'       => 'dashicons-megaphone',
+            'supports'        => ['title', 'editor'],
         ];
 
         register_post_type(Campaigns::postType(), $args);
     }
 
+    /**
+     * Attaches all campaign meta fields to a post or campaign object.
+     *
+     * Lazily generates and persists a campaignHash if one is not yet stored.
+     *
+     * @param object $post WP_Post or campaign object to decorate.
+     * @return object The same object with all campaign meta properties attached.
+     */
     public static function appendMeta($post)
     {
         $post->id = $post->ID ?? $post->id;
@@ -264,6 +328,12 @@ class Campaigns
         return $post;
     }
 
+    /**
+     * Retrieves a campaign by its WordPress post ID.
+     *
+     * @param int $id Campaign post ID.
+     * @return object|null Campaign with meta attached, or null if not found.
+     */
     public static function getCampaignById($id): object|null
     {
         $wpPost = get_post($id);
@@ -282,6 +352,12 @@ class Campaigns
         return self::appendMeta($campaign);
     }
 
+    /**
+     * Retrieves a campaign by its public campaignHash identifier.
+     *
+     * @param string $campaignHash MD5 hash stored in the campaignHash meta field.
+     * @return object|null Campaign with meta, or null if not found.
+     */
     public static function getCampaignByHash($campaignHash): object|null
     {
         $postByMeta = get_posts([
@@ -298,6 +374,12 @@ class Campaigns
         return self::appendMeta((object)$postByMeta[0]);
     }
 
+    /**
+     * Retrieves a campaign by its exact title.
+     *
+     * @param string $title Campaign title to search for.
+     * @return object|null Campaign with meta, or null if not found.
+     */
     public static function getCampaign($title): object|null
     {
         $wpQuery = new \WP_Query([
@@ -326,6 +408,11 @@ class Campaigns
         return null;
     }
 
+    /**
+     * Returns all campaigns with meta attached.
+     *
+     * @return array Array of campaign objects.
+     */
     public static function getCampaigns(): array
     {
         $wpQuery = new \WP_Query([
@@ -353,6 +440,12 @@ class Campaigns
         return $campaigns;
     }
 
+    /**
+     * Returns the most recently created campaigns, ordered newest first.
+     *
+     * @param int $limit Maximum number of campaigns to return (default 5).
+     * @return array Array of campaign objects with meta attached.
+     */
     public static function getLastCampaigns(int $limit = 5): array
     {
         $wpQuery = new \WP_Query([
@@ -382,6 +475,17 @@ class Campaigns
         return $campaigns;
     }
 
+    /**
+     * Creates a new campaign post with all associated meta fields.
+     *
+     * @param string   $title        Campaign title.
+     * @param string   $subject      Email subject line.
+     * @param string   $contentTitle Internal content title for template placeholders.
+     * @param string   $content      Campaign post content body.
+     * @param int[]    $audiences    Array of audience term IDs.
+     * @param string   $template     Email template filename.
+     * @return int New post ID.
+     */
     public static function addCampaign(string $title, string $subject, string $contentTitle, string $content, array $audiences, string $template): int
     {
 
@@ -409,6 +513,18 @@ class Campaigns
         return $post_id;
     }
 
+    /**
+     * Updates an existing campaign's post fields and meta.
+     *
+     * @param int      $campaignPostId Post ID of the campaign to update.
+     * @param string   $title          New title.
+     * @param string   $subject        New email subject.
+     * @param string   $contentTitle   New content title.
+     * @param string   $content        New post content.
+     * @param int[]    $audiences      New array of audience term IDs.
+     * @param string   $template       New email template filename.
+     * @return int Updated post ID.
+     */
     public static function updateCampaign(int $campaignPostId, string $title, string $subject, string $contentTitle, string $content, array $audiences, string $template): int
     {
         // Prepare the post data
@@ -433,6 +549,7 @@ class Campaigns
     }
 
 
+    /** @deprecated Use getCampaigns() instead. Returns all campaigns as plain associative arrays. */
     public static function getArrayOfCampaigns(): array
     {
         $args = [
@@ -459,6 +576,12 @@ class Campaigns
         return $campaigns;
     }
 
+    /**
+     * Returns campaigns matching the given title as plain associative arrays.
+     *
+     * @param string $name Campaign title to search for.
+     * @return array Array of campaign data arrays.
+     */
     public static function getArrayOfCampaignsByName(string $name): array
     {
         $args = [
@@ -485,6 +608,11 @@ class Campaigns
         return $campaigns;
     }
 
+    /**
+     * Permanently deletes all campaigns matching the given title.
+     *
+     * @param string $name Campaign title to match.
+     */
     public static function deleteCampaignByName(string $name)
     {
 
@@ -504,6 +632,16 @@ class Campaigns
         }
     }
 
+    /**
+     * Archives the campaign template snapshot and returns the processed HTML ready for sending.
+     *
+     * Sets the campaign status to 'sending-in-progress', fetches and archives the template
+     * via REST (for WPML compatibility), evaluates shortcodes, and fills static placeholders.
+     *
+     * @param object $campaign  Campaign object with meta attached.
+     * @param bool   $testMode  When true, always refreshes the archived template copy.
+     * @return string|false Processed HTML, or false if the template could not be retrieved.
+     */
     public static function lockTemplate(object $campaign, bool $testMode): string|bool
     {
 
@@ -526,6 +664,17 @@ class Campaigns
     }
 
 
+    /**
+     * Replaces per-subscriber placeholders in a template with actual values.
+     *
+     * Handles {campaignHash}, {subscriberHash}, {email} and their URL-encoded equivalents.
+     * Called once per email just before sending.
+     *
+     * @param string $template   Template HTML (typically from lockTemplate()).
+     * @param object $campaign   Campaign object.
+     * @param object $subscriber Subscriber object.
+     * @return string Personalised HTML ready to send.
+     */
     public static function fillTemplate(string $template, object $campaign, object $subscriber): string
     {
         $email = $subscriber->email;
@@ -545,6 +694,15 @@ class Campaigns
         return $templateHTML;
     }
 
+    /**
+     * Persists the four main email-send counters for a campaign.
+     *
+     * @param object $campaign       Campaign object.
+     * @param int    $emailsSent     Total successfully sent emails.
+     * @param int    $emailsFailed   Total failed sends.
+     * @param int    $emailsSkipped  Total skipped sends.
+     * @param int    $emailsUnsubed  Total sends skipped due to unsubscription.
+     */
     public static function updateCounters(object $campaign, int $emailsSent, int $emailsFailed, int $emailsSkipped, int $emailsUnsubed): void
     {
 
@@ -555,6 +713,12 @@ class Campaigns
         update_post_meta($campaignPostId, 'emailsUnsubed', $emailsUnsubed);
     }
 
+    /**
+     * Returns the current email-send counters for a campaign.
+     *
+     * @param object $campaign Campaign object with an id property.
+     * @return object Object with emailsSend, emailsFailed, emailsSkipped, emailsUnsubed, emailsNewlyUnsubed.
+     */
     public static function getCounters(object $campaign): object
     {
         return (object)[
@@ -566,6 +730,11 @@ class Campaigns
         ];
     }
 
+    /**
+     * Increments the newly-unsubscribed counter and appends the current timestamp for attribution.
+     *
+     * @param int $campaignPostId Campaign post ID.
+     */
     public static function incrementNewlyUnsubed(int $campaignPostId): void
     {
         $campaign = self::getCampaignById($campaignPostId);
@@ -576,6 +745,16 @@ class Campaigns
         }
     }
 
+    /**
+     * Records a link click for a campaign URL, updating all three click counters.
+     *
+     * Always increments linksClickedTotal. Increments linksClicked and uniqueUserClicks
+     * only when the session doesn't already carry them (prevents double-counting per session).
+     *
+     * @param string $campaignHash Campaign identifier hash.
+     * @param string $url          The URL that was clicked.
+     * @return int Updated per-session click count, or 0 if campaign not found.
+     */
     public static function linkCLicked(string $campaignHash, string $url): int
     {
         $campaign = self::getCampaignByHash($campaignHash);
@@ -622,6 +801,12 @@ class Campaigns
         return $newCount;
     }
 
+    /**
+     * Returns click counts grouped by day of week for a single campaign.
+     *
+     * @param int $campaignPostId Campaign post ID.
+     * @return array Map of weekday name to click count.
+     */
     public static function getClickTimesByDayOfWeek(int $campaignPostId): array
     {
         $campaign = self::getCampaignById($campaignPostId);
@@ -663,6 +848,12 @@ class Campaigns
         return $dayStats;
     }
 
+    /**
+     * Returns aggregated click counts grouped by day of week across the last N campaigns.
+     *
+     * @param int $limit Number of recent campaigns to include (default 12).
+     * @return array Map of weekday name to total click count.
+     */
     public static function getClickTimesByDayOfWeekForLastCampaigns(int $limit = 12): array
     {
         $campaigns = self::getLastCampaigns($limit);
@@ -692,6 +883,12 @@ class Campaigns
         return $dayStats;
     }
 
+    /**
+     * Returns click counts grouped by hour of day (0–23) for a single campaign.
+     *
+     * @param int $campaignPostId Campaign post ID.
+     * @return array Map of hour integer to click count.
+     */
     public static function getClickTimesByHourOfDay(int $campaignPostId): array
     {
         $campaign = self::getCampaignById($campaignPostId);
@@ -725,6 +922,12 @@ class Campaigns
         return $hourStats;
     }
 
+    /**
+     * Returns aggregated click counts grouped by hour of day across the last N campaigns.
+     *
+     * @param int $limit Number of recent campaigns to include (default 12).
+     * @return array Map of hour integer (0–23) to total click count.
+     */
     public static function getClickTimesByHourOfDayForLastCampaigns(int $limit = 12): array
     {
         $campaigns = self::getLastCampaigns($limit);
@@ -749,6 +952,14 @@ class Campaigns
         return $hourStats;
     }
 
+    /**
+     * Returns campaign start counts grouped by day of week for the last N campaigns.
+     *
+     * Used alongside getClickTimesByDayOfWeekForLastCampaigns() to compute the activity rating.
+     *
+     * @param int $limit Number of recent campaigns to include (default 12).
+     * @return array Map of weekday name to campaign start count.
+     */
     public static function getCampaignStartTimesByDayOfWeek(int $limit = 12): array
     {
         $campaigns = self::getLastCampaigns($limit);
@@ -775,6 +986,11 @@ class Campaigns
         return $dayStats;
     }
 
+    /**
+     * Starts the test phase: syncs unsubscribe status, records the start timestamp, and resets counters.
+     *
+     * @param int $campaignPostId Campaign post ID.
+     */
     public static function testStart(int $campaignPostId): void
     {
         Subscribers::syncUnsubscribeStatus();
@@ -782,16 +998,31 @@ class Campaigns
         self::resetCounters($campaignPostId);
     }
 
+    /**
+     * Records the test phase completion timestamp.
+     *
+     * @param int $campaignPostId Campaign post ID.
+     */
     public static function testFinish(int $campaignPostId): void
     {
         update_post_meta($campaignPostId, 'testFinished', time());
     }
 
+    /**
+     * Approves the test phase, allowing the campaign to proceed to full send.
+     *
+     * @param int $campaignPostId Campaign post ID.
+     */
     public static function testApprove(int $campaignPostId): void
     {
         update_post_meta($campaignPostId, 'testApproved', time());
     }
 
+    /**
+     * Clears all test-phase timestamps so the campaign can be re-tested from scratch.
+     *
+     * @param int $campaignPostId Campaign post ID.
+     */
     public static function testReset(int $campaignPostId): void
     {
         update_post_meta($campaignPostId, 'testStarted', false);
@@ -799,6 +1030,13 @@ class Campaigns
         update_post_meta($campaignPostId, 'testApproved', false);
     }
 
+    /**
+     * Starts the full campaign send: resets counters and records the start timestamp.
+     *
+     * Guard: does nothing if campaignStarted is already set, preventing double-start.
+     *
+     * @param int $campaignPostId Campaign post ID.
+     */
     public static function campaignStart(int $campaignPostId): void
     {
         $campaign = self::getCampaignById($campaignPostId);
@@ -808,11 +1046,23 @@ class Campaigns
         }
     }
 
+    /**
+     * Records the campaign send completion timestamp.
+     *
+     * @param int $campaignPostId Campaign post ID.
+     */
     public static function campaignFinish(int $campaignPostId): void
     {
         update_post_meta($campaignPostId, 'campaignFinished', time());
     }
 
+    /**
+     * Zeros all email-send and click counters for a campaign.
+     *
+     * Called at the start of each test phase and production send to ensure a clean slate.
+     *
+     * @param int $campaignPostId Campaign post ID.
+     */
     public static function resetCounters(int $campaignPostId): void
     {
         update_post_meta($campaignPostId, 'emailsSend', 0);
@@ -825,6 +1075,14 @@ class Campaigns
         update_post_meta($campaignPostId, 'uniqueUserClicks', 0);
     }
 
+    /**
+     * Returns raw email-send and click stats for a campaign, formatted for bar-chart templates.
+     *
+     * Each stat key maps to an array of numeric values (one element per campaign in the input).
+     *
+     * @param object $campaign Campaign object with meta attached.
+     * @return array<string, int[]> Map of STAT_* constant to single-element numeric array.
+     */
     public static function getStatsForCampaign(object $campaign): array
     {
         $lastCampaigns = [$campaign];
@@ -858,6 +1116,15 @@ class Campaigns
         ];
     }
 
+    /**
+     * Returns percentage-based conversion stats for a campaign, formatted for bar-chart templates.
+     *
+     * Normalises each stat as a percentage of total attempted sends to allow comparison across
+     * campaigns with different list sizes.
+     *
+     * @param object $campaign Campaign object with meta attached.
+     * @return array<string, float[]> Map of STAT_* constant to single-element percentage array.
+     */
     public static function getConversionStatsForCampaign(object $campaign): array
     {
         $lastCampaigns = [$campaign];
@@ -902,6 +1169,12 @@ class Campaigns
         ];
     }
 
+    /**
+     * Returns raw email-send stats for the last N campaigns, formatted for dashboard bar charts.
+     *
+     * @param int $limit Number of recent campaigns to include.
+     * @return array<string, int[]> Map of STAT_* constant to array of values (one per campaign).
+     */
     public static function getDataForDashBoard(int $limit): array
     {
         $lastCampaigns = Campaigns::getLastCampaigns($limit);
@@ -935,6 +1208,12 @@ class Campaigns
         ];
     }
 
+    /**
+     * Returns percentage-based conversion stats for the last N campaigns, formatted for dashboard bar charts.
+     *
+     * @param int $limit Number of recent campaigns to include.
+     * @return array<string, float[]> Map of STAT_* constant to array of percentages (one per campaign).
+     */
     public static function getDataForDashBoardConversionRate(int $limit): array
     {
         $lastCampaigns = Campaigns::getLastCampaigns($limit);
@@ -979,6 +1258,14 @@ class Campaigns
         ];
     }
 
+    /**
+     * Returns monthly unsubscribe counts for the given number of past months.
+     *
+     * Counts unsubscribe events by reading unsub_time meta entries on campaign posts.
+     *
+     * @param int $months Number of months to look back (default 12).
+     * @return array Map of "Mon YYYY" label to unsubscribe count.
+     */
     public static function getUnsubscribeGrowthStats(int $months = 12): array
     {
         $stats = [];

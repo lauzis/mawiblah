@@ -6,21 +6,26 @@ class Logs
 {
 
     // exampel http://gudlenieks.test/?utm_source=email&utm_medium=email&utm_campaign=monthly-email&mawiblahId=%7BmawiblahId%7D&unsubscribe=%7Bemail%7D
+
+    /** Registers the log custom post type on init. */
     public static function init()
     {
         self::registerPostType();
     }
 
+    /** Returns true when database logging is enabled in Settings (debug mode set to "enable-db-log"). */
     public static function enabled()
     {
         return get_option('mawiblah-debug', false) === 'enable-db-log';
     }
 
+    /** Returns the custom post type slug for log entries. */
     public static function postType()
     {
         return MAWIBLAH_POST_TYPE_PREFIX . 'log';
     }
 
+    /** Registers the log custom post type with WordPress (admin-only, not public). */
     public static function registerPostType()
     {
 
@@ -39,36 +44,45 @@ class Logs
             'parent_item_colon' => __('Parent Logs:', 'mawiblah'),
             'not_found' => __('No Logs found.', 'mawiblah'),
             'not_found_in_trash' => __('No Logs found in Trash.', 'mawiblah'),
-            'featured_image' => _x('Log Cover Image', 'Overrides the “Featured Image” phrase for this post type. Added in 4.3', 'mawiblah'),
-            'set_featured_image' => _x('Set cover image', 'Overrides the “Set featured image” phrase for this post type. Added in 4.3', 'mawiblah'),
-            'remove_featured_image' => _x('Remove cover image', 'Overrides the “Remove featured image” phrase for this post type. Added in 4.3', 'mawiblah'),
-            'use_featured_image' => _x('Use as cover image', 'Overrides the “Use as featured image” phrase for this post type. Added in 4.3', 'mawiblah'),
-            'archives' => _x('Log archives', 'The post type archive label used in nav menus. Default “Post Archives”. Added in 4.4', 'mawiblah'),
-            'insert_into_item' => _x('Insert into Log', 'Overrides the “Insert into post”/“Insert into page” phrase (used when inserting media into a post). Added in 4.4', 'mawiblah'),
-            'uploaded_to_this_item' => _x('Uploaded to this Log', 'Overrides the “Uploaded to this post”/“Uploaded to this page” phrase (used when viewing media attached to a post). Added in 4.4', 'mawiblah'),
-            'filter_items_list' => _x('Filter Logs list', 'Screen reader text for the filter links heading on the post type listing screen. Default “Filter posts list”/“Filter pages list”. Added in 4.4', 'mawiblah'),
-            'items_list_navigation' => _x('Logs list navigation', 'Screen reader text for the pagination heading on the post type listing screen. Default “Posts list navigation”/“Pages list navigation”. Added in 4.4', 'mawiblah'),
-            'items_list' => _x('Logs list', 'Screen reader text for the items list heading on the post type listing screen. Default “Posts list”/“Pages list”. Added in 4.4', 'mawiblah'),
+            'featured_image' => _x('Log Cover Image', 'Overrides the "Featured Image" phrase for this post type. Added in 4.3', 'mawiblah'),
+            'set_featured_image' => _x('Set cover image', 'Overrides the "Set featured image" phrase for this post type. Added in 4.3', 'mawiblah'),
+            'remove_featured_image' => _x('Remove cover image', 'Overrides the "Remove featured image" phrase for this post type. Added in 4.3', 'mawiblah'),
+            'use_featured_image' => _x('Use as cover image', 'Overrides the "Use as featured image" phrase for this post type. Added in 4.3', 'mawiblah'),
+            'archives' => _x('Log archives', 'The post type archive label used in nav menus. Default "Post Archives". Added in 4.4', 'mawiblah'),
+            'insert_into_item' => _x('Insert into Log', 'Overrides the "Insert into post"/"Insert into page" phrase (used when inserting media into a post). Added in 4.4', 'mawiblah'),
+            'uploaded_to_this_item' => _x('Uploaded to this Log', 'Overrides the "Uploaded to this post"/"Uploaded to this page" phrase (used when viewing media attached to a post). Added in 4.4', 'mawiblah'),
+            'filter_items_list' => _x('Filter Logs list', 'Screen reader text for the filter links heading on the post type listing screen. Default "Filter posts list"/"Filter pages list". Added in 4.4', 'mawiblah'),
+            'items_list_navigation' => _x('Logs list navigation', 'Screen reader text for the pagination heading on the post type listing screen. Default "Posts list navigation"/"Pages list navigation". Added in 4.4', 'mawiblah'),
+            'items_list' => _x('Logs list', 'Screen reader text for the items list heading on the post type listing screen. Default "Posts list"/"Pages list". Added in 4.4', 'mawiblah'),
         ];
 
         $args = [
-            'labels' => $labels,
-            'public' => false,
+            'labels'          => $labels,
+            'public'          => false,
             'publicly_queryable' => false,
-            'show_ui' => true,
-            'show_in_menu' => true,
-            'query_var' => true,
-            'rewrite' => ['slug' => 'mawiblah-log'],
+            'show_ui'         => true,
+            'show_in_menu'    => true,
+            'query_var'       => true,
+            'rewrite'         => ['slug' => 'mawiblah-log'],
             'capability_type' => 'post',
-            'has_archive' => false,
-            'hierarchical' => false,
-            'menu_position' => null,
-            'supports' => ['title', 'editor'],
+            'has_archive'     => false,
+            'hierarchical'    => false,
+            'menu_position'   => null,
+            'menu_icon'       => 'dashicons-list-view',
+            'supports'        => ['title', 'editor'],
         ];
 
         register_post_type(Logs::postType(), $args);
     }
 
+    /**
+     * Attaches log meta fields to a WP_Post object.
+     *
+     * Lazily generates a logId hash if one is not yet stored.
+     *
+     * @param object $post WP_Post instance.
+     * @return object The same post object with meta properties attached.
+     */
     public static function appendMeta($post)
     {
         $post->id = $post->ID;
@@ -88,6 +102,12 @@ class Logs
         return $post;
     }
 
+    /**
+     * Retrieves a single log entry by its WordPress post ID.
+     *
+     * @param int $id Post ID of the log entry.
+     * @return object|null Log object with meta, or null if not found.
+     */
     public static function getLog($id): object|null
     {
         $logById = get_post($id);
@@ -97,6 +117,17 @@ class Logs
         return null;
     }
 
+    /**
+     * Creates a new log entry if database logging is enabled.
+     *
+     * Additional objects are serialised as HTML into the post content for easy inspection
+     * in the WordPress admin.
+     *
+     * @param string $action            Short label stored as the post title.
+     * @param string $message           Human-readable message for the post content.
+     * @param array  $additionalObjects Key-value map of objects to append to the content.
+     * @return object|false New log object on success, false if logging is disabled or insert fails.
+     */
     public static function addLog(string $action, string $message = "", $additionalObjects = []): object|false
     {
         if (!self::enabled()) {
@@ -126,6 +157,13 @@ class Logs
         return false;
     }
 
+    /**
+     * Permanently deletes all log entries.
+     *
+     * Returns false immediately if logging is disabled.
+     *
+     * @return bool True on success, false if logging is disabled.
+     */
     public static function clearLogs(): bool
     {
         if (!self::enabled()) {
@@ -147,6 +185,13 @@ class Logs
         return true;
     }
 
+    /**
+     * Returns the total number of stored log entries.
+     *
+     * Returns 0 if logging is disabled.
+     *
+     * @return int Number of log entries.
+     */
     public static function getLogCount(): int
     {
         if (!self::enabled()) {

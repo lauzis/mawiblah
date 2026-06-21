@@ -6,6 +6,7 @@ class Subscribers
 {
 
     // exampel http://gudlenieks.test/?utm_source=email&utm_medium=email&utm_campaign=monthly-email&mawiblahId=%7BmawiblahId%7D&unsubscribe=%7Bemail%7D
+    /** Registers the subscriber post type, ensures default audiences exist, and adds admin meta boxes. */
     public static function init()
     {
         self::registerPostType();
@@ -13,12 +14,14 @@ class Subscribers
         add_action('add_meta_boxes', [self::class, 'addMetaBoxes']);
     }
 
+    /** Creates the Unsubed and Testers audiences if they do not already exist. */
     public static function ensureDefaultAudiences(): void
     {
         self::unsubedAudience();
         self::testerAudience();
     }
 
+    /** Registers the subscriber metadata meta box on the subscriber edit screen. */
     public static function addMetaBoxes()
     {
 
@@ -32,6 +35,11 @@ class Subscribers
         );
     }
 
+    /**
+     * Renders the subscriber metadata meta box content in the WP admin.
+     *
+     * @param \WP_Post $post The subscriber post being edited.
+     */
     public static function renderMetaData($post)
     {
         // Add your custom output here
@@ -44,11 +52,13 @@ class Subscribers
         echo '</div>';
     }
 
+    /** Returns the custom post type slug for subscribers. */
     public static function postType()
     {
         return MAWIBLAH_POST_TYPE_PREFIX . 'subscriber';
     }
 
+    /** Registers the subscriber custom post type and its audience taxonomy with WordPress. */
     public static function registerPostType()
     {
 
@@ -80,18 +90,19 @@ class Subscribers
         ];
 
         $args = [
-            'labels' => $labels,
-            'public' => false,
+            'labels'          => $labels,
+            'public'          => false,
             'publicly_queryable' => false,
-            'show_ui' => true,
-            'show_in_menu' => true,
-            'query_var' => true,
-            'rewrite' => ['slug' => 'mawiblah-subscriber'],
+            'show_ui'         => true,
+            'show_in_menu'    => true,
+            'query_var'       => true,
+            'rewrite'         => ['slug' => 'mawiblah-subscriber'],
             'capability_type' => 'post',
-            'has_archive' => false,
-            'hierarchical' => false,
-            'menu_position' => null,
-            'supports' => ['title'],
+            'has_archive'     => false,
+            'hierarchical'    => false,
+            'menu_position'   => null,
+            'menu_icon'       => 'dashicons-groups',
+            'supports'        => ['title'],
         ];
 
         register_post_type(Subscribers::postType(), $args);
@@ -123,6 +134,7 @@ class Subscribers
         register_taxonomy(Subscribers::postType() . '_category', [Subscribers::postType()], $taxonomy_args);
     }
 
+    /** Returns the map of subscriber meta keys and their default values. */
     public static function getMetaKeys()
     {
         return [
@@ -161,12 +173,20 @@ class Subscribers
         ];
     }
 
+    /**
+     * Attaches all subscriber meta fields to a WP_Post object.
+     *
+     * Lazily generates and persists a subscriberHash if one is not yet stored.
+     *
+     * @param object|null $post WP_Post instance to decorate.
+     * @return object|null The decorated post, or null if $post was null.
+     */
     public static function appendMeta($post)
     {
         if (!$post) {
             return null;
         }
-        
+
         $post->id = $post->ID ?? $post->id;
         $post->email = get_post_meta($post->id, 'email', true);
         $post->subscriberHash = get_post_meta($post->id, 'subscriberHash', true);
@@ -186,6 +206,12 @@ class Subscribers
         return $post;
     }
 
+    /**
+     * Returns a flat map of all subscriber meta key-value pairs for a given post ID.
+     *
+     * @param int $postId Subscriber post ID.
+     * @return array Map of meta key to meta value.
+     */
     public static function getMetaData($postId)
     {
         $metaKeys = self::getMetaKeys();
@@ -196,6 +222,12 @@ class Subscribers
         return $metaData;
     }
 
+    /**
+     * Finds a subscriber by email address.
+     *
+     * @param string $email Email address to look up.
+     * @return object|null Subscriber object with meta attached, or null if not found.
+     */
     public static function getSubscriber($email): object|null
     {
         $subscriber = get_posts([
@@ -216,6 +248,14 @@ class Subscribers
         return null;
     }
 
+    /**
+     * Attaches meta fields to an audience term object.
+     *
+     * Lazily generates and stores the audienceHash (MD5 of term_id) if not yet present.
+     *
+     * @param object $audience WP_Term object to decorate.
+     * @return object The decorated term with gravityFormsId, lastSyncDate, id, and audienceHash.
+     */
     static function appendAudienceMeta($audience)
     {
         $audience->gravityFormsId = get_term_meta($audience->term_id, 'gravityFormsId', true);
@@ -232,6 +272,12 @@ class Subscribers
         return $audience;
     }
 
+    /**
+     * Finds an audience term by its audienceHash.
+     *
+     * @param string $audienceHash MD5 audience hash.
+     * @return object|null Audience term with meta, or null if not found.
+     */
     public static function getAudienceByHash(string $audienceHash): ?object
     {
         $audiences = self::getAllAudiences();
@@ -243,6 +289,12 @@ class Subscribers
         return null;
     }
 
+    /**
+     * Returns a single audience term with meta attached, looked up by its term ID.
+     *
+     * @param int $audienceId Taxonomy term ID.
+     * @return object|null Audience term with meta, or null if not found.
+     */
     public static function getAudience($audienceId)
     {
         $audience = get_term($audienceId, Subscribers::postType() . '_category');
@@ -254,6 +306,14 @@ class Subscribers
         return null;
     }
 
+    /**
+     * Returns all subscriber audience terms, each decorated with meta (including audienceHash).
+     *
+     * System audiences (Unsubed, Testers) are included; callers that need only user-facing
+     * audiences should filter them out.
+     *
+     * @return array Array of decorated audience term objects.
+     */
     public static function getAllAudiences(): array
     {
         $audiences = get_terms([
@@ -273,6 +333,12 @@ class Subscribers
         return $result;
     }
 
+    /**
+     * Returns all subscribers belonging to a specific audience.
+     *
+     * @param int $audienceId Audience taxonomy term ID.
+     * @return array Array of subscriber objects with meta attached.
+     */
     public static function getSubscribersByAudience(int $audienceId): array
     {
         $args = [
@@ -305,6 +371,13 @@ class Subscribers
         return $subscribers;
     }
 
+    /**
+     * Creates a new subscriber with the given email, or returns the existing one if the email already exists.
+     *
+     * @param string $email          Email address of the subscriber.
+     * @param string $subscriberHash Optional pre-computed hash; auto-generated if empty.
+     * @return object Subscriber object with meta attached.
+     */
     public static function addSubscriber(string $email, string $subscriberHash = ""): object
     {
         $existing = self::getSubscriber($email);
@@ -334,6 +407,15 @@ class Subscribers
         return self::getSubscriber($email);
     }
 
+    /**
+     * Returns the unsubscribe token for a subscriber, generating and persisting it if not yet set.
+     *
+     * The token is an MD5 of the subscriber's post ID and email address.
+     *
+     * @param string|int $subId    Subscriber post ID (or email if ID is unknown).
+     * @param string     $subEmail Subscriber email, used for lookup when ID is unavailable.
+     * @return string Unsubscribe token.
+     */
     public static function getUnsubToken(string|int $subId, string $subEmail = "")
     {
         $id = $subId;
@@ -352,6 +434,17 @@ class Subscribers
 
     }
 
+    /**
+     * Marks a subscriber as unsubscribed after validating their token.
+     *
+     * Sets the unsubed flag, stores the feedback, adds them to the Unsubed audience,
+     * and records the unsubscribe timestamp.
+     *
+     * @param string $email      Subscriber email address.
+     * @param string $unsubToken Token from the confirmation URL.
+     * @param string $feedback   Optional feedback reason provided by the subscriber.
+     * @return bool True on success, false if the token does not match.
+     */
     public static function unsub($email, $unsubToken, $feedback)
     {
         $subscriber = self::getSubscriber($email);
@@ -372,6 +465,12 @@ class Subscribers
         }
     }
 
+    /**
+     * Returns true if all given audience IDs exist as valid taxonomy terms.
+     *
+     * @param int[] $audiences Array of audience term IDs to validate.
+     * @return bool False if the array is empty or any ID is not a valid term.
+     */
     public static function validateAudiences(array $audiences): bool
     {
         if (empty($audiences)) {
@@ -392,6 +491,14 @@ class Subscribers
         return true;
     }
 
+    /**
+     * Returns the audience term linked to a Gravity Forms form ID, creating it if needed.
+     *
+     * @param int    $gravityFormId The Gravity Forms form ID.
+     * @param string $title         Title for a new audience if one needs to be created.
+     * @param string $description   Description for a new audience.
+     * @return object|null Audience term with meta, or null if not found and no title was provided.
+     */
     public static function getGFAudience($gravityFormId, $title = "", $description = ""): object|null
     {
         $listOfTaxanomies = get_terms([
@@ -417,6 +524,14 @@ class Subscribers
     }
 
     // to do check this return types...
+    /**
+     * Creates a new audience taxonomy term and optionally links it to a Gravity Forms form.
+     *
+     * @param string $title         Audience name.
+     * @param string $description   Audience description.
+     * @param int    $gravityFormsId Gravity Forms form ID to link (0 for none).
+     * @return array|object|null New term data with meta, or null on failure.
+     */
     public static function createAudience($title, $description, $gravityFormsId): array|object|null
     {
         $term = wp_insert_term($title, Subscribers::postType() . '_category', ['description' => $description]);
@@ -426,6 +541,14 @@ class Subscribers
         return self::appendAudienceMeta((object)$term);
     }
 
+    /**
+     * Assigns a subscriber to an audience and syncs the unsubed meta flag when appropriate.
+     *
+     * Adding to the Unsubed audience also sets unsubed=true on the subscriber post.
+     *
+     * @param int $subscriberId Subscriber post ID.
+     * @param int $audienceId   Audience taxonomy term ID.
+     */
     public static function addSubscriberToAudience(int $subscriberId, int $audienceId): void
     {
         wp_set_post_terms($subscriberId, $audienceId, Subscribers::postType() . '_category', true);
@@ -442,6 +565,12 @@ class Subscribers
         }
     }
 
+    /**
+     * Returns true if the given email appears in the Mailchimp unsubscribed CSV import file.
+     *
+     * @param string $email Email address to check.
+     * @return bool True if the email is in the Mailchimp unsub list, false otherwise.
+     */
     public static function checkMailchimpUnsubedAudience($email): bool
     {
         // load file
@@ -461,6 +590,7 @@ class Subscribers
         return false;
     }
 
+    /** Returns the "Unsubed" system audience term, creating it if it does not exist. */
     public static function unsubedAudience()
     {
         $term = get_term_by('name', 'Unsubed', Subscribers::postType() . '_category');
@@ -474,6 +604,13 @@ class Subscribers
         return $term;
     }
 
+    /**
+     * Returns true if a campaign email has already been sent to this subscriber.
+     *
+     * @param int $subscriberId   Subscriber post ID.
+     * @param int $campaignPostId Campaign post ID.
+     * @return bool
+     */
     public static function isEmailSent(int $subscriberId, int $campaignPostId): bool
     {
         $sent = get_post_meta($subscriberId, 'sent_' . $campaignPostId, true);
@@ -481,6 +618,12 @@ class Subscribers
         return (bool)$sent;
     }
 
+    /**
+     * Returns true if the subscriber is flagged as a tester (either via meta or Testers audience membership).
+     *
+     * @param object $subscriber Subscriber object with meta and audiences attached.
+     * @return bool
+     */
     public static function isTester($subscriber): bool
     {
         $testerFlag = get_post_meta($subscriber->id, 'tester', true);
@@ -497,6 +640,7 @@ class Subscribers
         return $testerFlag || $inTesterAudience;
     }
 
+    /** Returns the "Testers" system audience term, creating it if it does not exist. */
     public static function testerAudience()
     {
         $term = get_term_by('name', 'Testers', Subscribers::postType() . '_category');
@@ -510,6 +654,12 @@ class Subscribers
         return $term;
     }
 
+    /**
+     * Updates the subscriber's last interaction timestamp, setting first interaction if not yet recorded.
+     *
+     * @param int      $subscriberId    Subscriber post ID.
+     * @param int|null $interactionDate Unix timestamp; defaults to now.
+     */
     public static function updateLastInteraction(int $subscriberId, int|null $interactionDate = null): void
     {
         $interactionDate = $interactionDate ?? time();
@@ -529,22 +679,46 @@ class Subscribers
         update_post_meta($subscriberId, 'lastInteraction', $interactionDate);
     }
 
+    /**
+     * Marks an email send as in-progress for a subscriber/campaign pair.
+     *
+     * @param int $subscriberId   Subscriber post ID.
+     * @param int $campaignPostId Campaign post ID.
+     */
     public static function sendingEmail(int $subscriberId, int $campaignPostId): void
     {
         update_post_meta($subscriberId, 'sent_' . $campaignPostId, 'sending');
     }
 
+    /**
+     * Marks an email as successfully sent and updates the last interaction timestamp.
+     *
+     * @param int $subscriberId   Subscriber post ID.
+     * @param int $campaignPostId Campaign post ID.
+     */
     public static function sentEmail(int $subscriberId, int $campaignPostId): void
     {
         update_post_meta($subscriberId, 'sent_' . $campaignPostId, 'sent');
         self::updateLastInteraction($subscriberId);
     }
 
+    /**
+     * Marks an email send as failed for a subscriber/campaign pair.
+     *
+     * @param int $subscriberId   Subscriber post ID.
+     * @param int $campaignPostId Campaign post ID.
+     */
     public static function sentEmailFailed(int $subscriberId, int $campaignPostId): void
     {
         update_post_meta($subscriberId, 'sent_' . $campaignPostId, 'failed');
     }
 
+    /**
+     * Retrieves a subscriber by their WordPress post ID.
+     *
+     * @param int $id Subscriber post ID.
+     * @return object|null Subscriber with meta, or null if not found.
+     */
     public static function getSubscriberById(int $id): object|null
     {
 
@@ -555,6 +729,12 @@ class Subscribers
         return null;
     }
 
+    /**
+     * Retrieves a subscriber by their public subscriberHash identifier.
+     *
+     * @param string $subscriberHash MD5 hash stored in the subscriberHash meta field.
+     * @return object|null Subscriber with meta, or null if not found.
+     */
     public static function getSubscriberBySubscriberHash(string $subscriberHash)
     {
 
@@ -576,6 +756,13 @@ class Subscribers
         return self::appendMeta($postsByMeta[0]);
     }
 
+    /**
+     * Increments the subscriber's total activity counter and, when not already counted in
+     * the current session, the per-session activity counter.
+     *
+     * @param string $subscriberHash Subscriber identifier hash.
+     * @return int|null Updated per-session activity count, or null if subscriber not found.
+     */
     public static function linksClicked($subscriberHash)
     {
         $subscriber = self::getSubscriberBySubscriberHash($subscriberHash);
@@ -609,6 +796,12 @@ class Subscribers
      * @param string|null $date Optional date to set if no last sync date exists
      * @return string|false The last sync date or false if not found and no date was provided
      */
+    /**
+     * Returns the Unix timestamp of the last sync for an audience, initialising it to now if absent.
+     *
+     * @param int $audienceId Audience taxonomy term ID.
+     * @return int|false Unix timestamp, or false on failure.
+     */
     public static function getLastSyncDate(int $audienceId): int|false
     {
         $lastSyncDate = get_term_meta($audienceId, 'lastSyncDate', true);
@@ -622,16 +815,34 @@ class Subscribers
         return $lastSyncDate;
     }
 
+    /**
+     * Persists the last sync date for a Gravity Forms-linked audience.
+     *
+     * @param int $audienceId Audience taxonomy term ID.
+     * @param int $date       Unix timestamp of the most recent Gravity Forms entry.
+     */
     public static function updateLastSyncDate(int $audienceId, int $date):void
     {
         update_term_meta($audienceId, 'lastSyncDate', $date);
     }
 
+    /**
+     * Sets the first interaction timestamp for a subscriber.
+     *
+     * @param int $subscriberId Subscriber post ID.
+     * @param int $time         Unix timestamp.
+     */
     public static function updateFirstInteraction(int $subscriberId, int $time):void
     {
         update_post_meta($subscriberId, 'firstInteraction', $time);
     }
 
+    /**
+     * Returns monthly subscriber growth counts for the given number of past months.
+     *
+     * @param int $months Number of months to look back (default 12).
+     * @return array Map of "Mon YYYY" label to new subscriber count.
+     */
     public static function getSubscriberGrowthStats(int $months = 12): array
     {
         global $wpdb;
@@ -671,6 +882,12 @@ class Subscribers
         return $formattedStats;
     }
 
+    /**
+     * Bidirectionally synchronises the unsubed meta flag and the Unsubed audience membership.
+     *
+     * Subscribers in the Unsubed audience get unsubed=true; subscribers with unsubed=true
+     * get added to the Unsubed audience. Runs as a maintenance utility.
+     */
     public static function syncUnsubscribeStatus(): void
     {
         $unsubedAudience = self::unsubedAudience();
@@ -728,6 +945,12 @@ class Subscribers
         }
     }
 
+    /**
+     * Returns the most recent unsubscribe feedback entries.
+     *
+     * @param int $limit Maximum number of entries to return (default 20).
+     * @return array Array of ['feedback' => string, 'date' => string] maps, newest first.
+     */
     public static function getUnsubscribeReasons(int $limit = 20): array
     {
         global $wpdb;

@@ -5,36 +5,63 @@ namespace Mawiblah;
 class RestRoutes
 {
 
-    public static function getHtmlTemplate(\WP_REST_Request $request)
+    /**
+     * Returns a processed email template with all shortcodes evaluated.
+     *
+     * Requires editor capabilities. Used by the campaign editor to preview template output.
+     *
+     * @param \WP_REST_Request $request JSON body containing 'template' (template name string).
+     * @return \WP_REST_Response Template HTML content and template name.
+     */
+    public static function getHtmlTemplate(\WP_REST_Request $request): \WP_REST_Response
     {
-        $post = $request->get_json_params();
-
-        $template = $post['template'];
+        $template        = sanitize_text_field($request->get_param('template') ?? '');
         $templateContent = Templates::getEmailTemplateByName($template);
         $templateContent = do_shortcode($templateContent);
 
-        return [
-            'status' => 'ok',
-            'template' => $templateContent,
-            'templateName' => $template
-        ];
+        return new \WP_REST_Response([
+            'status'       => 'ok',
+            'template'     => $templateContent,
+            'templateName' => $template,
+        ], 200);
     }
 
-    public static function test(\WP_REST_Request $request)
+    /** Connectivity smoke-test endpoint. Returns {"status":"ok"} with HTTP 200. */
+    public static function test(\WP_REST_Request $request): \WP_REST_Response
     {
-        return [
-            'status' => 'ok'
-        ];
+        return new \WP_REST_Response(['status' => 'ok'], 200);
     }
 
-    public static function sendEmail(\WP_REST_Request $request)
+    /**
+     * Sends one campaign email to one subscriber and updates campaign counters.
+     *
+     * This is the callback for the JS-driven per-subscriber send loop. It delegates
+     * to processSendEmail() and wraps the result in a WP_REST_Response.
+     *
+     * @param \WP_REST_Request $request JSON body: campaignPostId, subscriberId, email, lastItem.
+     * @return \WP_REST_Response Result payload with status, message, and emailSendingStats.
+     */
+    public static function sendEmail(\WP_REST_Request $request): \WP_REST_Response
     {
-        $post = $request->get_json_params();
+        return rest_ensure_response(self::processSendEmail($request));
+    }
 
-        $campaignPostId = $post['campaignPostId'];
-        $subscriberId = $post['subscriberId'];
-        $email = $post['email'];
-        $lastItem = $post['lastItem'] ?? false;
+    /**
+     * Core send-email logic: validates inputs, applies all skip rules, sends via wp_mail(),
+     * and updates campaign counters.
+     *
+     * Skip rules (in order): unsubscribed, already sent, do-not-disturb threshold,
+     * email sending disabled in settings, not a tester in test mode, template unavailable.
+     *
+     * @param \WP_REST_Request $request
+     * @return array Result array consumed by sendEmail().
+     */
+    private static function processSendEmail(\WP_REST_Request $request): array
+    {
+        $campaignPostId = absint($request->get_param('campaignPostId'));
+        $subscriberId   = absint($request->get_param('subscriberId'));
+        $email          = sanitize_email($request->get_param('email') ?? '');
+        $lastItem       = $request->get_param('lastItem');
 
         // Initialize or retrieve current counters
         $currentCounters = Campaigns::getCounters((object)['id' => $campaignPostId]);
@@ -43,11 +70,11 @@ class RestRoutes
         $emailsSkipped = (int)($currentCounters->emailsSkipped ?? 0);
         $emailsUnsubed = (int)($currentCounters->emailsUnsubed ?? 0);
 
-        if (!is_numeric($campaignPostId) || !is_numeric($subscriberId)) {
+        if (!$campaignPostId || !$subscriberId) {
             return [
-                'stats' => Helpers::emailSendingStats(skipped:1),
-                'status' => 'error',
-                'message' => 'Campaign or subscriber missing'
+                'stats'   => Helpers::emailSendingStats(skipped: 1),
+                'status'  => 'error',
+                'message' => 'Campaign or subscriber missing',
             ];
         }
 
@@ -272,7 +299,20 @@ class RestRoutes
         }
         $emailBody = Campaigns::fillTemplate($template, $campaign, $subscriber);
 
-        $emailSendingResult = wp_mail($email, $campaign->subject, $emailBody);
+        $unsubToken = Subscribers::getUnsubToken($subscriber->id, $subscriber->email);
+        $unsubUrl   = add_query_arg([
+            'subscriber' => $subscriber->subscriberHash,
+            'token'      => $unsubToken,
+            'campaign'   => $campaign->campaignHash,
+        ], rest_url('mawiblah/v1/unsubscribe'));
+
+        $emailHeaders = [
+            'Content-Type: text/html; charset=UTF-8',
+            'List-Unsubscribe: <' . $unsubUrl . '>',
+            'List-Unsubscribe-Post: List-Unsubscribe=One-Click',
+        ];
+
+        $emailSendingResult = wp_mail($email, $campaign->subject, $emailBody, $emailHeaders);
 
         if ($emailSendingResult) {
 

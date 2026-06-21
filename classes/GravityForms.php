@@ -4,6 +4,7 @@ namespace Mawiblah;
 
 class GravityForms
 {
+    /** Hooks into gform_after_submission to update the last-interaction timestamp for known subscribers. */
     public static function init()
     {
         add_action('gform_after_submission', function ($entry, $form) {
@@ -23,12 +24,22 @@ class GravityForms
         }, 10, 2);
     }
 
+    /**
+     * Returns all Gravity Forms as a raw array from the GFAPI.
+     *
+     * @return array Array of Gravity Forms form objects.
+     */
     public static function getArrayOfGravityForms(): array
     {
         $GravityForms = \GFAPI::get_forms();
         return $GravityForms;
     }
 
+    /**
+     * Returns an array of form-ID / email-field-ID pairs for all forms that contain an email field.
+     *
+     * @return array Array of ['formId' => int, 'emailId' => int] maps.
+     */
     public static function getGravityFormWithEmailFieldIds()
     {
         $forms = self::getArrayOfGravityForms();
@@ -49,6 +60,12 @@ class GravityForms
         return $ids;
     }
 
+    /**
+     * Searches all Gravity Forms entries for a specific email address.
+     *
+     * @param string $email Email address to search for.
+     * @return array Map of found email addresses (deduplicated).
+     */
     public static function findEmail(string $email):array
     {
 
@@ -79,6 +96,11 @@ class GravityForms
         return $emails;
     }
 
+    /**
+     * Returns all unique email addresses from all Gravity Forms entries.
+     *
+     * @return array Deduplicated map of email → email strings.
+     */
     public static function getAllEmails(): array
     {
         $formsWihtEmailField = self::getGravityFormWithEmailFieldIds();
@@ -100,6 +122,12 @@ class GravityForms
         return $emails;
     }
 
+    /**
+     * Returns all email addresses and their submission dates for a specific Gravity Form.
+     *
+     * @param int $formId Gravity Forms form ID.
+     * @return array Map of email → ['email' => string, 'dateCreated' => string].
+     */
     public static function getAllEmailsForForm(int $formId): array
     {
         $form = \GFAPI::get_form($formId);
@@ -128,17 +156,34 @@ class GravityForms
     }
 
 
+    /**
+     * Returns the title of a Gravity Form.
+     *
+     * @param int $formId Gravity Forms form ID.
+     * @return string Form title.
+     */
     public static function getFormName(int $formId):string
     {
         $form = \GFAPI::get_form($formId);
         return $form['title'];
     }
 
+    /** Returns true if both the GFForms and GFAPI classes are available (Gravity Forms is active). */
     public static function isGravityPluginActive(): bool
     {
         return class_exists('GFForms') && class_exists('GFAPI');;
     }
 
+    /**
+     * Synchronises Gravity Forms entries with Mawiblah subscriber audiences.
+     *
+     * For each form, creates or reuses a matching audience taxonomy term and imports
+     * all entries as subscribers. Skips forms whose last entry predates the last sync
+     * date unless $force is true.
+     *
+     * @param bool $force When true, re-syncs all forms even if already up to date.
+     * @return array Sync stats: checked, skipped, forms_processed, subscribers_created, subscribers_updated, total_entries_processed.
+     */
     public static function syncWithAudiencePostType(bool $force = false):array
     {
         $forms = self::getArrayOfGravityForms();

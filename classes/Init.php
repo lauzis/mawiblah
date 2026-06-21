@@ -15,6 +15,7 @@ class Init
 
     const MAWIBLAH_ACTIONS = 'mawiblah-actions';
     const MAWIBLAH_HELP    = 'mawiblah-help';
+    /** Bootstraps the plugin: runs migrations, registers admin menu, hooks, REST routes, and blocks. */
     public function init(): void
     {
         Migrations::run();
@@ -27,6 +28,7 @@ class Init
         add_filter('block_categories_all', [$this, 'registerBlockCategories'], 10, 2);
     }
 
+    /** Returns the array of all plugin admin page slugs used to conditionally enqueue assets. */
     public static function getIdsOfPages(){
         return [
             self::MAWIBLAH,
@@ -39,63 +41,124 @@ class Init
         ];
     }
 
+    /**
+     * Appends a Settings link to the plugin entry in the WP plugin list table.
+     *
+     * @param array $links Existing action links.
+     * @return array Modified links array.
+     */
     public static function add_settings_link_to_plugin_list($links)
     {
         $links[] = '<a href="' . self::get_settings_page_url() . '">Settings</a>';
         return $links;
     }
 
+    /** Returns the full URL to the plugin settings page in the WordPress admin. */
     public static function get_settings_page_url()
     {
-        return esc_url(get_admin_url(null, 'options-general.php?page=' . self::get_settings_page_relative_path()));
+        return esc_url(get_admin_url(null, 'admin.php?page=' . self::MAWIBLAH_SETTINGS));
     }
 
 
+    /** Registers all plugin REST API routes on the rest_api_init hook. */
     public function setup_api_routes(): void
     {
 
         add_action('rest_api_init', function () {
             register_rest_route('mawiblah/v1', '/get-html-template', array(
-                'methods' => 'POST',
-                'callback' => 'Mawiblah\RestRoutes::getHtmlTemplate',
+                'methods'             => \WP_REST_Server::CREATABLE,
+                'callback'            => 'Mawiblah\RestRoutes::getHtmlTemplate',
                 'permission_callback' => function () {
                     return current_user_can('edit_others_posts');
-                }
+                },
             ));
 
             register_rest_route('mawiblah/v1', '/test', array(
-                'methods' => 'GET',
-                'callback' => 'Mawiblah\RestRoutes::test',
+                'methods'             => \WP_REST_Server::READABLE,
+                'callback'            => 'Mawiblah\RestRoutes::test',
                 'permission_callback' => function () {
                     return current_user_can('edit_others_posts');
-                }
+                },
             ));
 
             register_rest_route('mawiblah/v1', '/send-email', array(
-                'methods' => 'POST',
-                'callback' => 'Mawiblah\RestRoutes::sendEmail',
+                'methods'             => \WP_REST_Server::CREATABLE,
+                'callback'            => 'Mawiblah\RestRoutes::sendEmail',
                 'permission_callback' => function () {
                     return current_user_can('edit_others_posts');
-                }
+                },
+                'args'                => [
+                    'campaignPostId' => [
+                        'type'     => 'integer',
+                        'required' => true,
+                    ],
+                    'subscriberId'   => [
+                        'type'     => 'integer',
+                        'required' => true,
+                    ],
+                    'email'          => [
+                        'type'              => 'string',
+                        'required'          => true,
+                        'sanitize_callback' => 'sanitize_email',
+                    ],
+                    'lastItem'       => [
+                        'type'    => 'boolean',
+                        'default' => false,
+                    ],
+                ],
             ));
 
             register_rest_route('mawiblah/v1', '/subscribe', array(
-                'methods'             => 'POST',
+                'methods'             => \WP_REST_Server::CREATABLE,
                 'callback'            => 'Mawiblah\SubscriptionForm::subscribe',
+                'permission_callback' => '__return_true',
+                'args'                => [
+                    'email'          => [
+                        'type'              => 'string',
+                        'required'          => true,
+                        'sanitize_callback' => 'sanitize_email',
+                    ],
+                    'audienceHashes' => [
+                        'type'    => 'array',
+                        'default' => [],
+                        'items'   => ['type' => 'string'],
+                    ],
+                    'honeypot'       => [
+                        'type'    => 'string',
+                        'default' => '',
+                    ],
+                    'recaptchaToken' => [
+                        'type'              => 'string',
+                        'default'           => '',
+                        'sanitize_callback' => 'sanitize_text_field',
+                    ],
+                ],
+            ));
+
+            register_rest_route('mawiblah/v1', '/unsubscribe', array(
+                'methods'             => [ \WP_REST_Server::READABLE, \WP_REST_Server::CREATABLE ],
+                'callback'            => 'Mawiblah\Unsubscribe::oneClickEndpoint',
                 'permission_callback' => '__return_true',
             ));
 
         });
     }
 
+    /**
+     * Prepends a Settings link in the plugin action links (admin bar variant).
+     *
+     * @param array $links Existing action links.
+     * @return array Modified links array.
+     */
     public function add_settings_link($links)
     {
-        $settings_link = '<a href="admin.php?page=mawiblah-logs">' . __('Settings', 'mawiblah') . '</a>';
+        $settings_link = '<a href="' . esc_url(get_admin_url(null, 'admin.php?page=' . self::MAWIBLAH_SETTINGS)) . '">' . __('Settings', 'mawiblah') . '</a>';
         array_unshift($links, $settings_link);
         return $links;
     }
 
 
+    /** Enqueues admin scripts and styles when the current page is a plugin admin page. */
     private function setup_hooks(): void
     {
         $pageIds = $this->getIdsOfPages();
@@ -107,11 +170,18 @@ class Init
         }
     }
 
+    /** Registers the subscriber custom post type and taxonomy (called during plugin bootstrap). */
     public function registerPostsTypesAndTaxamonies()
     {
         Subscribers::registerPostType();
     }
 
+    /**
+     * Registers the Gutenberg subscription-form block, its editor script, and render callback.
+     *
+     * Localises available audiences for the block editor via enqueue_block_editor_assets,
+     * filtering out system audiences (Unsubed, Testers).
+     */
     public function registerBlocks(): void
     {
         // Register the script early (before register_block_type references it)
@@ -169,6 +239,12 @@ class Init
         ]);
     }
 
+    /**
+     * Prepends the 'mawiblah' block category to the Gutenberg block inserter.
+     *
+     * @param array $categories Existing block categories.
+     * @return array Modified categories array.
+     */
     public function registerBlockCategories(array $categories): array
     {
         array_unshift($categories, [
@@ -179,6 +255,7 @@ class Init
         return $categories;
     }
 
+    /** Injects the WP REST nonce into the page as a JS global variable (mawiblahNonce) for admin AJAX calls. */
     public function my_custom_rest_api_nonce()
     {
 
@@ -191,18 +268,21 @@ class Init
         wp_add_inline_script( 'mawiblah-js', $inline_script);
     }
 
+    /** Enqueues the plugin's main admin stylesheet on plugin pages. */
     public function enqueue_plugin_styles(): void
     {
         wp_enqueue_style('mawiblah-css', MAWIBLAH_PLUGIN_URL . '/assets/css/mawiblah.css', [], MAWIBLAH_VERSION);
         //wp_enqueue_style('mawiblah-lib-table-styles', MAWIBLAH_PLUGIN_URL . '/assets/lib/jquery.dataTables.css', [], MAWIBLAH_VERSION);
     }
 
+    /** Enqueues the plugin's main admin JavaScript on plugin pages. */
     public function enqueue_plugin_scripts(): void
     {
         //wp_enqueue_script('mawiblah-lib-table-js', MAWIBLAH_PLUGIN_URL . '/assets/lib/jquery.dataTables.js.js', array('jquery'), MAWIBLAH_VERSION, true);
         wp_enqueue_script('mawiblah-main-js', MAWIBLAH_PLUGIN_URL . '/assets/js/mawiblah.js', ['mawiblah-js'], MAWIBLAH_VERSION);
     }
 
+    /** Registers the Mawiblah top-level menu and all submenus in the WordPress admin sidebar. */
     public function add_menu_links(): void
     {
         add_menu_page(
@@ -270,31 +350,38 @@ class Init
         );
     }
 
+    /** Admin page callback: renders the email templates list. */
     public function emailTemplates() {
         Renderer::emailTemplates();
     }
 
+    /** Admin page callback: renders the main plugin dashboard. */
     public function mawiblah()
     {
         Renderer::start();
     }
 
+    /** Admin page callback: renders the campaigns list and action pages. */
     public function campaigns() {
         Renderer::campaigns();
     }
 
+    /** Admin page callback: renders the test scenarios page. */
     public function tests() {
         Renderer::tests();
     }
 
+    /** Admin page callback: renders the plugin settings page. */
     public function settings() {
         Renderer::settings();
     }
 
+    /** Admin page callback: renders the actions/tools page. */
     public function actions() {
         Renderer::actions();
     }
 
+    /** Admin page callback: renders the in-plugin help page. */
     public function help() {
         Renderer::help();
     }

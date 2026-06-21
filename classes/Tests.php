@@ -4,16 +4,25 @@ namespace Mawiblah;
 
 class Tests
 {
+    /** Outputs a scenario heading (<h2>) in the test results area. */
     public static function echoHeading(string $title): void
     {
         echo '<h2>' . esc_html($title) . '</h2>';
     }
 
+    /** Outputs an assertion label (<h3>) in the test results area. */
     public static function echoTitle(string $title): void
     {
         echo '<h3>' . esc_html($title) . '</h3>';
     }
 
+    /**
+     * Outputs a pass/fail result line with optional debug dump.
+     *
+     * @param string     $resultMessage Human-readable assertion result.
+     * @param string     $resultType    'success' or 'error' (mapped to CSS class).
+     * @param mixed|null $debug         Optional value to print_r below the result.
+     */
     public static function echoResult(string $resultMessage, string $resultType, $debug = null): void
     {
         echo '<p class="mawiblah-' . esc_attr($resultType) . '">' . esc_html($resultMessage) . '</p>';
@@ -22,6 +31,7 @@ class Tests
         }
     }
 
+    /** Permanently deletes all subscriber posts matching the given email address (test cleanup helper). */
     private static function deleteSubscribersByEmail(string $email): void
     {
         $posts = get_posts([
@@ -35,6 +45,7 @@ class Tests
         }
     }
 
+    /** Returns the map of scenario slug to display label for the test page button grid. */
     public static function scenarios(): array
     {
         return [
@@ -51,6 +62,11 @@ class Tests
         ];
     }
 
+    /**
+     * Dispatches to the named scenario method after verifying administrator capability.
+     *
+     * @param string $scenario Scenario slug from scenarios().
+     */
     public static function run(string $scenario): void
     {
         if (!current_user_can('administrator')) {
@@ -77,6 +93,7 @@ class Tests
     // Campaign CRUD
     // -------------------------------------------------------------------------
 
+    /** In-browser integration test: campaign CRUD, hash lookup, uniqueness, and cleanup. */
     public static function campaignScenario(): void
     {
         self::echoHeading('Campaign CRUD');
@@ -123,6 +140,7 @@ class Tests
     // Campaign Workflow
     // -------------------------------------------------------------------------
 
+    /** In-browser integration test: campaign test/approve/start/finish workflow state transitions. */
     public static function campaignWorkflowScenario(): void
     {
         self::echoHeading('Campaign Workflow');
@@ -178,6 +196,7 @@ class Tests
     // Campaign Counters
     // -------------------------------------------------------------------------
 
+    /** In-browser integration test: campaign counters initialise at zero and update correctly. */
     public static function campaignCountersScenario(): void
     {
         self::echoHeading('Campaign Counters');
@@ -210,6 +229,7 @@ class Tests
     // Campaign Template & Placeholders
     // -------------------------------------------------------------------------
 
+    /** In-browser integration test: fillTemplate replaces all placeholders including URL-encoded variants. */
     public static function campaignTemplateScenario(): void
     {
         self::echoHeading('Campaign Template & Placeholders');
@@ -246,6 +266,7 @@ class Tests
     // Subscriber CRUD & Audience Hash
     // -------------------------------------------------------------------------
 
+    /** In-browser integration test: subscriber CRUD, audience hash generation, and token idempotency. */
     public static function subscriberScenario(): void
     {
         self::echoHeading('Subscriber CRUD & Audience Hash');
@@ -310,6 +331,7 @@ class Tests
     // Unsubscribe Flow
     // -------------------------------------------------------------------------
 
+    /** In-browser integration test: token validation, unsubed flag, audience assignment, and campaign counter. */
     public static function unsubscribeScenario(): void
     {
         self::echoHeading('Unsubscribe Flow');
@@ -351,6 +373,7 @@ class Tests
     // Click Tracking
     // -------------------------------------------------------------------------
 
+    /** In-browser integration test: triple-count click tracking (total, unique-per-session, unique-per-user). */
     public static function clickTrackingScenario(): void
     {
         self::echoHeading('Click Tracking (triple-count)');
@@ -409,6 +432,7 @@ class Tests
     // Subscription Form
     // -------------------------------------------------------------------------
 
+    /** In-browser integration test: full subscription form flow including honeypot, invalid email, resubscribe, and partial audience overlap. */
     public static function subscriptionFormScenario(): void
     {
         self::echoHeading('Subscription Form');
@@ -491,6 +515,7 @@ class Tests
     // Default Audiences
     // -------------------------------------------------------------------------
 
+    /** In-browser integration test: Unsubed and Testers system audiences exist and have correct hashes. */
     public static function defaultAudiencesScenario(): void
     {
         self::echoHeading('Default Audiences');
@@ -527,6 +552,7 @@ class Tests
     // Programmatic Subscribe
     // -------------------------------------------------------------------------
 
+    /** In-browser integration test: mawiblah_subscribe() function, no-duplicate guard, and mawiblah_subscribed action hook. */
     public static function programmaticSubscribeScenario(): void
     {
         self::echoHeading('Programmatic Subscribe');

@@ -4,6 +4,12 @@ namespace Mawiblah;
 
 class Migrations
 {
+    /**
+     * Runs all pending database migrations in version order.
+     *
+     * Reads the stored schema version from options and applies only the migrations
+     * that have not yet run. Safe to call on every request.
+     */
     public static function run()
     {
         $currentVersion = get_option('mawiblah_db_version');
@@ -20,6 +26,12 @@ class Migrations
 
     }
 
+    /**
+     * Migrates campaign meta key from campaignId to campaignHash (introduced in 1.0.15).
+     *
+     * Copies existing campaignId values to campaignHash and removes the old key.
+     * Generates a new hash for campaigns that have neither key set.
+     */
     private static function migrateTo1015()
     {
         // Migration: Rename campaignId meta to campaignHash
@@ -44,6 +56,12 @@ class Migrations
         }
     }
 
+    /**
+     * Migrates subscriber meta key from subscriberId to subscriberHash (introduced in 1.0.16).
+     *
+     * Copies existing subscriberId values to subscriberHash and removes the old key.
+     * Generates a new hash for subscribers that have neither key set.
+     */
     private static function migrateTo1016()
     {
         // Migration: Rename subscriberId meta to subscriberHash

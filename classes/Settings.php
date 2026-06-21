@@ -9,6 +9,7 @@ class Settings
     private static $messages = [];
     private static $permissionFailure = false;
 
+    /** Removes all plugin options and deletes generated files and directories on uninstall. */
     public static function uninstall()
     {
         // removing options
@@ -21,17 +22,20 @@ class Settings
         rmdir(MAWIBLAH_LOG_PATH);
     }
 
+    /** Plugin activation hook handler (currently a stub). */
     public static function activate()
     {
         //TODO
         // would be nice to show message with link to settings page
     }
 
+    /** Plugin deactivation hook handler. Resets the settings-page-visited flag. */
     public static function deactivate()
     {
         update_option("gae-settings-page-visited", 0);
     }
 
+    /** Settings init hook (currently a stub, registration is handled by get_sections). */
     public static function init()
     {
         //register settings
@@ -39,16 +43,19 @@ class Settings
         //self::add_scripts();
     }
 
+    /** Returns the full URL to the plugin settings page. */
     public static function get_settings_page_url()
     {
         return esc_url(get_admin_url(null, 'admin.php?page=' . self::get_settings_page_relative_path()));
     }
 
+    /** Returns the settings page slug constant. */
     public static function get_settings_page_relative_path()
     {
         return MAWIBLAH_SETTINGS_PAGE;
     }
 
+    /** Registers the plugin options page and adds the Settings link in the plugin list. */
     public static function create_menu()
     {
 
@@ -69,6 +76,14 @@ class Settings
 
     }
 
+    /**
+     * Returns the current debug level (0/1/2/3) based on the stored option value.
+     *
+     * Only applies if the current IP is in the allowed debug-IP list (when set).
+     * Returns false when debugging is disabled.
+     *
+     * @return int|false Debug level, or false if disabled.
+     */
     public static function debug()
     {
         # only run debug on localhost
@@ -105,6 +120,11 @@ class Settings
         return false;
     }
 
+    /**
+     * Returns the debug level for the current admin user based on their stored option value.
+     *
+     * @return int|false Debug level, or false if the user is not an administrator.
+     */
     public static function debug_admin()
     {
         $debug_level = 0;
@@ -137,11 +157,18 @@ class Settings
         }
         return false;
     }
+    /**
+     * Queues an admin notice message to be displayed on the settings page.
+     *
+     * @param string $text Message text.
+     * @param string $type Notice type: 'success' or 'error'.
+     */
     public static function add_message($text, $type = "success")
     {
         array_push(self::$messages, ["type" => $type, "message" => "MAWIBLAH: " . $text]);
     }
 
+    /** Reads all section field values from the database and then deletes those options. Called during uninstall. */
     private static function remove_sections_options()
     {
         $sections = json_decode(file_get_contents(MAWIBLAH_CONFIG_PATH . "/sections.json"), true);
@@ -155,19 +182,36 @@ class Settings
         }
     }
 
+    /**
+     * Returns all settings sections with current values loaded from the database.
+     *
+     * On POST (settings form submission), validates the nonce, sanitizes each value
+     * by field type, persists it via update_option(), and refreshes the asset version.
+     *
+     * @return array Settings sections with fields populated with their current values.
+     */
     public static function get_sections()
     {
         $options_updated = false;
         $sectionsFile = MAWIBLAH_CONFIG_PATH . "/sections.json";
         $sections = json_decode(file_get_contents($sectionsFile), true);
 
+        $is_post = !empty($_POST);
+        if ($is_post) {
+            check_admin_referer('gae-settings-group-options');
+        }
+
         foreach ($sections as $sk => $s) {
 
             foreach ($s["fields"] as $fk => $f) {
 
-                if (isset($_POST[$f["id"]])) {
-                    update_option($f["id"], $_POST[$f["id"]]);
-                    $sections[$sk]["fields"][$fk]["value"] = $_POST[$f["id"]];
+                if ($is_post && isset($_POST[$f["id"]])) {
+                    $raw   = wp_unslash($_POST[$f["id"]]);
+                    $value = $f['type'] === 'textarea'
+                        ? sanitize_textarea_field($raw)
+                        : sanitize_text_field($raw);
+                    update_option($f["id"], $value);
+                    $sections[$sk]["fields"][$fk]["value"] = $value;
                     $options_updated = true;
                 } else {
                     $sections[$sk]["fields"][$fk]["value"] = get_option($f["id"]);
@@ -180,6 +224,13 @@ class Settings
         return $sections;
     }
 
+    /**
+     * Outputs a single dismissible WordPress admin notice.
+     *
+     * @param int|string $id      Unique notice ID used in the element's HTML id attribute.
+     * @param string     $message Notice text.
+     * @param string     $type    Notice class suffix: 'success', 'error', 'warning', etc.
+     */
     public static function print_message($id, $message, $type)
     {
         ?>
@@ -194,6 +245,7 @@ class Settings
         <?php
     }
 
+    /** Outputs all queued admin notices added via add_message(). */
     public static function print_all_messages()
     {
         foreach (self::$messages as $id => $message) {
@@ -201,16 +253,19 @@ class Settings
         }
     }
 
+    /** Records that the settings page has been visited (used to suppress first-run notices). */
     public static function settings_page_visited()
     {
         update_option("gae-settings-page-visited", 1);
     }
 
+    /** Returns truthy if the settings page has been visited at least once, falsy otherwise. */
     public static function is_settings_page_visited()
     {
         return get_option("gae-settings-page-visited");
     }
 
+    /** Returns the number of unique translation strings collected so far (developer mode only). */
     public static function get_translation_count()
     {
         $translationIdsFile = MAWIBLAH_TRANSLATION_IDS_FILE;
@@ -221,6 +276,15 @@ class Settings
         return count($translationIds);
     }
 
+    /**
+     * Translates a string and optionally formats it with sprintf-style parameters.
+     *
+     * In developer mode, also records the string to the translation IDs file for POT generation.
+     *
+     * @param string       $text   String to translate.
+     * @param array|string $params Optional sprintf parameters.
+     * @return string Translated and formatted string.
+     */
     public static function get_translation($text, $params = [])
     {
 
@@ -270,6 +334,7 @@ class Settings
         return $text;
     }
 
+    /** Generates a .pot translation template file from the collected translation IDs (developer mode only). */
     public static function generate_pot_file()
     {
         if (MAWIBLAH_DEVELOPER) {
@@ -339,30 +404,36 @@ msgstr ""
         }
     }
 
+    /** Returns true when the "Send emails" setting is enabled (email sending is not suppressed). */
     public static function sendEmails():bool
     {
         return self::getOption("mawiblah-dont-send-emails") === 'send-emails';
     }
 
+    /** Returns the do-not-disturb threshold in seconds (minimum time between emails to the same subscriber). */
     public static function dontDisturbThreshold(){
         return self::getOption('mawiblah-dont-disturb-threshold');
     }
 
+    /** Returns true when reCAPTCHA v3 is set to "enabled" in settings (keys may still be missing). */
     public static function recaptchaEnabled(): bool
     {
         return self::getOption('mawiblah-recaptcha-enabled') === 'enabled';
     }
 
+    /** Returns the reCAPTCHA v3 site key (public, used in the browser). Empty string if not configured. */
     public static function recaptchaSiteKey(): string
     {
         return (string) self::getOption('mawiblah-recaptcha-site-key');
     }
 
+    /** Returns the reCAPTCHA v3 secret key (private, used server-side). Empty string if not configured. */
     public static function recaptchaSecretKey(): string
     {
         return (string) self::getOption('mawiblah-recaptcha-secret-key');
     }
 
+    /** Returns true only when reCAPTCHA is enabled AND both site key and secret key are non-empty. */
     public static function recaptchaReady(): bool
     {
         return self::recaptchaEnabled()
@@ -370,6 +441,12 @@ msgstr ""
             && self::recaptchaSecretKey() !== '';
     }
 
+    /**
+     * Returns a plugin option value, falling back to the field's default_value from sections.json.
+     *
+     * @param string $optionId WordPress option key matching a field id in sections.json.
+     * @return mixed Stored option value, or the field's default_value if not yet saved.
+     */
     public static function getOption($optionId)
     {
         // TODO: return default value if option not set

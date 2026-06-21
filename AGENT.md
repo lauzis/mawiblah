@@ -11,7 +11,7 @@ MAWIBLAH is a WordPress plugin that provides Mailchimp-like functionality for se
 - **GravityForms.php** - Integration with Gravity Forms for subscriber collection
 - **Helpers.php** - Utility functions and URL generators
 - **Init.php** - Plugin initialization
-- **Logs.php** - Action logging for debugging
+- **Logs.php** - File-based action logging. Writes daily log files to `{uploads}/gae-logs/mawiblah-YYYY-MM-DD.log`. Public API: `addLog()`, `clearLogs()`, `getLogCount()`, `getLogFiles()`. Enabled when `mawiblah-debug` option equals `enable-db-log`.
 - **Renderer.php** - Template rendering
 - **RestRoutes.php** - REST API endpoint for sending individual campaign emails (`/send-email`)
 - **Settings.php** - Plugin settings management; includes `recaptchaReady()` for safe reCAPTCHA gate
@@ -128,7 +128,7 @@ Email sending is handled via REST API endpoint `/wp-json/mawiblah/v1/send-email`
 - Time between emails (to avoid server overload)
 - "Do not disturb" threshold (minimum time between emails to same subscriber)
 - Enable/disable actual email sending (for testing)
-- Database logging toggle
+- File logging toggle (writes to daily log files, not the database)
 - IP-restricted debugging
 
 ### Dashboard Widget

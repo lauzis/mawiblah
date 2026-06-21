@@ -318,7 +318,7 @@ if ( $result['status'] === 'ok' ) {
                 <tbody>
                     <tr>
                         <td><?php esc_html_e('Debug mode', 'mawiblah'); ?></td>
-                        <td><?php esc_html_e('Disabled by default. Enable DB log to write debug entries to the database log.', 'mawiblah'); ?></td>
+                        <td><?php esc_html_e('Disabled by default. Set to "Enable DB log" to activate file-based logging — entries are written to daily files at {uploads}/gae-logs/mawiblah-YYYY-MM-DD.log. Use the Actions page to view and clear log files.', 'mawiblah'); ?></td>
                     </tr>
                     <tr>
                         <td><?php esc_html_e('Restrict output by IP', 'mawiblah'); ?></td>

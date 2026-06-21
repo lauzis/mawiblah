@@ -70,6 +70,15 @@ The initial version was built by hand. From version 1.0.9 onward, most changes h
 
 ## Change log
 
+### --- 1.0.21 ---
+- **Improved:** Test page (`mawiblah-tests`) redesigned with WordPress admin UI — postbox layout, collapsible settings section, scenario checkboxes (all selected by default), single "Run Tests" button. No more per-scenario separate buttons.
+- **Improved:** Help page (`mawiblah-help`) rebuilt with WordPress admin UI — four postbox cards (Subscription Form, Developer Integration, Template Overriding, Settings Reference), native `wp-list-table` tables, `notice` callout blocks, proper `metabox-holder` wrapper so postbox header padding matches WordPress core.
+- **Improved:** Campaigns, Subscribers, and Logs post types moved under the Mawiblah admin menu instead of appearing as separate top-level items. Sub-items (All, Add New, Audiences taxonomy) are registered explicitly to preserve full navigation.
+- **Changed:** Logging switched from the `mawiblah_log` custom post type to daily log files (`mawiblah-YYYY-MM-DD.log`) stored in the WordPress uploads directory under `gae-logs/`. Each entry is a single line: `[timestamp] [action] message | {json context}`. The post type is no longer registered.
+- **Migration:** `migrateTo1021()` — existing `mawiblah_log` post type entries are exported to the appropriate daily log file (based on `post_date_gmt`) and then permanently deleted from the database. Runs automatically on first load after update.
+- **Fixed:** Subscription form test scenario (`Tests::subscriptionFormScenario`) was accessing `SubscriptionForm::subscribe()` return value as a plain array; the method returns `WP_REST_Response`, so `->get_data()` now unwraps it correctly.
+- **Fixed:** Click tracking test scenario (`Tests::clickTrackingScenario`) was clearing `$_SESSION` before calling `session_start()`. PHP then restored stale session data from the session store on the first `Visits::visit()` call, making all three counters appear one behind. Fixed by starting the session first (to consume the store), then clearing.
+
 ### --- 1.0.20 ---
 - **New:** "Failing Email" system audience — after a subscriber's email fails to deliver N times (configurable threshold in Settings, default 3), they are automatically added to the Failing Email audience and skipped in all future campaign sends.
 - **New:** PHPMailer exceptions enabled around `wp_mail()` to capture the actual error reason (e.g. SMTP rejection message). Stored in `sent_{campaignId}_error` subscriber meta and included in the activity log.

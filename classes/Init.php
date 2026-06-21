@@ -2,6 +2,7 @@
 
 namespace Mawiblah;
 
+use Mawiblah\Campaigns;
 use Mawiblah\Subscribers;
 
 class Init
@@ -297,11 +298,51 @@ class Init
 
         add_submenu_page(
             'mawiblah',
-            'Compaigns',
+            'Campaigns',
             'Campaigns',
             'manage_options',
             self::MAWIBLAH_CAMPAIGNS,
             [$this, 'campaigns']
+        );
+
+        add_submenu_page(
+            'mawiblah',
+            'All Campaigns',
+            '— All Campaigns',
+            'manage_options',
+            'edit.php?post_type=' . Campaigns::postType()
+        );
+
+        add_submenu_page(
+            'mawiblah',
+            'Add New Campaign',
+            '— Add New',
+            'manage_options',
+            'post-new.php?post_type=' . Campaigns::postType()
+        );
+
+        add_submenu_page(
+            'mawiblah',
+            'Subscribers',
+            'Subscribers',
+            'manage_options',
+            'edit.php?post_type=' . Subscribers::postType()
+        );
+
+        add_submenu_page(
+            'mawiblah',
+            'Add New Subscriber',
+            '— Add New',
+            'manage_options',
+            'post-new.php?post_type=' . Subscribers::postType()
+        );
+
+        add_submenu_page(
+            'mawiblah',
+            'Audiences',
+            '— Audiences',
+            'manage_options',
+            'edit-tags.php?taxonomy=' . Subscribers::postType() . '_category&post_type=' . Subscribers::postType()
         );
 
         add_submenu_page(

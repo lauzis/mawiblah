@@ -3,7 +3,7 @@ Contributors: lauzis
 Tags: email, newsletter, marketing, mailchimp alternative, subscribers
 Requires at least: 5.0
 Tested up to: 6.9
-Stable tag: 1.0.20
+Stable tag: 1.0.22
 Requires PHP: 8.0
 License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl.html
@@ -68,6 +68,9 @@ Technically yes, but it is not recommended. The plugin sends emails individually
 8. MVP version
 
 == Changelog ==
+
+= 1.0.22 =
+*   Fixed: Test sends and real sends now use separate meta keys (sent_test_{id} vs sent_{id}), so testers are no longer skipped when the real campaign runs. testReset() clears test-send flags when a retest is triggered. Fixes #43.
 
 = 1.0.20 =
 *   New: "Failing Email" system audience — subscribers are automatically moved here after N failed sends (configurable threshold, default 3) and skipped in all future campaigns.

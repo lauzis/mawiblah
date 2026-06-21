@@ -70,6 +70,9 @@ The initial version was built by hand. From version 1.0.9 onward, most changes h
 
 ## Change log
 
+### --- 1.0.22 ---
+- **Fixed:** Test sends and real sends now use separate subscriber meta keys (`sent_test_{campaignId}` vs `sent_{campaignId}`), so testers who received the test email are no longer skipped when the real campaign runs. `testReset()` clears the test-send flags so a retest always starts clean. Fixes #43.
+
 ### --- 1.0.21 ---
 - **Improved:** Test page (`mawiblah-tests`) redesigned with WordPress admin UI — postbox layout, collapsible settings section, scenario checkboxes (all selected by default), single "Run Tests" button. No more per-scenario separate buttons.
 - **Improved:** Help page (`mawiblah-help`) rebuilt with WordPress admin UI — four postbox cards (Subscription Form, Developer Integration, Template Overriding, Settings Reference), native `wp-list-table` tables, `notice` callout blocks, proper `metabox-holder` wrapper so postbox header padding matches WordPress core.

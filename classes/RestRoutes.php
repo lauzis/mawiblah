@@ -169,7 +169,7 @@ class RestRoutes
         //-----------------------------------------------------
         // --------------- Already sent email -----------------
         //----------------------------------------------------
-        $alreadySent = Subscribers::isEmailSent($subscriberId, $campaignPostId);
+        $alreadySent = Subscribers::isEmailSent($subscriberId, $campaignPostId, $testMode);
 
         if ($alreadySent) {
             return [
@@ -354,7 +354,7 @@ class RestRoutes
 
         if ($emailSendingResult) {
 
-            Subscribers::sentEmail($subscriber->id, $campaign->id);
+            Subscribers::sentEmail($subscriber->id, $campaign->id, $testMode);
             $emailsSent++;
             Campaigns::updateCounters($campaign, $emailsSent, $emailsFailed, $emailsSkipped, $emailsUnsubed);
 

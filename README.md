@@ -79,6 +79,7 @@ The initial version was built by hand. From version 1.0.9 onward, most changes h
 - **Fixed:** Subscription form test scenario (`Tests::subscriptionFormScenario`) was accessing `SubscriptionForm::subscribe()` return value as a plain array; the method returns `WP_REST_Response`, so `->get_data()` now unwraps it correctly.
 - **Fixed:** Click tracking test scenario (`Tests::clickTrackingScenario`) was clearing `$_SESSION` before calling `session_start()`. PHP then restored stale session data from the session store on the first `Visits::visit()` call, making all three counters appear one behind. Fixed by starting the session first (to consume the store), then clearing.
 
+
 ### --- 1.0.20 ---
 - **New:** "Failing Email" system audience — after a subscriber's email fails to deliver N times (configurable threshold in Settings, default 3), they are automatically added to the Failing Email audience and skipped in all future campaign sends.
 - **New:** PHPMailer exceptions enabled around `wp_mail()` to capture the actual error reason (e.g. SMTP rejection message). Stored in `sent_{campaignId}_error` subscriber meta and included in the activity log.

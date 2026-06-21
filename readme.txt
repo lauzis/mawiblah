@@ -78,6 +78,7 @@ Technically yes, but it is not recommended. The plugin sends emails individually
 *   Fixed: Subscription form test scenario incorrectly accessed `WP_REST_Response` as an array; now unwrapped correctly.
 *   Fixed: Click tracking test scenario cleared the PHP session before starting it, causing session store to be restored and first-visit counters to be off by one.
 
+
 = 1.0.20 =
 *   New: "Failing Email" system audience — subscribers are automatically moved here after N failed sends (configurable threshold, default 3) and skipped in all future campaigns.
 *   New: Mailer error reason captured via PHPMailer exceptions and stored per subscriber/campaign for diagnostics.

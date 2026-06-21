@@ -1028,7 +1028,6 @@ class Campaigns
         update_post_meta($campaignPostId, 'testStarted', false);
         update_post_meta($campaignPostId, 'testFinished', false);
         update_post_meta($campaignPostId, 'testApproved', false);
-        Subscribers::resetTestSent($campaignPostId);
     }
 
     /**

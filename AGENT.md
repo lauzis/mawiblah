@@ -191,6 +191,10 @@ add_action('wp_dashboard_setup', [Actions::class, 'registerDashboardWidget']);
 - Static methods for utility classes
 - Minimal comments (code should be self-explanatory)
 
+### Commit Messages
+- Do **not** add `Co-Authored-By: Claude` or any AI attribution line to commit messages.
+- Claude usage may be noted in `README.md` if appropriate, but not in individual commits.
+
 ### Making Changes
 - **Surgical modifications** — change as few lines as possible
 - Only update counters during actual campaign sends (not tests)

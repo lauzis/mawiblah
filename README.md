@@ -40,6 +40,10 @@ This is a free plugin, so support is limited.
 The main idea is to create functionality that is needed for the particular project. There is no intention to make it work
 on all possible configurations and setups.
 
+## Development
+
+The initial version was built by hand. From version 1.0.9 onward, most changes have been made with the assistance of [CodeRabbit](https://coderabbit.ai) for code review and [Claude Code](https://claude.ai/code) for implementation.
+
 ## 📊 MAWIBLAH vs Mailchimp
 
 | Feature                          | MAWIBLAH                                         | Mailchimp (Free Tier)                      | Mailchimp (Essentials / Paid)          |

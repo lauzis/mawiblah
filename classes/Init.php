@@ -56,7 +56,7 @@ class Init
     /** Returns the full URL to the plugin settings page in the WordPress admin. */
     public static function get_settings_page_url()
     {
-        return esc_url(get_admin_url(null, 'options-general.php?page=' . self::get_settings_page_relative_path()));
+        return esc_url(get_admin_url(null, 'admin.php?page=' . self::MAWIBLAH_SETTINGS));
     }
 
 
@@ -152,7 +152,7 @@ class Init
      */
     public function add_settings_link($links)
     {
-        $settings_link = '<a href="admin.php?page=mawiblah-logs">' . __('Settings', 'mawiblah') . '</a>';
+        $settings_link = '<a href="' . esc_url(get_admin_url(null, 'admin.php?page=' . self::MAWIBLAH_SETTINGS)) . '">' . __('Settings', 'mawiblah') . '</a>';
         array_unshift($links, $settings_link);
         return $links;
     }

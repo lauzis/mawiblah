@@ -7,7 +7,7 @@ class Logs
     /** Returns true when file logging is enabled in Settings. */
     public static function enabled(): bool
     {
-        return get_option('mawiblah-debug', false) === 'enable-db-log';
+        return in_array(get_option('mawiblah-debug', false), ['enable-file-log', 'enable-db-log'], true);
     }
 
     /** Returns the absolute path to today's log file. */

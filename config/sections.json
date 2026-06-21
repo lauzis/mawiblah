@@ -31,12 +31,12 @@
   },
   {
     "id": "debug",
-    "title": "Debuging",
-    "description": "Enable this for testing purposes, to see to what elements events are added and if they fire at all.",
+    "title": "Logging",
+    "description": "Enable file-based logging to record plugin actions to daily log files. Logs are stored in {uploads}/gae-logs/mawiblah-YYYY-MM-DD.log and can be viewed under Mawiblah → Logs.",
     "fields": [
       {
         "id": "mawiblah-debug",
-        "title": "Debug the events",
+        "title": "File logging",
         "type": "select",
         "value": "",
         "placeholder": "",
@@ -47,8 +47,8 @@
             "title": "Disabled"
           },
           {
-            "value": "enable-db-log",
-            "title": "Enable - db log"
+            "value": "enable-file-log",
+            "title": "Enable - file log"
           }
         ]
       },

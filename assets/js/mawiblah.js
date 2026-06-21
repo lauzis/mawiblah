@@ -209,8 +209,21 @@ function MAWIBLAH_loadPreview() {
 }
 
 
+function MAWIBLAH_initSettingsToggle() {
+  document.querySelectorAll('.mawiblah .handlediv, .mawiblah h2.section-title').forEach(function(el) {
+    el.addEventListener('click', function() {
+      var sortables = this.closest('.meta-box-sortables');
+      if (!sortables) { return; }
+      var nowClosed = sortables.classList.toggle('closed');
+      var btn = sortables.querySelector('.handlediv');
+      if (btn) { btn.setAttribute('aria-expanded', nowClosed ? 'false' : 'true'); }
+    });
+  });
+}
+
 function init() {
   MAWIBLAH_tableActions();
+  MAWIBLAH_initSettingsToggle();
 
   var templateElement = document.getElementById('template');
   if (templateElement) {

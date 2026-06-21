@@ -350,7 +350,7 @@ class Init
         add_submenu_page(
             'mawiblah',
             'Email Templates',
-            'Email Templates',
+            '<span class="dashicons dashicons-email-alt" style="font-size:16px;line-height:1.4;margin-right:6px;vertical-align:middle;"></span>Email Templates',
             'manage_options',
             self::MAWIBLAH_EMAIL_TEMPLATES,
             [$this, 'emailTemplates']
@@ -359,7 +359,7 @@ class Init
         add_submenu_page(
             'mawiblah',
             'Tests',
-            'Tests',
+            '<span class="dashicons dashicons-yes-alt" style="font-size:16px;line-height:1.4;margin-right:6px;vertical-align:middle;"></span>Tests',
             'manage_options',
             self::MAWIBLAH_TESTS,
             [$this, 'tests']
@@ -368,7 +368,7 @@ class Init
         add_submenu_page(
             'mawiblah',
             'Actions',
-            'Actions',
+            '<span class="dashicons dashicons-admin-tools" style="font-size:16px;line-height:1.4;margin-right:6px;vertical-align:middle;"></span>Actions',
             'manage_options',
             self::MAWIBLAH_ACTIONS,
             [$this, 'actions']
@@ -377,7 +377,7 @@ class Init
         add_submenu_page(
             'mawiblah',
             'Logs',
-            'Logs',
+            '<span class="dashicons dashicons-list-view" style="font-size:16px;line-height:1.4;margin-right:6px;vertical-align:middle;"></span>Logs',
             'manage_options',
             self::MAWIBLAH_LOGS,
             [$this, 'logs']
@@ -386,7 +386,7 @@ class Init
         add_submenu_page(
             'mawiblah',
             'Settings',
-            'Settings',
+            '<span class="dashicons dashicons-admin-settings" style="font-size:16px;line-height:1.4;margin-right:6px;vertical-align:middle;"></span>Settings',
             'manage_options',
             self::MAWIBLAH_SETTINGS,
             [$this, 'settings']
@@ -395,7 +395,7 @@ class Init
         add_submenu_page(
             'mawiblah',
             'Help',
-            'Help',
+            '<span class="dashicons dashicons-editor-help" style="font-size:16px;line-height:1.4;margin-right:6px;vertical-align:middle;"></span>Help',
             'manage_options',
             self::MAWIBLAH_HELP,
             [$this, 'help']

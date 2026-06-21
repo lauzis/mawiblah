@@ -155,6 +155,31 @@ class Campaigns
     }
 
     /**
+     * Creates a copy of a campaign with "(Copy)" appended to the title.
+     * Copies subject, contentTitle, content, audiences, and template. Workflow state is not copied.
+     *
+     * @param int $campaignPostId Source campaign post ID.
+     * @return int New campaign post ID, or 0 on failure.
+     */
+    public static function duplicateCampaign(int $campaignPostId): int
+    {
+        $source = self::getCampaignById($campaignPostId);
+        if (!$source) {
+            return 0;
+        }
+
+        $newTitle = $source->post_title . ' (Copy)';
+        return self::addCampaign(
+            title: $newTitle,
+            subject: $source->subject,
+            contentTitle: $source->contentTitle,
+            content: $source->post_content,
+            audiences: $source->audiences,
+            template: $source->template
+        );
+    }
+
+    /**
      * Returns true if no campaign with the given title exists.
      *
      * @param string $title Campaign title to check.

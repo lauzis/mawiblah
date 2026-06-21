@@ -201,6 +201,22 @@ class Renderer
                 require MAWIBLAH_PLUGIN_DIR . "/templates/campaign/list.php";
                 break;
 
+            case 'campaign-duplicate':
+                if (isset($_GET['campaignPostId'])) {
+                    $campaignPostId = intval($_GET['campaignPostId']);
+
+                    if ($campaignPostId > 0) {
+                        if (!current_user_can('edit_posts')) {
+                            wp_die(__('You are not allowed to do this.', 'mawiblah'), 403);
+                        }
+                        check_admin_referer('campaign-duplicate_' . $campaignPostId);
+
+                        Campaigns::duplicateCampaign($campaignPostId);
+                    }
+                }
+                require MAWIBLAH_PLUGIN_DIR . "/templates/campaign/list.php";
+                break;
+
             default:
                 require MAWIBLAH_PLUGIN_DIR . "/templates/campaign/list.php";
         }

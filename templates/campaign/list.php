@@ -29,7 +29,7 @@ use Mawiblah\Helpers;
             <th>Emails unsubed</th>
             <th>Unique visitors</th>
             <th>Links clicked</th>
-            <th colspan="4">Actions</th>
+            <th colspan="5">Actions</th>
         </tr>
         </thead>
         <tbody>
@@ -84,7 +84,7 @@ use Mawiblah\Helpers;
             }
 
             if ($campaignFinished) {
-                echo "<td colspan='4'>
+                echo "<td colspan='5'>
                     Campaign is completed
                     </td>";
             } else {
@@ -112,6 +112,9 @@ use Mawiblah\Helpers;
                         <a class='btn link-edit campaign-actions' data-type='edit' data-href='" . esc_url(Helpers::generatePluginUrl(['action' => 'campaign-edit', 'campaignPostId' => $campaign->id], 'campaignPostId')) . "'>" . esc_html__('Edit', 'mawiblah') . "</a>
                     </td>";
                 }
+                echo "<td>
+                    <a class='btn campaign-actions' data-type='duplicate' data-href='" . esc_url(Helpers::generatePluginUrl(['action' => 'campaign-duplicate', 'campaignPostId' => $campaign->id], 'campaignPostId')) . "'>" . esc_html__('Duplicate', 'mawiblah') . "</a>
+                </td>";
             }
 
 

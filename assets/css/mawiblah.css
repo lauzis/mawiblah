@@ -322,6 +322,10 @@ form.google-analytics-events {
     content: "\f140" !important;
 }
 
+.meta-box-sortables.closed .inside {
+    display: none;
+}
+
 .mawiblah-section code {
     padding: 10px;
     font-family: monospace;

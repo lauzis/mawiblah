@@ -2,6 +2,7 @@
 
 namespace Mawiblah;
 
+use Mawiblah\Campaigns;
 use Mawiblah\Subscribers;
 
 class Init
@@ -14,6 +15,7 @@ class Init
     const MAWIBLAH_SETTINGS = 'mawiblah-settings';
 
     const MAWIBLAH_ACTIONS = 'mawiblah-actions';
+    const MAWIBLAH_LOGS    = 'mawiblah-logs';
     const MAWIBLAH_HELP    = 'mawiblah-help';
     /** Bootstraps the plugin: runs migrations, registers admin menu, hooks, REST routes, and blocks. */
     public function init(): void
@@ -37,6 +39,7 @@ class Init
             self::MAWIBLAH_TESTS,
             self::MAWIBLAH_SETTINGS,
             self::MAWIBLAH_ACTIONS,
+            self::MAWIBLAH_LOGS,
             self::MAWIBLAH_HELP,
         ];
     }
@@ -297,8 +300,8 @@ class Init
 
         add_submenu_page(
             'mawiblah',
-            'Compaigns',
             'Campaigns',
+            '<span class="dashicons dashicons-megaphone" style="font-size:16px;line-height:1.4;margin-right:6px;vertical-align:middle;"></span>Campaigns',
             'manage_options',
             self::MAWIBLAH_CAMPAIGNS,
             [$this, 'campaigns']
@@ -306,8 +309,48 @@ class Init
 
         add_submenu_page(
             'mawiblah',
+            'All Campaigns',
+            '— All Campaigns',
+            'manage_options',
+            'edit.php?post_type=' . Campaigns::postType()
+        );
+
+        add_submenu_page(
+            'mawiblah',
+            'Add New Campaign',
+            '— Add New',
+            'manage_options',
+            'post-new.php?post_type=' . Campaigns::postType()
+        );
+
+        add_submenu_page(
+            'mawiblah',
+            'Subscribers',
+            '<span class="dashicons dashicons-groups" style="font-size:16px;line-height:1.4;margin-right:6px;vertical-align:middle;"></span>Subscribers',
+            'manage_options',
+            'edit.php?post_type=' . Subscribers::postType()
+        );
+
+        add_submenu_page(
+            'mawiblah',
+            'Add New Subscriber',
+            '— Add New',
+            'manage_options',
+            'post-new.php?post_type=' . Subscribers::postType()
+        );
+
+        add_submenu_page(
+            'mawiblah',
+            'Audiences',
+            '— Audiences',
+            'manage_options',
+            'edit-tags.php?taxonomy=' . Subscribers::postType() . '_category&post_type=' . Subscribers::postType()
+        );
+
+        add_submenu_page(
+            'mawiblah',
             'Email Templates',
-            'Email Templates',
+            '<span class="dashicons dashicons-email-alt" style="font-size:16px;line-height:1.4;margin-right:6px;vertical-align:middle;"></span>Email Templates',
             'manage_options',
             self::MAWIBLAH_EMAIL_TEMPLATES,
             [$this, 'emailTemplates']
@@ -316,7 +359,7 @@ class Init
         add_submenu_page(
             'mawiblah',
             'Tests',
-            'Tests',
+            '<span class="dashicons dashicons-yes-alt" style="font-size:16px;line-height:1.4;margin-right:6px;vertical-align:middle;"></span>Tests',
             'manage_options',
             self::MAWIBLAH_TESTS,
             [$this, 'tests']
@@ -325,7 +368,7 @@ class Init
         add_submenu_page(
             'mawiblah',
             'Actions',
-            'Actions',
+            '<span class="dashicons dashicons-admin-tools" style="font-size:16px;line-height:1.4;margin-right:6px;vertical-align:middle;"></span>Actions',
             'manage_options',
             self::MAWIBLAH_ACTIONS,
             [$this, 'actions']
@@ -333,8 +376,17 @@ class Init
 
         add_submenu_page(
             'mawiblah',
+            'Logs',
+            '<span class="dashicons dashicons-list-view" style="font-size:16px;line-height:1.4;margin-right:6px;vertical-align:middle;"></span>Logs',
+            'manage_options',
+            self::MAWIBLAH_LOGS,
+            [$this, 'logs']
+        );
+
+        add_submenu_page(
+            'mawiblah',
             'Settings',
-            'Settings',
+            '<span class="dashicons dashicons-admin-settings" style="font-size:16px;line-height:1.4;margin-right:6px;vertical-align:middle;"></span>Settings',
             'manage_options',
             self::MAWIBLAH_SETTINGS,
             [$this, 'settings']
@@ -343,7 +395,7 @@ class Init
         add_submenu_page(
             'mawiblah',
             'Help',
-            'Help',
+            '<span class="dashicons dashicons-editor-help" style="font-size:16px;line-height:1.4;margin-right:6px;vertical-align:middle;"></span>Help',
             'manage_options',
             self::MAWIBLAH_HELP,
             [$this, 'help']
@@ -379,6 +431,11 @@ class Init
     /** Admin page callback: renders the actions/tools page. */
     public function actions() {
         Renderer::actions();
+    }
+
+    /** Admin page callback: renders the log viewer page. */
+    public function logs() {
+        Renderer::logs();
     }
 
     /** Admin page callback: renders the in-plugin help page. */

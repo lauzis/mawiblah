@@ -100,7 +100,6 @@ function mawiblah_init(): void
     \Mawiblah\Subscribers::init();
     \Mawiblah\Campaigns::init();
     \Mawiblah\Visits::init();
-    \Mawiblah\Logs::init();
     \Mawiblah\GravityForms::init();
     \Mawiblah\SubscriptionForm::init();
 }

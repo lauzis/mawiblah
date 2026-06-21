@@ -24,6 +24,11 @@ class Migrations
             update_option('mawiblah_db_version', '1.0.16');
         }
 
+        if (version_compare($currentVersion, '1.0.21', '<')) {
+            self::migrateTo1021();
+            update_option('mawiblah_db_version', '1.0.21');
+        }
+
     }
 
     /**
@@ -53,6 +58,56 @@ class Migrations
                 $hash = Helpers::generateCampaignHash($campaign->ID);
                 update_post_meta($campaign->ID, 'campaignHash', $hash);
             }
+        }
+    }
+
+    /**
+     * Migrates log entries from the mawiblah_log post type to daily log files (introduced in 1.0.21).
+     *
+     * Each post is written as a single line to mawiblah-YYYY-MM-DD.log (based on post_date),
+     * then permanently deleted from the database.
+     */
+    private static function migrateTo1021()
+    {
+        $posts = get_posts([
+            'post_type'      => MAWIBLAH_POST_TYPE_PREFIX . 'log',
+            'posts_per_page' => -1,
+            'post_status'    => 'any',
+            'orderby'        => 'date',
+            'order'          => 'ASC',
+        ]);
+
+        if (empty($posts)) {
+            return;
+        }
+
+        $dir = MAWIBLAH_LOG_PATH;
+        if (!is_dir($dir)) {
+            wp_mkdir_p($dir);
+        }
+
+        foreach ($posts as $post) {
+            $date      = gmdate('Y-m-d', strtotime($post->post_date_gmt ?: $post->post_date));
+            $timestamp = gmdate('Y-m-d H:i:s', strtotime($post->post_date_gmt ?: $post->post_date));
+            $action    = sanitize_text_field($post->post_title);
+
+            // Strip HTML that addLog() injected for additional objects, collapse whitespace
+            $content = wp_strip_all_tags($post->post_content ?? '');
+            $content = preg_replace('/\s+/', ' ', $content);
+            $content = trim($content);
+
+            $line = "[{$timestamp}] [{$action}]";
+            if ($content !== '') {
+                $line .= " {$content}";
+            }
+
+            file_put_contents(
+                $dir . "mawiblah-{$date}.log",
+                $line . PHP_EOL,
+                FILE_APPEND | LOCK_EX
+            );
+
+            wp_delete_post($post->ID, true);
         }
     }
 

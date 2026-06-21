@@ -59,6 +59,7 @@ class Tests
             'subscription-form' => 'Subscription Form',
             'default-audiences'          => 'Default Audiences (Unsubed + Testers)',
             'programmatic-subscribe'     => 'Programmatic Subscribe (mawiblah_subscribe hook)',
+            'logging'                    => 'Logging (write & verify file log)',
         ];
     }
 
@@ -85,6 +86,7 @@ class Tests
             'subscription-form' => self::subscriptionFormScenario(),
             'default-audiences'          => self::defaultAudiencesScenario(),
             'programmatic-subscribe'     => self::programmaticSubscribeScenario(),
+            'logging'                    => self::loggingScenario(),
             default                      => self::echoResult('Unknown scenario: ' . $scenario, 'error'),
         };
     }
@@ -650,5 +652,46 @@ class Tests
         if ($aud1Id) wp_delete_term($aud1Id, $taxonomy);
         if ($aud2Id) wp_delete_term($aud2Id, $taxonomy);
         self::echoResult('Cleaned up', 'success');
+    }
+
+    // -------------------------------------------------------------------------
+    // Logging
+    // -------------------------------------------------------------------------
+
+    /** In-browser integration test: verifies file logging is enabled, writes a test entry, and confirms it appears in the log file. */
+    public static function loggingScenario(): void
+    {
+        self::echoHeading('Logging');
+
+        self::echoTitle('Logging is enabled');
+        $enabled = Logs::enabled();
+        self::echoResult($enabled ? 'Enabled' : 'Disabled — enable it under Settings → Logging', $enabled ? 'success' : 'error');
+
+        if (!$enabled) {
+            return;
+        }
+
+        self::echoTitle('Write test log entry');
+        $message = 'Hey, this is a log entry from tests! [' . gmdate('H:i:s') . ']';
+        $written = Logs::addLog('test', $message);
+        self::echoResult($written ? 'Written' : 'Write failed', $written ? 'success' : 'error');
+
+        self::echoTitle('Log file exists');
+        $files = Logs::getLogFiles();
+        $ok    = !empty($files);
+        self::echoResult($ok ? 'Found ' . count($files) . ' log file(s)' : 'No log files found', $ok ? 'success' : 'error');
+
+        self::echoTitle('Test entry appears in today\'s log');
+        $found = false;
+        if ($ok && file_exists($files[0]['file'])) {
+            $lines = file($files[0]['file'], FILE_IGNORE_NEW_LINES) ?: [];
+            foreach ($lines as $line) {
+                if (str_contains($line, $message)) {
+                    $found = true;
+                    break;
+                }
+            }
+        }
+        self::echoResult($found ? 'Entry confirmed in file' : 'Entry not found in file', $found ? 'success' : 'error', $found ? null : ($lines ?? []));
     }
 }

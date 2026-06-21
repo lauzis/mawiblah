@@ -3,7 +3,7 @@ Contributors: lauzis
 Tags: email, newsletter, marketing, mailchimp alternative, subscribers
 Requires at least: 5.0
 Tested up to: 6.9
-Stable tag: 1.0.19
+Stable tag: 1.0.20
 Requires PHP: 8.0
 License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl.html
@@ -68,6 +68,10 @@ Technically yes, but it is not recommended. The plugin sends emails individually
 8. MVP version
 
 == Changelog ==
+
+= 1.0.20 =
+*   New: "Failing Email" system audience — subscribers are automatically moved here after N failed sends (configurable threshold, default 3) and skipped in all future campaigns.
+*   New: Mailer error reason captured via PHPMailer exceptions and stored per subscriber/campaign for diagnostics.
 
 = 1.0.19 =
 *   New: Block test start when campaign has no testers — shows a clear error and links back to the campaign edit page.

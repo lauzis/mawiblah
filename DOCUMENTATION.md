@@ -88,17 +88,22 @@ flowchart TD
     N --> O[JS calls REST API per subscriber\nfor all audiences]
     O --> P{Unsubscribed?}
     P -- Yes --> Q[Skip\nincrement emailsUnsubed]
-    P -- No --> R{Already sent?}
+    P -- No --> P2{Failing Email\naudience?}
+    P2 -- Yes --> P3[Skip\nincrement emailsSkipped]
+    P2 -- No --> R{Already sent?}
     R -- Yes --> S[Skip: already sent]
     R -- No --> T{Do-not-disturb\nthreshold active?}
     T -- Yes --> U[Skip\nincrement emailsSkipped]
     T -- No --> V{Email sending\nenabled in settings?}
     V -- No --> W[Skip: emails disabled]
     V -- Yes --> X[Lock template\nFill placeholders\ncampaignHash · subscriberHash · email]
-    X --> Y[wp_mail]
+    X --> Y[wp_mail with PHPMailer\nexceptions enabled]
     Y -- Success --> Z[Mark subscriber as sent\nincrement emailsSent\nupdateCounters]
-    Y -- Failed --> AA[Mark failed\nincrement emailsFailed\nupdateCounters]
-    Q & S & U & W & Z & AA --> AB{Last subscriber?}
+    Y -- Failed --> AA[Capture error reason\nStore in sent_{id}_error meta\nincrement email_fail_count\nincrement emailsFailed\nupdateCounters]
+    AA --> AA2{email_fail_count\n>= threshold?}
+    AA2 -- Yes --> AA3[Add to Failing Email audience\nskipped in all future sends]
+    AA2 -- No --> AA4[Continue]
+    Q & P3 & S & U & W & Z & AA3 & AA4 --> AB{Last subscriber?}
     AB -- No --> O
     AB -- Yes --> AC[campaignFinish\nsets campaignFinished timestamp]
 ```
@@ -315,6 +320,25 @@ Subscribers are organized using WordPress taxonomy (`mawiblah_subscriber_categor
 - **Manual Import**: Add subscribers directly
 - **Mailchimp Import**: Import unsubscribed users from Mailchimp
 
+### System Audiences
+
+Three audiences are created automatically by the plugin and cannot be deleted safely:
+
+| Audience | Purpose |
+|---|---|
+| **Unsubed** | Subscribers who have unsubscribed. All sends are skipped. |
+| **Testers** | Subscribers who receive test emails when a campaign is in test mode. |
+| **Failing Email** | Subscribers whose email address has failed to deliver `N` times (configurable threshold, default 3). All sends are skipped. |
+
+### Failed Email Tracking
+
+Each time `wp_mail()` fails for a subscriber, the plugin:
+1. Stores the mailer error reason in `sent_{campaignId}_error` post meta.
+2. Increments the `email_fail_count` meta counter on the subscriber.
+3. Once `email_fail_count` reaches the configured threshold, automatically adds the subscriber to the **Failing Email** audience.
+
+The threshold is configurable under **Settings → Failing Email**. Subscribers in the Failing Email audience are skipped in all future campaign sends (counted as `emailsSkipped`).
+
 ### Subscriber Features
 - Unsubscribe functionality with confirmation page (human click) and RFC 8058 one-click (mail client)
 - `List-Unsubscribe` + `List-Unsubscribe-Post` headers on every campaign email
@@ -322,11 +346,15 @@ Subscribers are organized using WordPress taxonomy (`mawiblah_subscriber_categor
 - Email throttling (configurable time between emails to same subscriber)
 - Duplicate detection (case-insensitive email matching)
 - Taxonomy-based audience assignment
+- Automatic "Failing Email" flagging after repeated delivery failures
 
 ## Settings
 
 ### Email Intervals
 Control the minimum time between emails sent to the same subscriber to avoid overwhelming them.
+
+### Failing Email
+- **Failure threshold** — number of failed sends before a subscriber is moved to the Failing Email audience (default: 3, minimum: 1)
 
 ### Debugging
 - Enable debugging with IP restrictions

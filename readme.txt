@@ -72,6 +72,15 @@ Technically yes, but it is not recommended. The plugin sends emails individually
 = 1.0.22 =
 *   Fixed: Test sends and real sends now use separate meta keys (sent_test_{id} vs sent_{id}), so testers are no longer skipped when the real campaign runs. testReset() clears test-send flags when a retest is triggered. Fixes #43.
 
+= 1.0.21 =
+*   Improved: Test page redesigned with WordPress admin UI — postbox layout, checkbox scenario selection, single "Run Tests" button.
+*   Improved: Help page rebuilt with WordPress admin UI — postbox cards, native WP tables, notice callouts.
+*   Improved: Campaigns, Subscribers, and Logs post types moved under the Mawiblah admin menu with full sub-item navigation.
+*   Changed: Logging switched from custom post type to daily log files (mawiblah-YYYY-MM-DD.log) in the uploads directory.
+*   Migration: Existing log post type entries are exported to daily files and deleted from the database on first load after update.
+*   Fixed: Subscription form test scenario incorrectly accessed WP_REST_Response as an array; now unwrapped correctly.
+*   Fixed: Click tracking test scenario cleared the PHP session before starting it, causing first-visit counters to be off by one.
+
 = 1.0.20 =
 *   New: "Failing Email" system audience — subscribers are automatically moved here after N failed sends (configurable threshold, default 3) and skipped in all future campaigns.
 *   New: Mailer error reason captured via PHPMailer exceptions and stored per subscriber/campaign for diagnostics.

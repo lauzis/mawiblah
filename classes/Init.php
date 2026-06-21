@@ -15,6 +15,7 @@ class Init
     const MAWIBLAH_SETTINGS = 'mawiblah-settings';
 
     const MAWIBLAH_ACTIONS = 'mawiblah-actions';
+    const MAWIBLAH_LOGS    = 'mawiblah-logs';
     const MAWIBLAH_HELP    = 'mawiblah-help';
     /** Bootstraps the plugin: runs migrations, registers admin menu, hooks, REST routes, and blocks. */
     public function init(): void
@@ -38,6 +39,7 @@ class Init
             self::MAWIBLAH_TESTS,
             self::MAWIBLAH_SETTINGS,
             self::MAWIBLAH_ACTIONS,
+            self::MAWIBLAH_LOGS,
             self::MAWIBLAH_HELP,
         ];
     }
@@ -299,7 +301,7 @@ class Init
         add_submenu_page(
             'mawiblah',
             'Campaigns',
-            'Campaigns',
+            '<span class="dashicons dashicons-megaphone" style="font-size:16px;line-height:1.4;margin-right:6px;vertical-align:middle;"></span>Campaigns',
             'manage_options',
             self::MAWIBLAH_CAMPAIGNS,
             [$this, 'campaigns']
@@ -324,7 +326,7 @@ class Init
         add_submenu_page(
             'mawiblah',
             'Subscribers',
-            'Subscribers',
+            '<span class="dashicons dashicons-groups" style="font-size:16px;line-height:1.4;margin-right:6px;vertical-align:middle;"></span>Subscribers',
             'manage_options',
             'edit.php?post_type=' . Subscribers::postType()
         );
@@ -370,6 +372,15 @@ class Init
             'manage_options',
             self::MAWIBLAH_ACTIONS,
             [$this, 'actions']
+        );
+
+        add_submenu_page(
+            'mawiblah',
+            'Logs',
+            'Logs',
+            'manage_options',
+            self::MAWIBLAH_LOGS,
+            [$this, 'logs']
         );
 
         add_submenu_page(
@@ -420,6 +431,11 @@ class Init
     /** Admin page callback: renders the actions/tools page. */
     public function actions() {
         Renderer::actions();
+    }
+
+    /** Admin page callback: renders the log viewer page. */
+    public function logs() {
+        Renderer::logs();
     }
 
     /** Admin page callback: renders the in-plugin help page. */

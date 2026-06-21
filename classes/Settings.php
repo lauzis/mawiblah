@@ -323,7 +323,7 @@ class Settings
             }
         }
 
-        $text = __($text, EMU2_I18N_DOMAIN);
+        $text = __($text, 'mawiblah');
 
         if (is_array($params) && count($params) > 0) {
             $text = vsprintf($text, $params);

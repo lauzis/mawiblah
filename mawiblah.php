@@ -10,8 +10,9 @@
  * Requires PHP: 8.0
  */
 
+define('MAWIBLAH_VERSION_BASE', '1.0.22');
 if (!defined('MAWIBLAH_VERSION')) {
-    define('MAWIBLAH_VERSION', '1.0.22.' . time());
+    define('MAWIBLAH_VERSION', MAWIBLAH_VERSION_BASE . '.' . time());
 }
 
 define('MAWIBLAH_PLUGIN_NAME', 'Mawiblah');
@@ -89,6 +90,7 @@ require(MAWIBLAH_PLUGIN_DIR . '/classes/Logs.php');
 require(MAWIBLAH_PLUGIN_DIR . '/classes/Migrations.php');
 require(MAWIBLAH_PLUGIN_DIR . '/classes/Actions.php');
 require(MAWIBLAH_PLUGIN_DIR . '/classes/SubscriptionForm.php');
+require(MAWIBLAH_PLUGIN_DIR . '/classes/SetupNotice.php');
 
 function mawiblah_init(): void
 {
@@ -101,6 +103,7 @@ function mawiblah_init(): void
     \Mawiblah\Campaigns::init();
     \Mawiblah\Visits::init();
     \Mawiblah\GravityForms::init();
+    \Mawiblah\SetupNotice::init();
     \Mawiblah\SubscriptionForm::init();
 }
 

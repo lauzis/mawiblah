@@ -439,6 +439,12 @@ msgstr ""
         return (string) self::getOption('mawiblah-recaptcha-secret-key');
     }
 
+    /** Returns the background send batch size (subscribers per cron run). Defaults to 100. */
+    public static function backgroundBatchSize(): int
+    {
+        return max(1, (int) (self::getOption('mawiblah-background-batch-size') ?: 100));
+    }
+
     /** Returns true when email open tracking is set to "enabled" in settings. */
     public static function openTrackingEnabled(): bool
     {

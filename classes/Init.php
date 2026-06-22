@@ -144,6 +144,20 @@ class Init
                 'permission_callback' => '__return_true',
             ));
 
+            register_rest_route('mawiblah/v1', '/background-progress', array(
+                'methods'             => \WP_REST_Server::READABLE,
+                'callback'            => 'Mawiblah\RestRoutes::backgroundProgress',
+                'permission_callback' => function () {
+                    return current_user_can('edit_others_posts');
+                },
+                'args'                => [
+                    'campaignPostId' => [
+                        'type'     => 'integer',
+                        'required' => true,
+                    ],
+                ],
+            ));
+
             register_rest_route('mawiblah/v1', '/open', array(
                 'methods'             => \WP_REST_Server::READABLE,
                 'callback'            => 'Mawiblah\RestRoutes::trackOpen',

@@ -343,8 +343,9 @@ class Campaigns
         $post->testFinished = get_post_meta($post->id, 'testFinished', true) ?? false;
         $post->testApproved = get_post_meta($post->id, 'testApproved', true) ?? false;
 
-        $post->campaignStarted = get_post_meta($post->id, 'campaignStarted', true) ?? false;
-        $post->campaignFinished = get_post_meta($post->id, 'campaignFinished', true) ?? false;
+        $post->campaignStarted    = get_post_meta($post->id, 'campaignStarted', true) ?? false;
+        $post->campaignFinished   = get_post_meta($post->id, 'campaignFinished', true) ?? false;
+        $post->backgroundStarted  = get_post_meta($post->id, 'backgroundStarted', true) ?? false;
 
         if (!$post->campaignHash) {
             $post->campaignHash = Helpers::generateCampaignHash($post->id);
@@ -1089,6 +1090,27 @@ class Campaigns
             self::resetCounters($campaignPostId);
             update_post_meta($campaignPostId, 'campaignStarted', time());
         }
+    }
+
+    /**
+     * Starts a background (cron-driven) send: marks the campaign started and sets backgroundStarted.
+     *
+     * @param int $campaignPostId Campaign post ID.
+     */
+    public static function backgroundSendStart(int $campaignPostId): void
+    {
+        self::campaignStart($campaignPostId);
+        update_post_meta($campaignPostId, 'backgroundStarted', time());
+    }
+
+    /**
+     * Stops a background send: clears backgroundStarted.
+     *
+     * @param int $campaignPostId Campaign post ID.
+     */
+    public static function backgroundSendStop(int $campaignPostId): void
+    {
+        delete_post_meta($campaignPostId, 'backgroundStarted');
     }
 
     /**

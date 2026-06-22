@@ -91,6 +91,7 @@ require(MAWIBLAH_PLUGIN_DIR . '/classes/Migrations.php');
 require(MAWIBLAH_PLUGIN_DIR . '/classes/Actions.php');
 require(MAWIBLAH_PLUGIN_DIR . '/classes/SubscriptionForm.php');
 require(MAWIBLAH_PLUGIN_DIR . '/classes/SetupNotice.php');
+require(MAWIBLAH_PLUGIN_DIR . '/classes/CronSend.php');
 
 function mawiblah_init(): void
 {
@@ -105,6 +106,7 @@ function mawiblah_init(): void
     \Mawiblah\GravityForms::init();
     \Mawiblah\SetupNotice::init();
     \Mawiblah\SubscriptionForm::init();
+    \Mawiblah\CronSend::init();
 }
 
 add_action('init', 'mawiblah_init');

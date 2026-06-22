@@ -122,6 +122,44 @@ class Renderer
                 }
                 break;
 
+            case 'campaign-send-background':
+                if (isset($_GET['campaignPostId'])) {
+                    $campaignPostId = intval($_GET['campaignPostId'] ?? 0);
+
+                    if ($campaignPostId > 0 && !current_user_can('edit_post', $campaignPostId)) {
+                        wp_die(__('You are not allowed to do this.', 'mawiblah'), 403);
+                    }
+                    check_admin_referer('campaign-send-background_' . $campaignPostId);
+
+                    $campaign = Campaigns::getCampaignById($campaignPostId);
+                    if (!$campaign || !$campaign->testApproved) {
+                        wp_die(__('Campaign must be approved before sending.', 'mawiblah'), 403);
+                    }
+
+                    Campaigns::backgroundSendStart($campaignPostId);
+                    CronSend::schedule($campaignPostId);
+
+                    require MAWIBLAH_PLUGIN_DIR . "/templates/campaign/background-progress.php";
+                }
+                break;
+
+            case 'campaign-stop-background':
+                if (isset($_GET['campaignPostId'])) {
+                    $campaignPostId = intval($_GET['campaignPostId'] ?? 0);
+
+                    if ($campaignPostId > 0 && !current_user_can('edit_post', $campaignPostId)) {
+                        wp_die(__('You are not allowed to do this.', 'mawiblah'), 403);
+                    }
+                    check_admin_referer('campaign-stop-background_' . $campaignPostId);
+
+                    CronSend::unschedule($campaignPostId);
+                    Campaigns::backgroundSendStop($campaignPostId);
+
+                    wp_safe_redirect(admin_url('admin.php?page=' . Init::MAWIBLAH_CAMPAIGNS));
+                    exit;
+                }
+                break;
+
             case 'save-campaign':
                 $debug = [];
                 $debug['post'] = $_POST;

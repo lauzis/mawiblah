@@ -386,5 +386,184 @@ if ( $result['status'] === 'ok' ) {
         </div>
     </div>
 
+    <!-- ── Background Send & Cron Setup ─────────────────────────────────── -->
+    <div class="postbox">
+        <div class="postbox-header">
+            <h2 class="hndle"><span><?php esc_html_e('Background Send & Real Cron Setup', 'mawiblah'); ?></span></h2>
+        </div>
+        <div class="inside">
+
+            <p>
+                <?php esc_html_e('Mawiblah can send campaigns in the background via WP Cron so you can close the browser tab. By default WordPress uses "poor man\'s cron" — cron jobs only run when a visitor loads a page. On low-traffic sites this means background sends can stall for minutes or hours.', 'mawiblah'); ?>
+            </p>
+            <p>
+                <?php esc_html_e('Setting up a real system cron job on your Linux host fixes this: cron runs on a schedule regardless of site traffic, and sends proceed at full speed.', 'mawiblah'); ?>
+            </p>
+
+            <div class="notice notice-warning inline" style="margin:0 0 16px;">
+                <p>
+                    <strong><?php esc_html_e('Without a real cron:', 'mawiblah'); ?></strong>
+                    <?php esc_html_e('background sends only advance when someone visits the site. A 2 000-subscriber campaign sending 100 per batch takes at least 20 page loads to complete.', 'mawiblah'); ?>
+                </p>
+            </div>
+
+            <h3><?php esc_html_e('Step 1 — Disable WP\'s built-in cron trigger', 'mawiblah'); ?></h3>
+            <p>
+                <?php esc_html_e('Open', 'mawiblah'); ?>
+                <code>wp-config.php</code>
+                <?php esc_html_e('and add this line above the "That\'s all" comment:', 'mawiblah'); ?>
+            </p>
+            <pre><code>define( 'DISABLE_WP_CRON', true );</code></pre>
+            <p><?php esc_html_e('This prevents WordPress from spawning a background HTTP request on every page load — once the real cron takes over you no longer need it.', 'mawiblah'); ?></p>
+
+            <h3 style="margin-top:24px;"><?php esc_html_e('Step 2 — Add a system cron job', 'mawiblah'); ?></h3>
+            <p>
+                <?php esc_html_e('Run', 'mawiblah'); ?> <code>crontab -e</code>
+                <?php esc_html_e('as the web server user (e.g.', 'mawiblah'); ?> <code>www-data</code>
+                <?php esc_html_e(') or as root, and add one of the lines below. Every 1 minute is recommended to keep background sends moving.', 'mawiblah'); ?>
+            </p>
+
+            <h4><?php esc_html_e('Option A — WP-CLI (recommended)', 'mawiblah'); ?></h4>
+            <p><?php esc_html_e('WP-CLI is the cleanest approach: no HTTP overhead, works even when the site has no visitors, and reports errors to the cron log.', 'mawiblah'); ?></p>
+            <pre><code># Run WP Cron every minute via WP-CLI
+* * * * * www-data wp cron event run --due-now --path=/var/www/html --url=https://yoursite.com >> /var/log/wp-cron.log 2>&1</code></pre>
+            <p>
+                <?php esc_html_e('Replace', 'mawiblah'); ?> <code>/var/www/html</code>
+                <?php esc_html_e('with your WordPress root and', 'mawiblah'); ?> <code>https://yoursite.com</code>
+                <?php esc_html_e('with your site URL. If WP-CLI is not in the system PATH, use its full path, e.g.', 'mawiblah'); ?> <code>/usr/local/bin/wp</code>.
+            </p>
+
+            <h4 style="margin-top:16px;"><?php esc_html_e('Option B — curl', 'mawiblah'); ?></h4>
+            <p><?php esc_html_e('Works without WP-CLI. Triggers cron over HTTP — requires the site to be reachable from the server itself.', 'mawiblah'); ?></p>
+            <pre><code># Run WP Cron every minute via curl
+* * * * * www-data curl -s "https://yoursite.com/wp-cron.php?doing_wp_cron" > /dev/null 2>&1</code></pre>
+
+            <h4 style="margin-top:16px;"><?php esc_html_e('Option C — PHP CLI', 'mawiblah'); ?></h4>
+            <p><?php esc_html_e('Direct PHP invocation — faster than curl, no WP-CLI needed.', 'mawiblah'); ?></p>
+            <pre><code># Run WP Cron every minute via PHP
+* * * * * www-data php /var/www/html/wp-cron.php > /dev/null 2>&1</code></pre>
+
+            <h3 style="margin-top:24px;"><?php esc_html_e('Step 3 — Verify it works', 'mawiblah'); ?></h3>
+            <ol style="padding-left:1.5em;">
+                <li><?php esc_html_e('Wait 2–3 minutes after saving the crontab.', 'mawiblah'); ?></li>
+                <li>
+                    <?php esc_html_e('Start a background campaign send. The counter on the progress page should advance every minute without any browser interaction.', 'mawiblah'); ?>
+                </li>
+                <li>
+                    <?php esc_html_e('Optional: install the', 'mawiblah'); ?>
+                    <strong>WP Crontrol</strong>
+                    <?php esc_html_e('plugin to inspect scheduled events and confirm', 'mawiblah'); ?>
+                    <code>mawiblah_background_send</code>
+                    <?php esc_html_e('appears in the event list while a background send is running.', 'mawiblah'); ?>
+                </li>
+            </ol>
+
+            <h3 style="margin-top:24px;"><?php esc_html_e('Nginx — open tracking pixel', 'mawiblah'); ?></h3>
+            <p>
+                <?php esc_html_e('The open tracking pixel endpoint', 'mawiblah'); ?>
+                (<code>/wp-json/mawiblah/v1/open</code>)
+                <?php esc_html_e('is a standard WordPress REST API route. On a typical Nginx + PHP-FPM setup no extra configuration is needed — the existing WordPress rewrite rules handle it.', 'mawiblah'); ?>
+            </p>
+            <p>
+                <?php esc_html_e('If your Nginx config bypasses PHP for static assets, make sure the REST API base path is not excluded. A minimal working location block:', 'mawiblah'); ?>
+            </p>
+            <pre><code>location /wp-json/ {
+    try_files $uri $uri/ /index.php?$args;
+}</code></pre>
+            <p>
+                <?php esc_html_e('The endpoint returns a 1×1 transparent GIF and records the open as a side effect — no separate nginx scripting is required.', 'mawiblah'); ?>
+            </p>
+
+            <h3 style="margin-top:24px;"><?php esc_html_e('Background send — how it works', 'mawiblah'); ?></h3>
+            <table class="wp-list-table widefat fixed striped" style="max-width:800px;">
+                <thead>
+                    <tr>
+                        <th style="width:28%"><?php esc_html_e('Phase', 'mawiblah'); ?></th>
+                        <th><?php esc_html_e('What happens', 'mawiblah'); ?></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><?php esc_html_e('Click "BG" button', 'mawiblah'); ?></td>
+                        <td><?php esc_html_e('Campaign is marked started, backgroundStarted flag is set, first cron event is scheduled.', 'mawiblah'); ?></td>
+                    </tr>
+                    <tr>
+                        <td><?php esc_html_e('Cron fires', 'mawiblah'); ?></td>
+                        <td>
+                            <?php
+                            printf(
+                                /* translators: %s: batch size link */
+                                esc_html__('Processes up to N subscribers (configured in Settings → Subscribers per cron batch, default 100). Applies all normal send rules: do-not-disturb threshold, unsubscribed, failing email, open tracking pixel. Reschedules itself in 60 seconds if more subscribers remain.', 'mawiblah'),
+                            );
+                            ?>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><?php esc_html_e('Progress page', 'mawiblah'); ?></td>
+                        <td><?php esc_html_e('Polls the REST API every 5 seconds and updates the sent/failed/skipped/unsubscribed counters live. Safe to close — the send continues regardless.', 'mawiblah'); ?></td>
+                    </tr>
+                    <tr>
+                        <td><?php esc_html_e('Stop button', 'mawiblah'); ?></td>
+                        <td><?php esc_html_e('Clears the backgroundStarted flag and cancels the pending cron event. Already-sent subscribers are recorded — restarting the campaign would skip them.', 'mawiblah'); ?></td>
+                    </tr>
+                    <tr>
+                        <td><?php esc_html_e('Completion', 'mawiblah'); ?></td>
+                        <td><?php esc_html_e('When the last subscriber is processed, the campaign is marked finished and the backgroundStarted flag is automatically cleared.', 'mawiblah'); ?></td>
+                    </tr>
+                </tbody>
+            </table>
+
+        </div>
+    </div>
+
+    <!-- ── Settings Reference (updated) ─────────────────────────────────── -->
+    <div class="postbox">
+        <div class="postbox-header">
+            <h2 class="hndle"><span><?php esc_html_e('Settings Reference — Background Send & Open Tracking', 'mawiblah'); ?></span></h2>
+        </div>
+        <div class="inside">
+
+            <h3><?php esc_html_e('Background Send (WP Cron)', 'mawiblah'); ?></h3>
+            <table class="wp-list-table widefat fixed striped" style="max-width:800px;">
+                <thead>
+                    <tr>
+                        <th style="width:30%"><?php esc_html_e('Setting', 'mawiblah'); ?></th>
+                        <th><?php esc_html_e('Description', 'mawiblah'); ?></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><?php esc_html_e('Subscribers per cron batch', 'mawiblah'); ?></td>
+                        <td><?php esc_html_e('How many subscribers are processed in a single WP Cron run. Higher = fewer cron runs needed; lower = shorter PHP execution time per run. Default: 100. Reduce if your host has a tight PHP max_execution_time.', 'mawiblah'); ?></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3 style="margin-top:24px;"><?php esc_html_e('Email Open Tracking', 'mawiblah'); ?></h3>
+            <table class="wp-list-table widefat fixed striped" style="max-width:800px;">
+                <thead>
+                    <tr>
+                        <th style="width:30%"><?php esc_html_e('Setting', 'mawiblah'); ?></th>
+                        <th><?php esc_html_e('Description', 'mawiblah'); ?></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><?php esc_html_e('Enable open tracking', 'mawiblah'); ?></td>
+                        <td>
+                            <?php esc_html_e('When enabled, a 1×1 transparent GIF pixel is appended to every outgoing campaign email (real sends only — not test mode). The pixel URL is:', 'mawiblah'); ?>
+                            <code><?php echo esc_html(rest_url('mawiblah/v1/open')); ?></code>.
+                            <?php esc_html_e('Opens are recorded uniquely per subscriber per campaign with a timestamp. The campaign list shows an "Emails opened" column with count and percentage when tracking is active.', 'mawiblah'); ?>
+                            <br><br>
+                            <strong><?php esc_html_e('Privacy:', 'mawiblah'); ?></strong>
+                            <?php esc_html_e('inform your subscribers about open tracking in your site\'s privacy policy before enabling.', 'mawiblah'); ?>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+        </div>
+    </div>
+
     </div><!-- /.metabox-holder -->
 </div>

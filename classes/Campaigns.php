@@ -337,6 +337,7 @@ class Campaigns
         $post->emailsSkipped = get_post_meta($post->id, 'emailsSkipped', true);
         $post->emailsUnsubed = get_post_meta($post->id, 'emailsUnsubed', true);
         $post->emailsNewlyUnsubed = get_post_meta($post->id, 'emailsNewlyUnsubed', true) ?? 0;
+        $post->emailsOpened = (int) (get_post_meta($post->id, 'emailsOpened', true) ?? 0);
 
         $post->testStarted = get_post_meta($post->id, 'testStarted', true) ?? false;
         $post->testFinished = get_post_meta($post->id, 'testFinished', true) ?? false;
@@ -728,6 +729,24 @@ class Campaigns
      * @param int    $emailsSkipped  Total skipped sends.
      * @param int    $emailsUnsubed  Total sends skipped due to unsubscription.
      */
+    /**
+     * Records a unique open for a subscriber+campaign pair and increments the campaign open counter.
+     * No-op if the subscriber has already opened this campaign.
+     *
+     * @param int $subscriberId  Subscriber post ID.
+     * @param int $campaignPostId Campaign post ID.
+     */
+    public static function recordOpen(int $subscriberId, int $campaignPostId): void
+    {
+        $metaKey = 'opened_' . $campaignPostId;
+        if (get_post_meta($subscriberId, $metaKey, true)) {
+            return;
+        }
+        update_post_meta($subscriberId, $metaKey, time());
+        $current = (int) get_post_meta($campaignPostId, 'emailsOpened', true);
+        update_post_meta($campaignPostId, 'emailsOpened', $current + 1);
+    }
+
     public static function updateCounters(object $campaign, int $emailsSent, int $emailsFailed, int $emailsSkipped, int $emailsUnsubed): void
     {
 

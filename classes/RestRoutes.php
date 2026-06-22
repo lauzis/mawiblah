@@ -322,6 +322,14 @@ class RestRoutes
         }
         $emailBody = Campaigns::fillTemplate($template, $campaign, $subscriber);
 
+        if (!$testMode && Settings::openTrackingEnabled()) {
+            $pixelUrl = add_query_arg([
+                'subscriber' => $subscriber->subscriberHash,
+                'campaign'   => $campaign->campaignHash,
+            ], rest_url('mawiblah/v1/open'));
+            $emailBody .= '<img src="' . esc_url($pixelUrl) . '" width="1" height="1" alt="" style="display:none;" />';
+        }
+
         $unsubToken = Subscribers::getUnsubToken($subscriber->id, $subscriber->email);
         $unsubUrl   = add_query_arg([
             'subscriber' => $subscriber->subscriberHash,
@@ -436,5 +444,35 @@ class RestRoutes
             'status' => 'error',
             'message' => $failMessage,
         ];
+    }
+
+    /**
+     * Tracking pixel endpoint — records a unique email open and returns a 1×1 transparent GIF.
+     * Publicly accessible; no authentication required (the pixel is embedded in emails).
+     *
+     * @param \WP_REST_Request $request REST request with 'subscriber' and 'campaign' query params.
+     */
+    public static function trackOpen(\WP_REST_Request $request): void
+    {
+        $subscriberHash = sanitize_text_field($request->get_param('subscriber') ?? '');
+        $campaignHash   = sanitize_text_field($request->get_param('campaign') ?? '');
+
+        if (Settings::openTrackingEnabled() && $subscriberHash && $campaignHash) {
+            $subscriber = Subscribers::getSubscriberBySubscriberHash($subscriberHash);
+            $campaign   = Campaigns::getCampaignByHash($campaignHash);
+
+            if ($subscriber && $campaign) {
+                Campaigns::recordOpen($subscriber->id, $campaign->id);
+            }
+        }
+
+        $gif = base64_decode('R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7');
+        header('Content-Type: image/gif');
+        header('Cache-Control: no-cache, no-store, must-revalidate');
+        header('Pragma: no-cache');
+        header('Expires: Wed, 11 Jan 1984 05:00:00 GMT');
+        // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+        echo $gif;
+        exit;
     }
 }

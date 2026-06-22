@@ -439,6 +439,12 @@ msgstr ""
         return (string) self::getOption('mawiblah-recaptcha-secret-key');
     }
 
+    /** Returns true when email open tracking is set to "enabled" in settings. */
+    public static function openTrackingEnabled(): bool
+    {
+        return self::getOption('mawiblah-open-tracking-enabled') === 'enabled';
+    }
+
     /** Returns true only when reCAPTCHA is enabled AND both site key and secret key are non-empty. */
     public static function recaptchaReady(): bool
     {

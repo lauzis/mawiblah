@@ -160,5 +160,20 @@
         ]
       }
     ]
+  },
+  {
+    "id": "mawiblah-background-send",
+    "title": "Background Send (WP Cron)",
+    "description": "Settings for background campaign sending via WP Cron. Campaigns can be sent in the background so you can close the browser tab.",
+    "fields": [
+      {
+        "id": "mawiblah-background-batch-size",
+        "title": "Subscribers per cron batch",
+        "type": "number",
+        "value": "",
+        "placeholder": "100",
+        "default_value": "100"
+      }
+    ]
   }
 ]

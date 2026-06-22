@@ -10,8 +10,7 @@ namespace Mawiblah;
  */
 class CronSend
 {
-    const HOOK       = 'mawiblah_background_send';
-    const BATCH_SIZE = 50;
+    const HOOK = 'mawiblah_background_send';
 
     /** Registers the cron action hook. Call from plugin init. */
     public static function init(): void
@@ -73,10 +72,11 @@ class CronSend
         $failingEmailAudience  = Subscribers::failingEmailAudience();
         $sendEmails            = Settings::sendEmails();
 
-        $audiences     = $campaign->audiences ?? [];
-        $seenEmails    = [];
-        $batchCount    = 0;
-        $hasMore       = false;
+        $batchSize  = Settings::backgroundBatchSize();
+        $audiences  = $campaign->audiences ?? [];
+        $seenEmails = [];
+        $batchCount = 0;
+        $hasMore    = false;
 
         foreach ($audiences as $audienceId) {
             $subscribers = Subscribers::getSubscribersByAudience($audienceId);
@@ -95,7 +95,7 @@ class CronSend
                 }
 
                 // If batch is full, note that more work remains and stop iteration
-                if ($batchCount >= self::BATCH_SIZE) {
+                if ($batchCount >= $batchSize) {
                     $hasMore = true;
                     break 2;
                 }

@@ -1,6 +1,6 @@
 <?php if (!isset($data) || !is_array($data) || count($data) === 0): ?>
     <div class="stats-box-email-container">
-        <?php _e('No data to display.', 'mawiblah'); ?>
+        <?php esc_html_e('No data to display.', 'mawiblah'); ?>
     </div>
 <?php return; endif; ?>
 
@@ -52,8 +52,8 @@ $oneItem = $arrayItemCount === 1;
             <thead>
             <tr>
                 <th></th>
-                <th><?= __('Max', 'mawiblah'); ?></th>
-                <th><?= __('Avg', 'mawiblah'); ?></th>
+                <th><?php esc_html_e('Max', 'mawiblah'); ?></th>
+                <th><?php esc_html_e('Avg', 'mawiblah'); ?></th>
             </tr>
             </thead>
             <tbody>

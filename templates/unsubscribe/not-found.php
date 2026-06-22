@@ -22,7 +22,7 @@
             <p><?php esc_html_e('We could not find you in subscribers list.', 'mawiblah'); ?></p>
             <?php if (is_admin()): ?>
                 <pre>
-                    <?php print_r($debug); ?>
+                    <?php echo esc_html(print_r($debug, true)); ?>
                 </pre>
             <?php endif; ?>
         </div>

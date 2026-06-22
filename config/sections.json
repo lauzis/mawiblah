@@ -135,5 +135,30 @@
         "default_value": ""
       }
     ]
+  },
+  {
+    "id": "mawiblah-open-tracking",
+    "title": "Email Open Tracking",
+    "description": "Embeds a 1×1 tracking pixel in outgoing emails. Requires server-side configuration (nginx must serve the pixel URL and execute PHP). When enabled, unique opens are recorded per subscriber per campaign. Note: inform subscribers in your privacy policy.",
+    "fields": [
+      {
+        "id": "mawiblah-open-tracking-enabled",
+        "title": "Enable open tracking",
+        "type": "select",
+        "value": "",
+        "placeholder": "",
+        "default_value": "disabled",
+        "options": [
+          {
+            "value": "disabled",
+            "title": "Disabled"
+          },
+          {
+            "value": "enabled",
+            "title": "Enabled"
+          }
+        ]
+      }
+    ]
   }
 ]

@@ -29,6 +29,9 @@ use Mawiblah\Helpers;
             <th>Emails unsubed</th>
             <th>Unique visitors</th>
             <th>Links clicked</th>
+            <?php if (\Mawiblah\Settings::openTrackingEnabled()): ?>
+            <th>Emails opened</th>
+            <?php endif; ?>
             <th colspan="5">Actions</th>
         </tr>
         </thead>
@@ -59,6 +62,12 @@ use Mawiblah\Helpers;
             echo "<td>" . esc_html($campaign->emailsUnsubed) . "</td>";
             echo "<td>" . esc_html($campaign->uniqueUserClicks) . "</td>";
             echo "<td>" . esc_html($campaign->linksClicked) . "</td>";
+            if (\Mawiblah\Settings::openTrackingEnabled()) {
+                $sent = (int) $campaign->emailsSend;
+                $opened = (int) $campaign->emailsOpened;
+                $pct = $sent > 0 ? round($opened / $sent * 100) : 0;
+                echo "<td>" . esc_html($opened) . ($sent > 0 ? ' (' . esc_html($pct) . '%)' : '') . "</td>";
+            }
             $status = $campaign->post_status;
 
             $campaignFinished = false;

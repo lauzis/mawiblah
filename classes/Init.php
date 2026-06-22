@@ -144,6 +144,24 @@ class Init
                 'permission_callback' => '__return_true',
             ));
 
+            register_rest_route('mawiblah/v1', '/open', array(
+                'methods'             => \WP_REST_Server::READABLE,
+                'callback'            => 'Mawiblah\RestRoutes::trackOpen',
+                'permission_callback' => '__return_true',
+                'args'                => [
+                    'subscriber' => [
+                        'type'              => 'string',
+                        'default'           => '',
+                        'sanitize_callback' => 'sanitize_text_field',
+                    ],
+                    'campaign'   => [
+                        'type'              => 'string',
+                        'default'           => '',
+                        'sanitize_callback' => 'sanitize_text_field',
+                    ],
+                ],
+            ));
+
         });
     }
 

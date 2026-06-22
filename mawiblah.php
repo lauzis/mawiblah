@@ -92,6 +92,7 @@ require(MAWIBLAH_PLUGIN_DIR . '/classes/Actions.php');
 require(MAWIBLAH_PLUGIN_DIR . '/classes/SubscriptionForm.php');
 require(MAWIBLAH_PLUGIN_DIR . '/classes/SetupNotice.php');
 require(MAWIBLAH_PLUGIN_DIR . '/classes/CronSend.php');
+require(MAWIBLAH_PLUGIN_DIR . '/classes/Import.php');
 
 function mawiblah_init(): void
 {

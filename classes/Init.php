@@ -14,6 +14,7 @@ class Init
 
     const MAWIBLAH_SETTINGS = 'mawiblah-settings';
 
+    const MAWIBLAH_IMPORT  = 'mawiblah-import';
     const MAWIBLAH_ACTIONS = 'mawiblah-actions';
     const MAWIBLAH_LOGS    = 'mawiblah-logs';
     const MAWIBLAH_HELP    = 'mawiblah-help';
@@ -38,6 +39,7 @@ class Init
             self::MAWIBLAH_EMAIL_TEMPLATES,
             self::MAWIBLAH_TESTS,
             self::MAWIBLAH_SETTINGS,
+            self::MAWIBLAH_IMPORT,
             self::MAWIBLAH_ACTIONS,
             self::MAWIBLAH_LOGS,
             self::MAWIBLAH_HELP,
@@ -402,6 +404,15 @@ class Init
 
         add_submenu_page(
             'mawiblah',
+            'Import',
+            '<span class="dashicons dashicons-upload" style="font-size:16px;line-height:1.4;margin-right:6px;vertical-align:middle;"></span>Import',
+            'manage_options',
+            self::MAWIBLAH_IMPORT,
+            [$this, 'import']
+        );
+
+        add_submenu_page(
+            'mawiblah',
             'Actions',
             '<span class="dashicons dashicons-admin-tools" style="font-size:16px;line-height:1.4;margin-right:6px;vertical-align:middle;"></span>Actions',
             'manage_options',
@@ -471,6 +482,11 @@ class Init
     /** Admin page callback: renders the log viewer page. */
     public function logs() {
         Renderer::logs();
+    }
+
+    /** Admin page callback: renders the CSV import page. */
+    public function import() {
+        Renderer::import();
     }
 
     /** Admin page callback: renders the in-plugin help page. */

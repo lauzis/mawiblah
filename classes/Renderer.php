@@ -281,6 +281,12 @@ class Renderer
         exit;
     }
 
+    /** Renders the CSV import page. */
+    public static function import()
+    {
+        require MAWIBLAH_PLUGIN_DIR . "/templates/import.php";
+    }
+
     /** Renders the in-plugin help page and exits. */
     public static function help()
     {

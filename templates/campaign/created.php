@@ -2,8 +2,8 @@
     <section class="message">
 
         <div>
-            <h1><?php _e('Campaign created'); ?></h1>
-            <p><?php _e('Campaign created succesfully'); ?></p>
+            <h1><?php esc_html_e('Campaign created', 'mawiblah'); ?></h1>
+            <p><?php esc_html_e('Campaign created succesfully', 'mawiblah'); ?></p>
         </div>
 
     </section>

@@ -447,6 +447,37 @@ class RestRoutes
     }
 
     /**
+     * Returns live send counters for a background send in progress.
+     *
+     * @param \WP_REST_Request $request REST request with 'campaignPostId'.
+     * @return array{sent:int, failed:int, skipped:int, unsubed:int, total:int, running:bool}
+     */
+    public static function backgroundProgress(\WP_REST_Request $request): array
+    {
+        $campaignPostId = (int) $request->get_param('campaignPostId');
+        $campaign       = Campaigns::getCampaignById($campaignPostId);
+
+        if (!$campaign) {
+            return ['error' => 'Not found'];
+        }
+
+        $counters = Campaigns::getCounters($campaign);
+        $sent     = (int) ($counters->emailsSend ?? 0);
+        $failed   = (int) ($counters->emailsFailed ?? 0);
+        $skipped  = (int) ($counters->emailsSkipped ?? 0);
+        $unsubed  = (int) ($counters->emailsUnsubed ?? 0);
+
+        return [
+            'sent'    => $sent,
+            'failed'  => $failed,
+            'skipped' => $skipped,
+            'unsubed' => $unsubed,
+            'total'   => $sent + $failed + $skipped + $unsubed,
+            'running' => !empty($campaign->backgroundStarted) && empty($campaign->campaignFinished),
+        ];
+    }
+
+    /**
      * Tracking pixel endpoint — records a unique email open and returns a 1×1 transparent GIF.
      * Publicly accessible; no authentication required (the pixel is embedded in emails).
      *

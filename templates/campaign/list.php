@@ -92,6 +92,8 @@ use Mawiblah\Helpers;
                 $campaignFinished = true;
             }
 
+            $backgroundRunning = !empty($campaign->backgroundStarted) && empty($campaign->campaignFinished);
+
             if ($campaignFinished) {
                 echo "<td colspan='5'>
                     Campaign is completed
@@ -100,11 +102,18 @@ use Mawiblah\Helpers;
                 echo "<td>
                     <a class='btn link-send campaign-actions' data-type='send' data-href='" . esc_url(Helpers::generatePluginUrl(['action' => 'test', 'campaignPostId' => $campaign->id])) . "'>" . esc_html($testButtonText) . "</a>
                 </td>";
-                if ($sendDisabled) {
+                if ($backgroundRunning) {
+                    $progressUrl = Helpers::generatePluginUrl(['action' => 'campaign-send-background', 'campaignPostId' => $campaign->id], 'campaignPostId');
+                    echo "<td>
+                        <a class='btn btn-secondary' href='" . esc_url($progressUrl) . "'>" . esc_html__('Background: running…', 'mawiblah') . "</a>
+                    </td>";
+                } elseif ($sendDisabled) {
                     echo "<td><span class='btn btn-danger disabled'>" . esc_html__('Send', 'mawiblah') . "</span></td>";
                 } else {
                     echo "<td>
                         <a class='btn btn-danger link-send campaign-actions' data-type='send' data-href='" . esc_url(Helpers::generatePluginUrl(['action' => 'campaign-send', 'campaignPostId' => $campaign->id], 'campaignPostId')) . "'>" . esc_html__('Send', 'mawiblah') . "</a>
+                        &nbsp;
+                        <a class='btn btn-secondary link-send campaign-actions' data-type='send' data-href='" . esc_url(Helpers::generatePluginUrl(['action' => 'campaign-send-background', 'campaignPostId' => $campaign->id], 'campaignPostId')) . "'>" . esc_html__('BG', 'mawiblah') . "</a>
                     </td>";
                 }
                 if ($deleteDisabled) {

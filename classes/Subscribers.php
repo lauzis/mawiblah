@@ -43,12 +43,38 @@ class Subscribers
      */
     public static function renderMetaData($post)
     {
-        // Add your custom output here
         $metadata = self::getMetaData($post->ID);
         echo '<div>';
         echo '<h3>Meta data</h3>';
         foreach ($metadata as $key => $value) {
             echo '<p><strong>' . esc_html($key) . ':</strong> ' . esc_html($value) . '</p>';
+        }
+        echo '</div>';
+
+        // Opens section: total opens and per-campaign open timestamps.
+        $allMeta = get_post_meta($post->ID);
+        $openEntries = [];
+        foreach ($allMeta as $key => $values) {
+            if (strncmp($key, 'opened_', 7) === 0) {
+                $campaignPostId = (int) substr($key, 7);
+                $timestamp      = (int) ($values[0] ?? 0);
+                $campaign       = \Mawiblah\Campaigns::getCampaignById($campaignPostId);
+                $campaignLabel  = $campaign ? esc_html($campaign->post_title) . ' (#' . $campaignPostId . ')' : '#' . $campaignPostId;
+                $openEntries[]  = ['label' => $campaignLabel, 'time' => $timestamp];
+            }
+        }
+
+        $totalOpens = count($openEntries);
+        echo '<div>';
+        echo '<h3>' . esc_html__('Opens', 'mawiblah') . '</h3>';
+        echo '<p><strong>' . esc_html__('Total opens (unique campaigns)', 'mawiblah') . ':</strong> ' . esc_html($totalOpens) . '</p>';
+        if ($openEntries) {
+            echo '<table><thead><tr><th>' . esc_html__('Campaign', 'mawiblah') . '</th><th>' . esc_html__('Opened at', 'mawiblah') . '</th></tr></thead><tbody>';
+            foreach ($openEntries as $entry) {
+                $formattedTime = $entry['time'] ? esc_html(date('Y-m-d H:i:s', $entry['time'])) : '—';
+                echo '<tr><td>' . esc_html($entry['label']) . '</td><td>' . $formattedTime . '</td></tr>';
+            }
+            echo '</tbody></table>';
         }
         echo '</div>';
     }

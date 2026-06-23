@@ -93,6 +93,8 @@ require(MAWIBLAH_PLUGIN_DIR . '/classes/SubscriptionForm.php');
 require(MAWIBLAH_PLUGIN_DIR . '/classes/SetupNotice.php');
 require(MAWIBLAH_PLUGIN_DIR . '/classes/CronSend.php');
 require(MAWIBLAH_PLUGIN_DIR . '/classes/Import.php');
+require(MAWIBLAH_PLUGIN_DIR . '/classes/Scheduler.php');
+require(MAWIBLAH_PLUGIN_DIR . '/classes/SchedulerCron.php');
 
 function mawiblah_init(): void
 {
@@ -108,6 +110,8 @@ function mawiblah_init(): void
     \Mawiblah\SetupNotice::init();
     \Mawiblah\SubscriptionForm::init();
     \Mawiblah\CronSend::init();
+    \Mawiblah\Scheduler::init();
+    \Mawiblah\SchedulerCron::init();
 }
 
 add_action('init', 'mawiblah_init');

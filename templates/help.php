@@ -565,5 +565,96 @@ if ( $result['status'] === 'ok' ) {
         </div>
     </div>
 
+    <!-- ── Scheduler ────────────────────────────────────────────────────── -->
+    <div class="postbox">
+        <div class="postbox-header">
+            <h2 class="hndle"><span><?php esc_html_e('Campaign Scheduler', 'mawiblah'); ?></span></h2>
+        </div>
+        <div class="inside">
+
+            <p>
+                <?php esc_html_e('The Scheduler lets you send campaigns automatically on a fixed schedule — once at a specific date/time, every week on a chosen day, or every month on a chosen day.', 'mawiblah'); ?>
+            </p>
+
+            <h3><?php esc_html_e('How to set up a schedule', 'mawiblah'); ?></h3>
+            <ol style="padding-left:1.5em;">
+                <li><?php esc_html_e('Approve the campaign through the test phase (the campaign must be test-approved before it can be scheduled).', 'mawiblah'); ?></li>
+                <li>
+                    <?php
+                    printf(
+                        wp_kses(
+                            /* translators: %s: scheduler page link */
+                            __('Go to <strong>Mawiblah → Scheduler</strong> and click <em>Create new schedule</em>.', 'mawiblah'),
+                            ['strong' => [], 'em' => []]
+                        )
+                    );
+                    ?>
+                </li>
+                <li><?php esc_html_e('Choose a schedule type, set the date/day and time, then save.', 'mawiblah'); ?></li>
+                <li><?php esc_html_e('The schedule will fire automatically via WP Cron at the configured time.', 'mawiblah'); ?></li>
+            </ol>
+
+            <h3 style="margin-top:24px;"><?php esc_html_e('Schedule types', 'mawiblah'); ?></h3>
+            <table class="wp-list-table widefat fixed striped" style="max-width:800px;">
+                <thead>
+                    <tr>
+                        <th style="width:20%"><?php esc_html_e('Type', 'mawiblah'); ?></th>
+                        <th><?php esc_html_e('Behaviour', 'mawiblah'); ?></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong><?php esc_html_e('Once', 'mawiblah'); ?></strong></td>
+                        <td><?php esc_html_e('Fires once on a specific date and time, then marks itself completed.', 'mawiblah'); ?></td>
+                    </tr>
+                    <tr>
+                        <td><strong><?php esc_html_e('Weekly', 'mawiblah'); ?></strong></td>
+                        <td><?php esc_html_e('Fires every week on the chosen day at the chosen time. Runs forever unless an End Date is set.', 'mawiblah'); ?></td>
+                    </tr>
+                    <tr>
+                        <td><strong><?php esc_html_e('Monthly', 'mawiblah'); ?></strong></td>
+                        <td><?php esc_html_e('Fires on the chosen day of each month at the chosen time. If the month is shorter than the chosen day (e.g. February when day 31 is selected), the last available day of that month is used. Runs forever unless an End Date is set.', 'mawiblah'); ?></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3 style="margin-top:24px;"><?php esc_html_e('How recurring sends work', 'mawiblah'); ?></h3>
+            <p>
+                <?php esc_html_e('Each time a schedule fires, the campaign\'s send state is fully reset so that all current subscribers receive the email — regardless of whether they received a previous scheduled send of the same campaign. The live subscriber list on the campaign at fire time is used (no snapshots).', 'mawiblah'); ?>
+            </p>
+            <p>
+                <?php esc_html_e('Normal sending rules still apply: do-not-disturb threshold, unsubscribed flag, failing-email audience, and email-sending enabled/disabled setting.', 'mawiblah'); ?>
+            </p>
+
+            <h3 style="margin-top:24px;"><?php esc_html_e('WP Cron events triggered by the Scheduler', 'mawiblah'); ?></h3>
+            <table class="wp-list-table widefat fixed striped" style="max-width:800px;">
+                <thead>
+                    <tr>
+                        <th style="width:40%"><?php esc_html_e('Hook', 'mawiblah'); ?></th>
+                        <th><?php esc_html_e('Purpose', 'mawiblah'); ?></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>mawiblah_scheduler_check</code></td>
+                        <td><?php esc_html_e('Runs hourly. Checks all active schedules and fires a background campaign send for any whose next_send time has passed.', 'mawiblah'); ?></td>
+                    </tr>
+                    <tr>
+                        <td><code>mawiblah_background_send</code></td>
+                        <td><?php esc_html_e('Triggered by the scheduler (and manually via the "BG" button on a campaign). Processes the next batch of subscriber emails and reschedules itself until the send is complete.', 'mawiblah'); ?></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="notice notice-info inline" style="margin:12px 0 0;">
+                <p>
+                    <strong><?php esc_html_e('Real cron required:', 'mawiblah'); ?></strong>
+                    <?php esc_html_e('The scheduler relies on WP Cron running on time. On low-traffic sites, configure a real system cron job to trigger WP Cron every minute — see the "Background Send & Real Cron Setup" section above for instructions.', 'mawiblah'); ?>
+                </p>
+            </div>
+
+        </div>
+    </div>
+
     </div><!-- /.metabox-holder -->
 </div>

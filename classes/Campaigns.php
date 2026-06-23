@@ -206,32 +206,32 @@ class Campaigns
     public static function validateCampaign(string $title, string $subject, array $audiences, string $template): bool
     {
         if (empty($title)) {
-            print("Empty title");
+            echo esc_html__('Empty title', 'mawiblah');
             return false;
         }
 
         if (empty($audiences)) {
-            print("Empty audiences");
+            echo esc_html__('Empty audiences', 'mawiblah');
             return false;
         }
 
         if (empty($template)) {
-            print("Empty template");
+            echo esc_html__('Empty template', 'mawiblah');
             return false;
         }
 
         if (empty($subject)) {
-            print("Empty subject");
+            echo esc_html__('Empty subject', 'mawiblah');
             return false;
         }
 
         if (!self::validateEmailTemplate($template)) {
-            print("Could nog get template $template");
+            echo esc_html(sprintf(__('Could not get template %s', 'mawiblah'), $template));
             return false;
         }
 
         if (!Subscribers::validateAudiences($audiences)) {
-            print("Audiences not found audience");
+            echo esc_html__('Audiences not found', 'mawiblah');
             return false;
         }
 

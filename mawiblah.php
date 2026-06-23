@@ -45,7 +45,7 @@ if (!defined('MAWIBLAH_UPLOAD_DIR')) {
     $uploadDir = wp_get_upload_dir();
     $baseDir = $uploadDir['basedir'] . '/mawiblah';
     if (!is_dir($baseDir) && !file_exists($baseDir)) {
-        mkdir($baseDir, 0777);
+        mkdir($baseDir, 0755);
     }
     define('MAWIBLAH_UPLOAD_DIR', untrailingslashit($baseDir));
 }

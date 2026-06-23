@@ -343,9 +343,10 @@ class Campaigns
         $post->testFinished = get_post_meta($post->id, 'testFinished', true) ?? false;
         $post->testApproved = get_post_meta($post->id, 'testApproved', true) ?? false;
 
-        $post->campaignStarted    = get_post_meta($post->id, 'campaignStarted', true) ?? false;
-        $post->campaignFinished   = get_post_meta($post->id, 'campaignFinished', true) ?? false;
-        $post->backgroundStarted  = get_post_meta($post->id, 'backgroundStarted', true) ?? false;
+        $post->campaignStarted      = get_post_meta($post->id, 'campaignStarted', true) ?? false;
+        $post->campaignFinished     = get_post_meta($post->id, 'campaignFinished', true) ?? false;
+        $post->backgroundStarted    = get_post_meta($post->id, 'backgroundStarted', true) ?? false;
+        $post->totalSubscribers     = (int) (get_post_meta($post->id, 'totalSubscribers', true) ?: 0);
 
         if (!$post->campaignHash) {
             $post->campaignHash = Helpers::generateCampaignHash($post->id);
@@ -1093,7 +1094,27 @@ class Campaigns
     }
 
     /**
-     * Starts a background (cron-driven) send: marks the campaign started and sets backgroundStarted.
+     * Counts unique subscriber emails across all campaign audiences.
+     * Used to populate the totalSubscribers denominator on the progress page.
+     *
+     * @param object $campaign Campaign object.
+     * @return int Unique subscriber count.
+     */
+    public static function countUniqueSubscribers(object $campaign): int
+    {
+        $seen = [];
+        foreach ($campaign->audiences ?? [] as $audienceId) {
+            $subscribers = Subscribers::getSubscribersByAudience((int) $audienceId);
+            foreach ($subscribers as $subscriber) {
+                $seen[trim(strtolower($subscriber->email))] = true;
+            }
+        }
+        return count($seen);
+    }
+
+    /**
+     * Starts a background (cron-driven) send: marks the campaign started, sets backgroundStarted,
+     * and snapshots the total unique subscriber count for progress display.
      *
      * @param int $campaignPostId Campaign post ID.
      */
@@ -1101,6 +1122,10 @@ class Campaigns
     {
         self::campaignStart($campaignPostId);
         update_post_meta($campaignPostId, 'backgroundStarted', time());
+        $campaign = self::getCampaignById($campaignPostId);
+        if ($campaign) {
+            update_post_meta($campaignPostId, 'totalSubscribers', self::countUniqueSubscribers($campaign));
+        }
     }
 
     /**

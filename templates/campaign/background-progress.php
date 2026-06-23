@@ -16,12 +16,13 @@ $stopUrl = Helpers::generatePluginUrl(
 
 $listUrl = admin_url('admin.php?page=' . Init::MAWIBLAH_CAMPAIGNS);
 
-$counters = Campaigns::getCounters($campaign);
-$sent     = (int) ($counters->emailsSend ?? 0);
-$failed   = (int) ($counters->emailsFailed ?? 0);
-$skipped  = (int) ($counters->emailsSkipped ?? 0);
-$unsubed  = (int) ($counters->emailsUnsubed ?? 0);
-$total    = $sent + $failed + $skipped + $unsubed;
+$counters         = Campaigns::getCounters($campaign);
+$sent             = (int) ($counters->emailsSend ?? 0);
+$failed           = (int) ($counters->emailsFailed ?? 0);
+$skipped          = (int) ($counters->emailsSkipped ?? 0);
+$unsubed          = (int) ($counters->emailsUnsubed ?? 0);
+$total            = $sent + $failed + $skipped + $unsubed;
+$totalSubscribers = (int) ($campaign->totalSubscribers ?? 0);
 ?>
 <div class="wrap mawiblah">
     <h1><?php esc_html_e('Background Send in Progress', 'mawiblah'); ?></h1>
@@ -50,6 +51,12 @@ $total    = $sent + $failed + $skipped + $unsubed;
                     <th><?php esc_html_e('Total processed', 'mawiblah'); ?></th>
                     <td id="bg-total"><?= esc_html($total); ?></td>
                 </tr>
+                <?php if ($totalSubscribers > 0): ?>
+                <tr>
+                    <th><?php esc_html_e('Total subscribers', 'mawiblah'); ?></th>
+                    <td id="bg-total-subscribers"><?= esc_html($totalSubscribers); ?></td>
+                </tr>
+                <?php endif; ?>
             </tbody>
         </table>
 
@@ -86,6 +93,8 @@ $total    = $sent + $failed + $skipped + $unsubed;
                     document.getElementById('bg-skipped').textContent = d.skipped;
                     document.getElementById('bg-unsubed').textContent = d.unsubed;
                     document.getElementById('bg-total').textContent   = d.total;
+                    var elTotal = document.getElementById('bg-total-subscribers');
+                    if (elTotal && d.total_subscribers > 0) { elTotal.textContent = d.total_subscribers; }
                     if (!d.running) {
                         clearInterval(interval);
                         document.getElementById('bg-status').innerHTML =

@@ -72,10 +72,11 @@ flowchart TD
     B --> B1{Any testers in\ncampaign audiences?}
     B1 -- No --> B2[Show error:\nno testers found\nblock test start]
     B1 -- Yes --> C[testStart\nsets testStarted timestamp]
-    C --> D[JS calls REST API per subscriber]
-    D --> E{testMode?\ntestStarted AND NOT testApproved}
+    C --> D[Pre-fetch: testers + up to 100\nrandom non-testers from audiences\ngetTestModeSubscribers]
+    D --> D2[JS calls REST API per\npre-filtered subscriber]
+    D2 --> E{testMode?\ntestStarted AND NOT testApproved}
     E -- Yes --> F{Subscriber is a tester?}
-    F -- No --> G[Skip: not a tester]
+    F -- No --> G[Skip: not a tester\n(random sample only)]
     F -- Yes --> H[Send test email via wp_mail]
     G & H --> I{Last subscriber?}
     I -- No --> D

@@ -670,6 +670,43 @@ class Subscribers
     }
 
     /**
+     * Builds the subscriber list for a test-mode send: all testers first, then up to
+     * $randomNonTesterLimit randomly-sampled non-testers. Deduplicates by email address.
+     *
+     * @param int[] $audienceIds          Audience term IDs to draw subscribers from.
+     * @param int   $randomNonTesterLimit Maximum number of non-tester subscribers to include (default 100).
+     * @return array Ordered subscriber objects: testers first, then random non-testers.
+     */
+    public static function getTestModeSubscribers(array $audienceIds, int $randomNonTesterLimit = 100): array
+    {
+        $testers    = [];
+        $nonTesters = [];
+        $seenEmails = [];
+
+        foreach ($audienceIds as $audienceId) {
+            $subscribers = self::getSubscribersByAudience((int) $audienceId);
+            foreach ($subscribers as $subscriber) {
+                $email = trim(strtolower($subscriber->email));
+                if (isset($seenEmails[$email])) {
+                    continue;
+                }
+                $seenEmails[$email] = true;
+
+                if (self::isTester($subscriber)) {
+                    $testers[] = $subscriber;
+                } else {
+                    $nonTesters[] = $subscriber;
+                }
+            }
+        }
+
+        shuffle($nonTesters);
+        $nonTesters = array_slice($nonTesters, 0, $randomNonTesterLimit);
+
+        return array_merge($testers, $nonTesters);
+    }
+
+    /**
      * Returns true if at least one subscriber in any of the given audience IDs is a tester.
      *
      * @param int[] $audienceIds Array of audience term IDs to search.

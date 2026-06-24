@@ -1277,7 +1277,7 @@ class Campaigns
             $failedCount = is_numeric($lastCampaign->emailsFailed) ? $lastCampaign->emailsFailed : 0;
             $uniqueUsersCount = is_numeric($lastCampaign->uniqueUserClicks) ? $lastCampaign->uniqueUserClicks : 0;
             $linksClickedCount = is_numeric($lastCampaign->linksClicked) ? $lastCampaign->linksClicked : 0;
-            $emailsOpenedCount = $lastCampaign->emailsOpened;
+            $emailsOpenedCount = is_numeric($lastCampaign->emailsOpened) ? (int)$lastCampaign->emailsOpened : 0;
             $total = $skip + $sentCount + $failedCount;
             $total = $total === 0 ? 1 : $total;
             $unsubed = is_numeric($lastCampaign->emailsUnsubed) ? $lastCampaign->emailsUnsubed : 0;

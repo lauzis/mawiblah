@@ -105,23 +105,14 @@
 
         <?php
 
-        foreach ($audiences as $audienceId) {
-            $audience = Subscribers::getAudience($audienceId);
-            if (!$audience) {
-                continue;
-            }
-
-            $audienceName = $audience->name;
-            $subscribers = Subscribers::getSubscribersByAudience($audienceId);
-
+        if ($testMode) {
+            $testModeSubscribers = Subscribers::getTestModeSubscribers($audiences);
             ?>
-
             <table class="mawiblah-email-list wp-list-table widefat striped table-view-list">
                 <thead>
                 <tr>
-                    <th colspan="4">Audience: <?= esc_html($audienceName) ?></th>
+                    <th colspan="4">Test run: testers + up to 100 random subscribers (<?= esc_html(count($testModeSubscribers)) ?> total)</th>
                 </tr>
-
                 <tr>
                     <th>Email</th>
                     <th>First interaction</th>
@@ -130,25 +121,16 @@
                 </tr>
                 </thead>
                 <tbody>
-
                 <?php
-                foreach ($subscribers as $subscriber) {
+                foreach ($testModeSubscribers as $subscriber) {
                     $email = trim(strtolower($subscriber->email));
-
-                    if (isset($uniqueEmails[$email])) {
-                        $skippingReasons['notUniqueEmail'][] = $email;
-                        continue;
-                    }
-                    $uniqueEmails[$email] = true;
-
                     $index++;
                     $subscriberId = $subscriber->id;
-
                     ?>
                     <tr>
                         <td><?= esc_html($subscriber->email); ?></td>
-                        <td><?= esc_html( date_i18n( 'Y-m-d H:i:s', $subscriber->firstInteraction ) ); ?></td>
-                        <td><?= esc_html( date_i18n( 'Y-m-d H:i:s', $subscriber->lastInteraction ) ); ?></td>
+                        <td><?= esc_html(date_i18n('Y-m-d H:i:s', $subscriber->firstInteraction)); ?></td>
+                        <td><?= esc_html(date_i18n('Y-m-d H:i:s', $subscriber->lastInteraction)); ?></td>
                         <td>
                             <div id="<?= esc_attr($campaignPostId . '-' . $subscriberId) ?>"
                                  class="mawiblah-campaign-action test"
@@ -160,13 +142,75 @@
                         </td>
                     </tr>
                     <?php
-
                 }
                 ?>
-
                 </tbody>
             </table>
             <?php
+        } else {
+            foreach ($audiences as $audienceId) {
+                $audience = Subscribers::getAudience($audienceId);
+                if (!$audience) {
+                    continue;
+                }
+
+                $audienceName = $audience->name;
+                $subscribers = Subscribers::getSubscribersByAudience($audienceId);
+
+                ?>
+
+                <table class="mawiblah-email-list wp-list-table widefat striped table-view-list">
+                    <thead>
+                    <tr>
+                        <th colspan="4">Audience: <?= esc_html($audienceName) ?></th>
+                    </tr>
+
+                    <tr>
+                        <th>Email</th>
+                        <th>First interaction</th>
+                        <th>Last interaction</th>
+                        <th>Status</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+
+                    <?php
+                    foreach ($subscribers as $subscriber) {
+                        $email = trim(strtolower($subscriber->email));
+
+                        if (isset($uniqueEmails[$email])) {
+                            $skippingReasons['notUniqueEmail'][] = $email;
+                            continue;
+                        }
+                        $uniqueEmails[$email] = true;
+
+                        $index++;
+                        $subscriberId = $subscriber->id;
+
+                        ?>
+                        <tr>
+                            <td><?= esc_html($subscriber->email); ?></td>
+                            <td><?= esc_html(date_i18n('Y-m-d H:i:s', $subscriber->firstInteraction)); ?></td>
+                            <td><?= esc_html(date_i18n('Y-m-d H:i:s', $subscriber->lastInteraction)); ?></td>
+                            <td>
+                                <div id="<?= esc_attr($campaignPostId . '-' . $subscriberId) ?>"
+                                     class="mawiblah-campaign-action test"
+                                     data-campaign-post-id="<?= esc_attr($campaignPostId) ?>"
+                                     data-subscriber-id="<?= esc_attr($subscriberId) ?>"
+                                     data-subscriber-email="<?= esc_attr($email) ?>">
+                                    Status
+                                </div>
+                            </td>
+                        </tr>
+                        <?php
+
+                    }
+                    ?>
+
+                    </tbody>
+                </table>
+                <?php
+            }
         }
     }
     ?>

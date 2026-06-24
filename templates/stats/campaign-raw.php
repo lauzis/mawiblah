@@ -17,7 +17,8 @@ $stats = $data['stats'];
                     __('Sent emails', 'mawiblah') => $stats[Campaigns::STAT_SENT],
                     __('Emails opened', 'mawiblah') => $stats[Campaigns::STAT_EMAILS_OPENED],
                     __('User opened', 'mawiblah') => $stats[Campaigns::STAT_UNIQUE_USERS],
-                    __('Links clicked', 'mawiblah') => $stats[Campaigns::STAT_LINKS_CLICKED]
+                    __('Links clicked', 'mawiblah') => $stats[Campaigns::STAT_LINKS_CLICKED],
+                    __('Emails opened', 'mawiblah') => $stats[Campaigns::STAT_EMAILS_OPENED]
             ];
             Templates::loadTemplate('campaign/bar-graph.php', $dataForDisplay);
             ?>

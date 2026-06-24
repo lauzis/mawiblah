@@ -141,7 +141,7 @@ class Campaigns
         \Mawiblah\Templates::loadTemplate('stats/last-links.php', $campaignData);
         \Mawiblah\Templates::loadTemplate('stats/last-days.php', $campaignData);
         \Mawiblah\Templates::loadTemplate('stats/last-hours.php', $campaignData);
-        if (Settings::openTrackingEnabled()) {
+        if (\Mawiblah\Settings::openTrackingEnabled()) {
             \Mawiblah\Templates::loadTemplate('stats/last-open-days.php', $campaignData);
             \Mawiblah\Templates::loadTemplate('stats/last-open-hours.php', $campaignData);
         }

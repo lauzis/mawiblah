@@ -748,11 +748,11 @@ class Campaigns
         if (get_post_meta($subscriberId, $metaKey, true)) {
             return;
         }
-        $now = time();
-        update_post_meta($subscriberId, $metaKey, $now);
+        $openTime = time();
+        update_post_meta($subscriberId, $metaKey, $openTime);
         $current = (int) get_post_meta($campaignPostId, 'emailsOpened', true);
         update_post_meta($campaignPostId, 'emailsOpened', $current + 1);
-        add_post_meta($campaignPostId, 'open_time', $now, false);
+        add_post_meta($campaignPostId, 'open_time', $openTime, false);
     }
 
     public static function updateCounters(object $campaign, int $emailsSent, int $emailsFailed, int $emailsSkipped, int $emailsUnsubed): void
@@ -1005,43 +1005,6 @@ class Campaigns
     }
 
     /**
-     * Returns open counts grouped by day of week for a single campaign.
-     *
-     * @param int $campaignPostId Campaign post ID.
-     * @return array Map of weekday name to open count.
-     */
-    public static function getOpenTimesByDayOfWeek(int $campaignPostId): array
-    {
-        $campaign = self::getCampaignById($campaignPostId);
-        if (!$campaign) {
-            return [];
-        }
-
-        $openTimes = get_post_meta($campaign->id, 'open_time', false);
-
-        $dayStats = [
-            'Monday' => 0,
-            'Tuesday' => 0,
-            'Wednesday' => 0,
-            'Thursday' => 0,
-            'Friday' => 0,
-            'Saturday' => 0,
-            'Sunday' => 0
-        ];
-
-        if (!empty($openTimes)) {
-            foreach ($openTimes as $timestamp) {
-                $dayOfWeek = date('l', (int)$timestamp);
-                if (isset($dayStats[$dayOfWeek])) {
-                    $dayStats[$dayOfWeek]++;
-                }
-            }
-        }
-
-        return $dayStats;
-    }
-
-    /**
      * Returns open counts grouped by hour of day (0–23) for a single campaign.
      *
      * @param int $campaignPostId Campaign post ID.
@@ -1049,28 +1012,49 @@ class Campaigns
      */
     public static function getOpenTimesByHourOfDay(int $campaignPostId): array
     {
-        $campaign = self::getCampaignById($campaignPostId);
-        if (!$campaign) {
-            return [];
-        }
-
-        $openTimes = get_post_meta($campaign->id, 'open_time', false);
-
         $hourStats = [];
         for ($i = 0; $i < 24; $i++) {
             $hourStats[$i] = 0;
         }
 
-        if (!empty($openTimes)) {
-            foreach ($openTimes as $timestamp) {
-                $hour = (int)date('G', (int)$timestamp);
-                if (isset($hourStats[$hour])) {
-                    $hourStats[$hour]++;
-                }
+        $openTimes = get_post_meta($campaignPostId, 'open_time', false);
+        foreach ($openTimes as $timestamp) {
+            $hour = (int) date('G', (int) $timestamp);
+            if (isset($hourStats[$hour])) {
+                $hourStats[$hour]++;
             }
         }
 
         return $hourStats;
+    }
+
+    /**
+     * Returns open counts grouped by day of week for a single campaign.
+     *
+     * @param int $campaignPostId Campaign post ID.
+     * @return array Map of weekday name to open count.
+     */
+    public static function getOpenTimesByDayOfWeek(int $campaignPostId): array
+    {
+        $dayStats = [
+            'Monday'    => 0,
+            'Tuesday'   => 0,
+            'Wednesday' => 0,
+            'Thursday'  => 0,
+            'Friday'    => 0,
+            'Saturday'  => 0,
+            'Sunday'    => 0,
+        ];
+
+        $openTimes = get_post_meta($campaignPostId, 'open_time', false);
+        foreach ($openTimes as $timestamp) {
+            $dayOfWeek = date('l', (int) $timestamp);
+            if (isset($dayStats[$dayOfWeek])) {
+                $dayStats[$dayOfWeek]++;
+            }
+        }
+
+        return $dayStats;
     }
 
     /**
@@ -1247,7 +1231,7 @@ class Campaigns
             $failed[] = is_numeric($lastCampaign->emailsFailed) ? $lastCampaign->emailsFailed : 0;
             $uniqueUsers[] = is_numeric($lastCampaign->uniqueUserClicks) ? $lastCampaign->uniqueUserClicks : 0;
             $linksClicked[] = is_numeric($lastCampaign->linksClicked) ? $lastCampaign->linksClicked : 0;
-            $emailsOpened[] = is_numeric($lastCampaign->emailsOpened) ? (int)$lastCampaign->emailsOpened : 0;
+            $emailsOpened[] = $lastCampaign->emailsOpened;
         }
 
         return [
@@ -1304,7 +1288,7 @@ class Campaigns
             $failed[] = round($failedCount/$total*100,2);
             $uniqueUsers[] = round($uniqueUsersCount/$total*100,2);
             $linksClicked[] = round($linksClickedCount/($totalLinksCount*$total)*100,2);
-            $emailsOpened[] = round($emailsOpenedCount/$total*100, 2);
+            $emailsOpened[] = round($emailsOpenedCount/$sentCount*100, 2);
         }
 
         return [

@@ -1,5 +1,6 @@
 <?php
 use Mawiblah\Campaigns;
+use Mawiblah\Settings;
 use Mawiblah\Templates;
 
 $campaignTitle = $data['title'];
@@ -20,6 +21,9 @@ $stats = $data['stats'];
                     __('Links clicked', 'mawiblah') => $stats[Campaigns::STAT_LINKS_CLICKED],
                     __('Emails opened', 'mawiblah') => $stats[Campaigns::STAT_EMAILS_OPENED]
             ];
+            if (Settings::openTrackingEnabled()) {
+                $dataForDisplay[__('Emails opened (pixel)', 'mawiblah')] = $stats[Campaigns::STAT_EMAILS_OPENED];
+            }
             Templates::loadTemplate('campaign/bar-graph.php', $dataForDisplay);
             ?>
         </div>

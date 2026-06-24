@@ -51,27 +51,30 @@ class Subscribers
         }
         echo '</div>';
 
-        $campaigns = Campaigns::getCampaigns();
-        $openRows = [];
-        foreach ($campaigns as $campaign) {
-            $openedTime = get_post_meta($post->ID, 'opened_' . $campaign->id, true);
-            if ($openedTime) {
-                $openRows[] = [
-                    'campaign' => $campaign->post_title,
-                    'time'     => date('Y-m-d H:i:s', (int)$openedTime),
-                ];
+        // Opens section: total opens and per-campaign open timestamps.
+        $allMeta = get_post_meta($post->ID);
+        $openEntries = [];
+        foreach ($allMeta as $key => $values) {
+            if (strncmp($key, 'opened_', 7) === 0) {
+                $campaignPostId = (int) substr($key, 7);
+                $timestamp      = (int) ($values[0] ?? 0);
+                $campaign       = \Mawiblah\Campaigns::getCampaignById($campaignPostId);
+                $campaignLabel  = $campaign ? esc_html($campaign->post_title) . ' (#' . $campaignPostId . ')' : '#' . $campaignPostId;
+                $openEntries[]  = ['label' => $campaignLabel, 'time' => $timestamp];
             }
         }
 
+        $totalOpens = count($openEntries);
         echo '<div>';
         echo '<h3>' . esc_html__('Opens', 'mawiblah') . '</h3>';
-        echo '<p>' . esc_html(sprintf(__('Total opens: %d', 'mawiblah'), count($openRows))) . '</p>';
-        if (!empty($openRows)) {
-            echo '<table><tr><th>' . esc_html__('Campaign', 'mawiblah') . '</th><th>' . esc_html__('Opened at', 'mawiblah') . '</th></tr>';
-            foreach ($openRows as $row) {
-                echo '<tr><td>' . esc_html($row['campaign']) . '</td><td>' . esc_html($row['time']) . '</td></tr>';
+        echo '<p><strong>' . esc_html__('Total opens (unique campaigns)', 'mawiblah') . ':</strong> ' . esc_html($totalOpens) . '</p>';
+        if ($openEntries) {
+            echo '<table><thead><tr><th>' . esc_html__('Campaign', 'mawiblah') . '</th><th>' . esc_html__('Opened at', 'mawiblah') . '</th></tr></thead><tbody>';
+            foreach ($openEntries as $entry) {
+                $formattedTime = $entry['time'] ? esc_html(date('Y-m-d H:i:s', $entry['time'])) : '—';
+                echo '<tr><td>' . esc_html($entry['label']) . '</td><td>' . $formattedTime . '</td></tr>';
             }
-            echo '</table>';
+            echo '</tbody></table>';
         }
         echo '</div>';
     }

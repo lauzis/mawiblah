@@ -7,15 +7,15 @@ $lastCampaign = $data['campaign'];
 ?>
     <?php if ($campaignTitle): ?>
         <section>
-            <h2><?= esc_html($campaignTitle) ?> - <?= __('Open hours', 'mawiblah'); ?></h2>
+            <h2><?= esc_html($campaignTitle) ?> - <?= __('Open active hours', 'mawiblah'); ?></h2>
             <?php
             $activeHours = Campaigns::getOpenTimesByHourOfDay($lastCampaign->id);
             $dataForBarGraph = [];
             $dataForBarGraph[__('Hours', 'mawiblah')] = [];
-            $headers=[__('Hour', 'mawiblah'), __('Count', 'mawiblah')];
+            $headers = [__('Hour', 'mawiblah'), __('Opens', 'mawiblah')];
             $tableData = [];
 
-            foreach($activeHours as $hour=>$count) {
+            foreach ($activeHours as $hour => $count) {
                 $dataForBarGraph[__('Hours', 'mawiblah')][] = $count;
                 $tableData[] = [$hour . ':00', $count];
             }
@@ -25,9 +25,7 @@ $lastCampaign = $data['campaign'];
                 <?php Templates::loadTemplate('campaign/bar-graph.php', $dataForBarGraph); ?>
             </div>
             <div class="graph-wrap">
-                <?php
-                Templates::renderTable($headers, $tableData);
-                ?>
+                <?php Templates::renderTable($headers, $tableData); ?>
             </div>
 
         </section>

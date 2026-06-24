@@ -748,10 +748,11 @@ class Campaigns
         if (get_post_meta($subscriberId, $metaKey, true)) {
             return;
         }
-        update_post_meta($subscriberId, $metaKey, time());
+        $now = time();
+        update_post_meta($subscriberId, $metaKey, $now);
         $current = (int) get_post_meta($campaignPostId, 'emailsOpened', true);
         update_post_meta($campaignPostId, 'emailsOpened', $current + 1);
-        add_post_meta($campaignPostId, 'open_time', time(), false);
+        add_post_meta($campaignPostId, 'open_time', $now, false);
     }
 
     public static function updateCounters(object $campaign, int $emailsSent, int $emailsFailed, int $emailsSkipped, int $emailsUnsubed): void
@@ -1246,7 +1247,7 @@ class Campaigns
             $failed[] = is_numeric($lastCampaign->emailsFailed) ? $lastCampaign->emailsFailed : 0;
             $uniqueUsers[] = is_numeric($lastCampaign->uniqueUserClicks) ? $lastCampaign->uniqueUserClicks : 0;
             $linksClicked[] = is_numeric($lastCampaign->linksClicked) ? $lastCampaign->linksClicked : 0;
-            $emailsOpened[] = is_numeric($lastCampaign->emailsOpened) ? $lastCampaign->emailsOpened : 0;
+            $emailsOpened[] = is_numeric($lastCampaign->emailsOpened) ? (int)$lastCampaign->emailsOpened : 0;
         }
 
         return [
@@ -1292,7 +1293,7 @@ class Campaigns
             $failedCount = is_numeric($lastCampaign->emailsFailed) ? $lastCampaign->emailsFailed : 0;
             $uniqueUsersCount = is_numeric($lastCampaign->uniqueUserClicks) ? $lastCampaign->uniqueUserClicks : 0;
             $linksClickedCount = is_numeric($lastCampaign->linksClicked) ? $lastCampaign->linksClicked : 0;
-            $emailsOpenedCount = is_numeric($lastCampaign->emailsOpened) ? $lastCampaign->emailsOpened : 0;
+            $emailsOpenedCount = is_numeric($lastCampaign->emailsOpened) ? (int)$lastCampaign->emailsOpened : 0;
             $total = $skip + $sentCount + $failedCount;
             $total = $total === 0 ? 1 : $total;
             $unsubed = is_numeric($lastCampaign->emailsUnsubed) ? $lastCampaign->emailsUnsubed : 0;
@@ -1303,7 +1304,7 @@ class Campaigns
             $failed[] = round($failedCount/$total*100,2);
             $uniqueUsers[] = round($uniqueUsersCount/$total*100,2);
             $linksClicked[] = round($linksClickedCount/($totalLinksCount*$total)*100,2);
-            $emailsOpened[] = round($emailsOpenedCount/$total*100,2);
+            $emailsOpened[] = round($emailsOpenedCount/$total*100, 2);
         }
 
         return [

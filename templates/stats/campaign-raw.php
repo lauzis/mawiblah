@@ -15,6 +15,7 @@ $stats = $data['stats'];
                     __('Unsubscribed', 'mawiblah') => $stats[Campaigns::STAT_UNSUBSCRIBED],
                     __('Newly unsubscribed', 'mawiblah') => $stats[Campaigns::STAT_NEWLY_UNSUBSCRIBED],
                     __('Sent emails', 'mawiblah') => $stats[Campaigns::STAT_SENT],
+                    __('Emails opened', 'mawiblah') => $stats[Campaigns::STAT_EMAILS_OPENED],
                     __('User opened', 'mawiblah') => $stats[Campaigns::STAT_UNIQUE_USERS],
                     __('Links clicked', 'mawiblah') => $stats[Campaigns::STAT_LINKS_CLICKED],
                     __('Emails opened', 'mawiblah') => $stats[Campaigns::STAT_EMAILS_OPENED]

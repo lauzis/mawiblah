@@ -43,12 +43,35 @@ class Subscribers
      */
     public static function renderMetaData($post)
     {
-        // Add your custom output here
         $metadata = self::getMetaData($post->ID);
         echo '<div>';
         echo '<h3>Meta data</h3>';
         foreach ($metadata as $key => $value) {
             echo '<p><strong>' . esc_html($key) . ':</strong> ' . esc_html($value) . '</p>';
+        }
+        echo '</div>';
+
+        $campaigns = Campaigns::getCampaigns();
+        $openRows = [];
+        foreach ($campaigns as $campaign) {
+            $openedTime = get_post_meta($post->ID, 'opened_' . $campaign->id, true);
+            if ($openedTime) {
+                $openRows[] = [
+                    'campaign' => $campaign->post_title,
+                    'time'     => date('Y-m-d H:i:s', (int)$openedTime),
+                ];
+            }
+        }
+
+        echo '<div>';
+        echo '<h3>' . esc_html__('Opens', 'mawiblah') . '</h3>';
+        echo '<p>' . esc_html(sprintf(__('Total opens: %d', 'mawiblah'), count($openRows))) . '</p>';
+        if (!empty($openRows)) {
+            echo '<table><tr><th>' . esc_html__('Campaign', 'mawiblah') . '</th><th>' . esc_html__('Opened at', 'mawiblah') . '</th></tr>';
+            foreach ($openRows as $row) {
+                echo '<tr><td>' . esc_html($row['campaign']) . '</td><td>' . esc_html($row['time']) . '</td></tr>';
+            }
+            echo '</table>';
         }
         echo '</div>';
     }

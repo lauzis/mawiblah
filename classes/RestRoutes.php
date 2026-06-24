@@ -468,12 +468,13 @@ class RestRoutes
         $unsubed  = (int) ($counters->emailsUnsubed ?? 0);
 
         return [
-            'sent'    => $sent,
-            'failed'  => $failed,
-            'skipped' => $skipped,
-            'unsubed' => $unsubed,
-            'total'   => $sent + $failed + $skipped + $unsubed,
-            'running' => !empty($campaign->backgroundStarted) && empty($campaign->campaignFinished),
+            'sent'              => $sent,
+            'failed'            => $failed,
+            'skipped'           => $skipped,
+            'unsubed'           => $unsubed,
+            'total'             => $sent + $failed + $skipped + $unsubed,
+            'total_subscribers' => (int) ($campaign->totalSubscribers ?? 0),
+            'running'           => !empty($campaign->backgroundStarted) && empty($campaign->campaignFinished),
         ];
     }
 

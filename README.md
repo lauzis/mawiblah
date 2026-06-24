@@ -70,6 +70,9 @@ The initial version was built by hand. From version 1.0.9 onward, most changes h
 
 ## Change log
 
+### --- 1.0.23 ---
+- **Improved:** Test-mode send loop now pre-fetches a reduced subscriber list — all testers first, then up to 100 randomly-sampled non-testers — instead of iterating all subscribers in every campaign audience. A 2 000-subscriber list previously triggered 2 000 REST calls in test mode; it now triggers at most `tester_count + 100`. Closes #25.
+
 ### --- 1.0.22 ---
 - **Fixed:** Test sends and real sends now use separate subscriber meta keys (`sent_test_{campaignId}` vs `sent_{campaignId}`), so testers who received the test email are no longer skipped when the real campaign runs. `testReset()` clears the test-send flags so a retest always starts clean. Fixes #43.
 

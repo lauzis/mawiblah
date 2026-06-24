@@ -728,6 +728,13 @@ class Tests
         $ts = get_post_meta($sub->id, 'opened_' . $cId, true);
         self::echoResult($ts > 0 ? "Timestamp=$ts" : 'No timestamp stored', $ts > 0 ? 'success' : 'error');
 
+        self::echoTitle('Campaign meta records open_time for hour/day analysis');
+        $openTimes = get_post_meta($cId, 'open_time', false);
+        self::echoResult(
+            count($openTimes) === 1 ? 'open_time stored (count=' . count($openTimes) . ')' : 'Expected 1 open_time entry, got ' . count($openTimes),
+            count($openTimes) === 1 ? 'success' : 'error'
+        );
+
         self::echoTitle('REST endpoint URL format');
         $pixelUrl = add_query_arg([
             'subscriber' => $sub->subscriberHash,

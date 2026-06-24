@@ -101,4 +101,19 @@ class CampaignTest extends WP_UnitTestCase
 
         $this->assertSame($first, $second);
     }
+
+    public function test_record_open_stores_open_time_on_campaign(): void
+    {
+        $sub = Subscribers::addSubscriber('open@mawiblah.test');
+        Campaigns::recordOpen($sub->id, $this->campaignId);
+
+        $openTimes = get_post_meta($this->campaignId, 'open_time', false);
+        $this->assertCount(1, $openTimes);
+        $this->assertIsNumeric($openTimes[0]);
+
+        $campaign = Campaigns::getCampaignById($this->campaignId);
+        $this->assertSame(1, $campaign->emailsOpened);
+
+        wp_delete_post($sub->id, true);
+    }
 }

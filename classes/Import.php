@@ -104,16 +104,25 @@ class Import
                     continue;
                 }
 
-                // overwrite — replace all existing audiences before re-adding
                 if ($duplicateMode === 'overwrite') {
-                    wp_set_post_terms($existing->id, [], Subscribers::postType() . '_category', false);
-                }
-
-                // overwrite or merge — add to requested audiences
-                foreach ($audienceIds as $audienceId) {
-                    $audienceId = (int) $audienceId;
-                    if ($audienceId > 0) {
-                        Subscribers::addSubscriberToAudience($existing->id, $audienceId);
+                    // Replace all existing audience memberships with only the selected ones.
+                    $validIds = array_values(array_filter(array_map('intval', $audienceIds), fn($id) => $id > 0));
+                    wp_set_post_terms($existing->id, $validIds, Subscribers::postType() . '_category', false);
+                    // Sync unsubed meta when the Unsubed audience is included.
+                    $unsubedAudience = Subscribers::unsubedAudience();
+                    if ($unsubedAudience && in_array($unsubedAudience->term_id, $validIds, true)) {
+                        update_post_meta($existing->id, 'unsubed', true);
+                        if (!get_post_meta($existing->id, 'unsub_time', true)) {
+                            update_post_meta($existing->id, 'unsub_time', time());
+                        }
+                    }
+                } else {
+                    // merge — add selected audiences without removing any existing ones
+                    foreach ($audienceIds as $audienceId) {
+                        $audienceId = (int) $audienceId;
+                        if ($audienceId > 0) {
+                            Subscribers::addSubscriberToAudience($existing->id, $audienceId);
+                        }
                     }
                 }
                 $result['updated']++;

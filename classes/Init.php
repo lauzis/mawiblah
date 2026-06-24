@@ -16,8 +16,9 @@ class Init
 
     const MAWIBLAH_IMPORT  = 'mawiblah-import';
     const MAWIBLAH_ACTIONS = 'mawiblah-actions';
-    const MAWIBLAH_LOGS    = 'mawiblah-logs';
-    const MAWIBLAH_HELP    = 'mawiblah-help';
+    const MAWIBLAH_LOGS      = 'mawiblah-logs';
+    const MAWIBLAH_HELP      = 'mawiblah-help';
+    const MAWIBLAH_SCHEDULER = 'mawiblah-scheduler';
     /** Bootstraps the plugin: runs migrations, registers admin menu, hooks, REST routes, and blocks. */
     public function init(): void
     {
@@ -43,6 +44,7 @@ class Init
             self::MAWIBLAH_ACTIONS,
             self::MAWIBLAH_LOGS,
             self::MAWIBLAH_HELP,
+            self::MAWIBLAH_SCHEDULER,
         ];
     }
 
@@ -440,6 +442,15 @@ class Init
 
         add_submenu_page(
             'mawiblah',
+            'Scheduler',
+            '<span class="dashicons dashicons-calendar-alt" style="font-size:16px;line-height:1.4;margin-right:6px;vertical-align:middle;"></span>Scheduler',
+            'manage_options',
+            self::MAWIBLAH_SCHEDULER,
+            [$this, 'scheduler']
+        );
+
+        add_submenu_page(
+            'mawiblah',
             'Help',
             '<span class="dashicons dashicons-editor-help" style="font-size:16px;line-height:1.4;margin-right:6px;vertical-align:middle;"></span>Help',
             'manage_options',
@@ -487,6 +498,11 @@ class Init
     /** Admin page callback: renders the CSV import page. */
     public function import() {
         Renderer::import();
+    }
+
+    /** Admin page callback: renders the campaign scheduler page. */
+    public function scheduler() {
+        Renderer::scheduler();
     }
 
     /** Admin page callback: renders the in-plugin help page. */

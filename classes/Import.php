@@ -104,6 +104,11 @@ class Import
                     continue;
                 }
 
+                // overwrite — replace all existing audiences before re-adding
+                if ($duplicateMode === 'overwrite') {
+                    wp_set_post_terms($existing->id, [], Subscribers::postType() . '_category', false);
+                }
+
                 // overwrite or merge — add to requested audiences
                 foreach ($audienceIds as $audienceId) {
                     $audienceId = (int) $audienceId;

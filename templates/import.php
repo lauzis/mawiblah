@@ -199,7 +199,7 @@ elseif (!empty($_FILES['csv_file']['tmp_name'])) {
                                 <label style="display:block;margin-bottom:4px;">
                                     <input type="radio" name="duplicate_mode" value="overwrite">
                                     <strong><?php esc_html_e('Overwrite', 'mawiblah'); ?></strong>
-                                    — <?php esc_html_e('same as Merge for now (full overwrite reserved for a future version).', 'mawiblah'); ?>
+                                    — <?php esc_html_e('replace all existing audience memberships with the selected audiences.', 'mawiblah'); ?>
                                 </label>
                             </fieldset>
                         </td>

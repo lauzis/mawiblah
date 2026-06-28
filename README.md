@@ -70,6 +70,9 @@ The initial version was built by hand. From version 1.0.9 onward, most changes h
 
 ## Change log
 
+### --- 1.0.25 ---
+- **Removed:** Actions admin page removed. Clear Logs functionality was already present on the Logs page; Gravity Forms sync is covered by the dedicated Import section. No unique functionality remains, so the page, its submenu entry, and all associated code have been deleted. Closes #81.
+
 ### --- 1.0.24 ---
 - **Fixed:** `migrateTo1021()` previously fetched all `mawiblah_log` posts in a single query (`posts_per_page => -1`), causing PHP timeout errors on sites with large log histories. The migration now processes posts in batches of 200 per request, deletes each batch, and schedules a WP-Cron event (`mawiblah_migration_1021_continue`) to continue if posts remain. Progress is visible in the daily log files. Fixes #80.
 

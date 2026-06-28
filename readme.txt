@@ -3,7 +3,7 @@ Contributors: lauzis
 Tags: email, newsletter, marketing, mailchimp alternative, subscribers
 Requires at least: 5.0
 Tested up to: 6.9
-Stable tag: 1.0.23
+Stable tag: 1.0.24
 Requires PHP: 8.0
 License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl.html
@@ -68,6 +68,9 @@ Technically yes, but it is not recommended. The plugin sends emails individually
 8. MVP version
 
 == Changelog ==
+
+= 1.0.24 =
+*   Fixed: migrateTo1021() now processes log posts in batches of 200 instead of all at once, preventing PHP timeouts on sites with large log histories. Remaining posts are migrated via WP-Cron. Fixes #80.
 
 = 1.0.23 =
 *   Improved: Test-mode send now pre-fetches a capped subscriber list — all testers first, then up to 100 random non-testers — instead of iterating every subscriber in the campaign audiences. Closes #25.

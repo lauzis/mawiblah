@@ -15,7 +15,6 @@ class Init
     const MAWIBLAH_SETTINGS = 'mawiblah-settings';
 
     const MAWIBLAH_IMPORT  = 'mawiblah-import';
-    const MAWIBLAH_ACTIONS = 'mawiblah-actions';
     const MAWIBLAH_LOGS      = 'mawiblah-logs';
     const MAWIBLAH_HELP      = 'mawiblah-help';
     const MAWIBLAH_SCHEDULER = 'mawiblah-scheduler';
@@ -41,7 +40,6 @@ class Init
             self::MAWIBLAH_TESTS,
             self::MAWIBLAH_SETTINGS,
             self::MAWIBLAH_IMPORT,
-            self::MAWIBLAH_ACTIONS,
             self::MAWIBLAH_LOGS,
             self::MAWIBLAH_HELP,
             self::MAWIBLAH_SCHEDULER,
@@ -415,15 +413,6 @@ class Init
 
         add_submenu_page(
             'mawiblah',
-            'Actions',
-            '<span class="dashicons dashicons-admin-tools" style="font-size:16px;line-height:1.4;margin-right:6px;vertical-align:middle;"></span>Actions',
-            'manage_options',
-            self::MAWIBLAH_ACTIONS,
-            [$this, 'actions']
-        );
-
-        add_submenu_page(
-            'mawiblah',
             'Logs',
             '<span class="dashicons dashicons-list-view" style="font-size:16px;line-height:1.4;margin-right:6px;vertical-align:middle;"></span>Logs',
             'manage_options',
@@ -483,11 +472,6 @@ class Init
     /** Admin page callback: renders the plugin settings page. */
     public function settings() {
         Renderer::settings();
-    }
-
-    /** Admin page callback: renders the actions/tools page. */
-    public function actions() {
-        Renderer::actions();
     }
 
     /** Admin page callback: renders the log viewer page. */

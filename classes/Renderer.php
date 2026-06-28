@@ -274,13 +274,6 @@ class Renderer
         exit;
     }
 
-    /** Renders the actions/tools admin page and exits. */
-    public static function actions()
-    {
-        require MAWIBLAH_PLUGIN_DIR . "/templates/actions.php";
-        exit;
-    }
-
     /** Renders the CSV import page. */
     public static function import()
     {

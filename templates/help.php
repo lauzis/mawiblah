@@ -692,7 +692,16 @@ if ( $result['status'] === 'ok' ) {
             <div class="notice notice-info inline" style="margin:12px 0 0;">
                 <p>
                     <strong><?php esc_html_e('Real cron required:', 'mawiblah'); ?></strong>
-                    <?php esc_html_e('The scheduler relies on WP Cron running on time. On low-traffic sites, configure a real system cron job to trigger WP Cron every minute — see the "Background Send & Real Cron Setup" section above for instructions.', 'mawiblah'); ?>
+                    <?php
+                    printf(
+                        wp_kses(
+                            /* translators: %s: link to cron setup section */
+                            __('The scheduler relies on WP Cron running on time. On low-traffic sites, configure a real system cron job to trigger WP Cron every minute — see the <a href="%s">Background Send & Real Cron Setup</a> section for instructions.', 'mawiblah'),
+                            ['a' => ['href' => []]]
+                        ),
+                        '#help-cron-setup'
+                    );
+                    ?>
                 </p>
             </div>
 

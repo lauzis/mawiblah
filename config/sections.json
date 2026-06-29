@@ -175,5 +175,33 @@
         "default_value": "100"
       }
     ]
+  },
+  {
+    "id": "mawiblah-scheduler",
+    "title": "Scheduler",
+    "description": "How often WP Cron checks whether a scheduled campaign is due. Lower values mean sends fire closer to the configured time, but generate more cron runs.",
+    "fields": [
+      {
+        "id": "mawiblah-scheduler-interval",
+        "title": "Scheduler check interval",
+        "type": "select",
+        "value": "",
+        "placeholder": "",
+        "default_value": "3600",
+        "options": [
+          { "value": "60",    "title": "Every 1 minute" },
+          { "value": "300",   "title": "Every 5 minutes" },
+          { "value": "600",   "title": "Every 10 minutes" },
+          { "value": "900",   "title": "Every 15 minutes" },
+          { "value": "1800",  "title": "Every 30 minutes" },
+          { "value": "3600",  "title": "Every 1 hour" },
+          { "value": "7200",  "title": "Every 2 hours" },
+          { "value": "14400", "title": "Every 4 hours" },
+          { "value": "28800", "title": "Every 8 hours" },
+          { "value": "43200", "title": "Every 12 hours" },
+          { "value": "86400", "title": "Once per day" }
+        ]
+      }
+    ]
   }
 ]

@@ -20,13 +20,43 @@ class SchedulerCron
 {
     const HOOK = 'mawiblah_scheduler_check';
 
-    /** Registers the cron action and schedules the recurring event if not already scheduled. */
+    /** Maps interval seconds to a WP Cron recurrence name. */
+    public static function intervalName(int $seconds): string
+    {
+        return 'mawiblah_scheduler_' . $seconds;
+    }
+
+    /** Registers the cron action, custom intervals, and schedules (or reschedules) the recurring event. */
     public static function init(): void
     {
+        // Register all supported custom intervals
+        add_filter('cron_schedules', function (array $schedules): array {
+            $intervals = [60, 300, 600, 900, 1800, 3600, 7200, 14400, 28800, 43200, 86400];
+            foreach ($intervals as $s) {
+                $name = self::intervalName($s);
+                $schedules[$name] = [
+                    'interval' => $s,
+                    'display'  => "Mawiblah every {$s}s",
+                ];
+            }
+            return $schedules;
+        });
+
         add_action(self::HOOK, [self::class, 'check']);
 
-        if (!wp_next_scheduled(self::HOOK)) {
-            wp_schedule_event(time(), 'hourly', self::HOOK);
+        $wantedInterval  = Settings::schedulerInterval();
+        $wantedName      = self::intervalName($wantedInterval);
+        $existingEvent   = wp_get_scheduled_event(self::HOOK);
+
+        if ($existingEvent) {
+            // Reschedule only when the interval has changed
+            if ($existingEvent->schedule !== $wantedName) {
+                wp_unschedule_event($existingEvent->timestamp, self::HOOK);
+                wp_schedule_event(time(), $wantedName, self::HOOK);
+                Logs::addLog('scheduler', "Rescheduled cron from {$existingEvent->schedule} to {$wantedName}");
+            }
+        } else {
+            wp_schedule_event(time(), $wantedName, self::HOOK);
         }
     }
 

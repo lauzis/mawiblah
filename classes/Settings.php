@@ -445,6 +445,12 @@ msgstr ""
         return max(1, (int) (self::getOption('mawiblah-background-batch-size') ?: 100));
     }
 
+    /** Returns the scheduler check interval in seconds (default 3600). */
+    public static function schedulerInterval(): int
+    {
+        return max(60, (int) (self::getOption('mawiblah-scheduler-interval') ?: 3600));
+    }
+
     /** Returns true when email open tracking is set to "enabled" in settings. */
     public static function openTrackingEnabled(): bool
     {

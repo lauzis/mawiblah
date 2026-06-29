@@ -411,14 +411,16 @@ class Init
             [$this, 'import']
         );
 
-        add_submenu_page(
-            'mawiblah',
-            'Logs',
-            '<span class="dashicons dashicons-list-view" style="font-size:16px;line-height:1.4;margin-right:6px;vertical-align:middle;"></span>Logs',
-            'manage_options',
-            self::MAWIBLAH_LOGS,
-            [$this, 'logs']
-        );
+        if (Logs::enabled() || !empty(Logs::getLogFiles())) {
+            add_submenu_page(
+                'mawiblah',
+                'Logs',
+                '<span class="dashicons dashicons-list-view" style="font-size:16px;line-height:1.4;margin-right:6px;vertical-align:middle;"></span>Logs',
+                'manage_options',
+                self::MAWIBLAH_LOGS,
+                [$this, 'logs']
+            );
+        }
 
         add_submenu_page(
             'mawiblah',

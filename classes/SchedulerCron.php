@@ -39,12 +39,23 @@ class SchedulerCron
         $schedulers = Scheduler::getAll();
         $now        = time();
 
+        Logs::addLog('scheduler', 'check() fired', [
+            'now'        => gmdate('Y-m-d H:i:s', $now),
+            'count'      => count($schedulers),
+        ]);
+
         foreach ($schedulers as $scheduler) {
             if ($scheduler->status !== 'active') {
+                Logs::addLog('scheduler', "Scheduler #{$scheduler->id}: skipped — status is '{$scheduler->status}'");
                 continue;
             }
 
             if ($scheduler->next_send <= 0 || $scheduler->next_send > $now) {
+                Logs::addLog('scheduler', "Scheduler #{$scheduler->id}: not due yet", [
+                    'next_send' => gmdate('Y-m-d H:i:s', $scheduler->next_send),
+                    'now'       => gmdate('Y-m-d H:i:s', $now),
+                    'diff_min'  => round(($scheduler->next_send - $now) / 60, 1),
+                ]);
                 continue;
             }
 

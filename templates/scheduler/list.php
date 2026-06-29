@@ -2,6 +2,7 @@
 
 use Mawiblah\Helpers;
 use Mawiblah\Scheduler;
+use Mawiblah\SchedulerCron;
 use Mawiblah\Campaigns;
 
 defined('ABSPATH') || exit;
@@ -11,6 +12,27 @@ defined('ABSPATH') || exit;
 
     <h1 class="wp-heading-inline"><?php esc_html_e('Scheduler', 'mawiblah'); ?></h1>
     <hr class="wp-header-end">
+
+    <?php
+    $cronNext = wp_next_scheduled(SchedulerCron::HOOK);
+    $tz       = wp_timezone();
+    if ($cronNext) {
+        $cronNextStr = wp_date('Y-m-d H:i:s', $cronNext, $tz);
+        $diffMin     = round(($cronNext - time()) / 60, 1);
+        echo '<div class="notice notice-info inline" style="margin:8px 0 16px;"><p>';
+        printf(
+            /* translators: 1: next fire datetime, 2: minutes until next fire */
+            esc_html__('Scheduler cron check next fires at %1$s (in %2$s min).', 'mawiblah'),
+            '<strong>' . esc_html($cronNextStr) . '</strong>',
+            esc_html($diffMin)
+        );
+        echo '</p></div>';
+    } else {
+        echo '<div class="notice notice-warning inline" style="margin:8px 0 16px;"><p>';
+        esc_html_e('Scheduler cron check is NOT scheduled in WP Cron. The scheduler will not fire automatically.', 'mawiblah');
+        echo '</p></div>';
+    }
+    ?>
 
     <div class="btn-row">
         <a class="btn" href="<?php echo esc_url(Helpers::generatePluginUrl(['action' => 'create-scheduler'])); ?>">

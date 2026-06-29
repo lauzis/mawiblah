@@ -400,6 +400,24 @@ if ( $result['status'] === 'ok' ) {
                 <?php esc_html_e('Setting up a real system cron job on your Linux host fixes this: cron runs on a schedule regardless of site traffic, and sends proceed at full speed.', 'mawiblah'); ?>
             </p>
 
+            <h3><?php esc_html_e('Why the built-in WP Cron slows down your site', 'mawiblah'); ?></h3>
+            <p>
+                <?php esc_html_e('WordPress\'s built-in cron works by piggybacking on real page requests. On every page load, WordPress checks whether any scheduled tasks are due — and if they are, it fires a non-blocking HTTP request back to the site to run them. This has two side effects:', 'mawiblah'); ?>
+            </p>
+            <ul style="list-style:disc;padding-left:1.5em;margin-bottom:12px;">
+                <li>
+                    <strong><?php esc_html_e('Slower page loads:', 'mawiblah'); ?></strong>
+                    <?php esc_html_e('the extra loopback HTTP request is made during the page load. Even though it is non-blocking, it still opens a connection and adds overhead — especially noticeable on shared hosting where outbound connections are slow or rate-limited.', 'mawiblah'); ?>
+                </li>
+                <li>
+                    <strong><?php esc_html_e('Unreliable timing:', 'mawiblah'); ?></strong>
+                    <?php esc_html_e('tasks only run when someone visits the site. A scheduled send at 09:00 may not fire until the first visitor arrives after that time. On low-traffic sites this can mean delays of hours.', 'mawiblah'); ?>
+                </li>
+            </ul>
+            <p>
+                <?php esc_html_e('Disabling the built-in cron trigger (see Step 1 below) and replacing it with a real system cron job eliminates both problems: pages load faster and tasks fire exactly on time.', 'mawiblah'); ?>
+            </p>
+
             <div class="notice notice-warning inline" style="margin:0 0 16px;">
                 <p>
                     <strong><?php esc_html_e('Without a real cron:', 'mawiblah'); ?></strong>
@@ -423,25 +441,30 @@ if ( $result['status'] === 'ok' ) {
                 <?php esc_html_e(') or as root, and add one of the lines below. Every 1 minute is recommended to keep background sends moving.', 'mawiblah'); ?>
             </p>
 
+            <?php
+            $siteUrl  = esc_attr(get_site_url());
+            $abspath  = esc_attr(rtrim(ABSPATH, '/'));
+            $cronUrl  = esc_attr(get_site_url() . '/wp-cron.php?doing_wp_cron');
+            $cronFile = esc_attr(rtrim(ABSPATH, '/') . '/wp-cron.php');
+            ?>
+
             <h4><?php esc_html_e('Option A — WP-CLI (recommended)', 'mawiblah'); ?></h4>
             <p><?php esc_html_e('WP-CLI is the cleanest approach: no HTTP overhead, works even when the site has no visitors, and reports errors to the cron log.', 'mawiblah'); ?></p>
             <pre><code># Run WP Cron every minute via WP-CLI
-* * * * * www-data wp cron event run --due-now --path=/var/www/html --url=https://yoursite.com >> /var/log/wp-cron.log 2>&1</code></pre>
+* * * * * www-data wp cron event run --due-now --path=<?php echo $abspath; ?> --url=<?php echo $siteUrl; ?> >> /var/log/wp-cron.log 2>&1</code></pre>
             <p>
-                <?php esc_html_e('Replace', 'mawiblah'); ?> <code>/var/www/html</code>
-                <?php esc_html_e('with your WordPress root and', 'mawiblah'); ?> <code>https://yoursite.com</code>
-                <?php esc_html_e('with your site URL. If WP-CLI is not in the system PATH, use its full path, e.g.', 'mawiblah'); ?> <code>/usr/local/bin/wp</code>.
+                <?php esc_html_e('If WP-CLI is not in the system PATH, use its full path, e.g.', 'mawiblah'); ?> <code>/usr/local/bin/wp</code>.
             </p>
 
             <h4 style="margin-top:16px;"><?php esc_html_e('Option B — curl', 'mawiblah'); ?></h4>
             <p><?php esc_html_e('Works without WP-CLI. Triggers cron over HTTP — requires the site to be reachable from the server itself.', 'mawiblah'); ?></p>
             <pre><code># Run WP Cron every minute via curl
-* * * * * www-data curl -s "https://yoursite.com/wp-cron.php?doing_wp_cron" > /dev/null 2>&1</code></pre>
+* * * * * www-data curl -s "<?php echo $cronUrl; ?>" > /dev/null 2>&1</code></pre>
 
             <h4 style="margin-top:16px;"><?php esc_html_e('Option C — PHP CLI', 'mawiblah'); ?></h4>
             <p><?php esc_html_e('Direct PHP invocation — faster than curl, no WP-CLI needed.', 'mawiblah'); ?></p>
             <pre><code># Run WP Cron every minute via PHP
-* * * * * www-data php /var/www/html/wp-cron.php > /dev/null 2>&1</code></pre>
+* * * * * www-data php <?php echo $cronFile; ?> > /dev/null 2>&1</code></pre>
 
             <h3 style="margin-top:24px;"><?php esc_html_e('Step 3 — Verify it works', 'mawiblah'); ?></h3>
             <ol style="padding-left:1.5em;">

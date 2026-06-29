@@ -3,7 +3,7 @@ Contributors: lauzis
 Tags: email, newsletter, marketing, mailchimp alternative, subscribers
 Requires at least: 5.0
 Tested up to: 6.9
-Stable tag: 1.0.25
+Stable tag: 1.0.26
 Requires PHP: 8.0
 License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl.html
@@ -68,6 +68,17 @@ Technically yes, but it is not recommended. The plugin sends emails individually
 8. MVP version
 
 == Changelog ==
+
+= 1.0.26 =
+*   Fixed: Background send via WP Cron failed silently when no user is logged in — template fetch now bypasses the authenticated REST loopback and reads the file directly in cron context.
+*   Fixed: Fatal error "Cannot access protected property WPMailSMTP\MailCatcherV6::$exceptions" — replaced phpmailer_init exceptions hook with the wp_mail_failed hook in both manual and background send paths.
+*   Fixed: Scheduler could reset a campaign mid-send if the previous background send was still in progress. Scheduler now skips the occurrence if backgroundStarted is set.
+*   New: Logs::addError() — always writes to PHP error_log and the Mawiblah log file regardless of whether debug mode is enabled. Used for all critical failures.
+*   New: Shutdown handler in CronSend::processBatch() captures PHP fatal errors and logs them.
+*   Improved: Extensive logging added throughout the background send pipeline (batch start/finish, all early-return paths, template load success/failure, REST errors).
+*   Improved: Scheduler create/edit form — past dates are disabled in the date picker, current date and time shown in field labels, and a live preview of the next 3 send dates is displayed below the form.
+*   Improved: Help page — added explanation of why the built-in WP Cron slows down page loads; cron command examples now use the real site URL and WordPress path.
+*   Changed: Admin menu reordered — last items are now Import, Logs, Tests, Settings.
 
 = 1.0.25 =
 *   Removed: Actions admin page removed. Clear Logs is on the Logs page; Gravity Forms sync is in the Import section. Closes #81.

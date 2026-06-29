@@ -395,11 +395,20 @@ class Init
 
         add_submenu_page(
             'mawiblah',
-            'Tests',
-            '<span class="dashicons dashicons-yes-alt" style="font-size:16px;line-height:1.4;margin-right:6px;vertical-align:middle;"></span>Tests',
+            'Scheduler',
+            '<span class="dashicons dashicons-calendar-alt" style="font-size:16px;line-height:1.4;margin-right:6px;vertical-align:middle;"></span>Scheduler',
             'manage_options',
-            self::MAWIBLAH_TESTS,
-            [$this, 'tests']
+            self::MAWIBLAH_SCHEDULER,
+            [$this, 'scheduler']
+        );
+
+        add_submenu_page(
+            'mawiblah',
+            'Help',
+            '<span class="dashicons dashicons-editor-help" style="font-size:16px;line-height:1.4;margin-right:6px;vertical-align:middle;"></span>Help',
+            'manage_options',
+            self::MAWIBLAH_HELP,
+            [$this, 'help']
         );
 
         add_submenu_page(
@@ -424,29 +433,20 @@ class Init
 
         add_submenu_page(
             'mawiblah',
+            'Tests',
+            '<span class="dashicons dashicons-yes-alt" style="font-size:16px;line-height:1.4;margin-right:6px;vertical-align:middle;"></span>Tests',
+            'manage_options',
+            self::MAWIBLAH_TESTS,
+            [$this, 'tests']
+        );
+
+        add_submenu_page(
+            'mawiblah',
             'Settings',
             '<span class="dashicons dashicons-admin-settings" style="font-size:16px;line-height:1.4;margin-right:6px;vertical-align:middle;"></span>Settings',
             'manage_options',
             self::MAWIBLAH_SETTINGS,
             [$this, 'settings']
-        );
-
-        add_submenu_page(
-            'mawiblah',
-            'Scheduler',
-            '<span class="dashicons dashicons-calendar-alt" style="font-size:16px;line-height:1.4;margin-right:6px;vertical-align:middle;"></span>Scheduler',
-            'manage_options',
-            self::MAWIBLAH_SCHEDULER,
-            [$this, 'scheduler']
-        );
-
-        add_submenu_page(
-            'mawiblah',
-            'Help',
-            '<span class="dashicons dashicons-editor-help" style="font-size:16px;line-height:1.4;margin-right:6px;vertical-align:middle;"></span>Help',
-            'manage_options',
-            self::MAWIBLAH_HELP,
-            [$this, 'help']
         );
     }
 

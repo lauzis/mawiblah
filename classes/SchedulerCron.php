@@ -74,6 +74,13 @@ class SchedulerCron
                 continue;
             }
 
+            // If the previous scheduled send is still in progress, skip this occurrence
+            // to avoid resetting the campaign mid-send.
+            if (!empty($campaign->backgroundStarted)) {
+                Logs::addLog('scheduler', "Scheduler #{$scheduler->id}: previous send still in progress, skipping this occurrence", ['campaignPostId' => $campaignPostId]);
+                continue;
+            }
+
             // Reset campaign so every subscriber is treated as unsent
             Scheduler::resetCampaignForResend($campaignPostId);
 

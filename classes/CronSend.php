@@ -53,12 +53,39 @@ class CronSend
     {
         $campaign = Campaigns::getCampaignById($campaignPostId);
 
-        if (!$campaign || !$campaign->backgroundStarted || $campaign->campaignFinished) {
+        if (!$campaign) {
+            Logs::addError('cron-send', "Campaign not found, aborting batch", ['campaignPostId' => $campaignPostId]);
             return;
         }
 
+        if (!$campaign->backgroundStarted) {
+            Logs::addError('cron-send', "backgroundStarted not set, aborting batch", ['campaignPostId' => $campaignPostId]);
+            return;
+        }
+
+        if ($campaign->campaignFinished) {
+            Logs::addLog('cron-send', "Campaign already finished, aborting batch", ['campaignPostId' => $campaignPostId]);
+            return;
+        }
+
+        Logs::addLog('cron-send', "Batch started", ['campaignPostId' => $campaignPostId]);
+
+        // Register a shutdown handler so fatal errors inside the batch are always logged
+        register_shutdown_function(function () use ($campaignPostId) {
+            $error = error_get_last();
+            if ($error && in_array($error['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR], true)) {
+                Logs::addError('cron-send', "Fatal error during batch", [
+                    'campaignPostId' => $campaignPostId,
+                    'error'          => $error['message'],
+                    'file'           => $error['file'],
+                    'line'           => $error['line'],
+                ]);
+            }
+        });
+
         $template = Campaigns::lockTemplate($campaign, false);
         if ($template === false) {
+            Logs::addError('cron-send', "lockTemplate returned false, aborting batch", ['campaignPostId' => $campaignPostId]);
             return;
         }
 
@@ -165,22 +192,15 @@ class CronSend
                     'List-Unsubscribe-Post: List-Unsubscribe=One-Click',
                 ];
 
-                $mailerError       = '';
-                $enableExceptions  = static function (\PHPMailer\PHPMailer\PHPMailer $mailer): void {
-                    $mailer->SMTPDebug   = 0;
-                    $mailer->Debugoutput = 'error_log';
-                    $mailer->exceptions  = true;
+                $mailerError      = '';
+                $captureMailError = static function (\WP_Error $error) use (&$mailerError): void {
+                    $mailerError = $error->get_error_message();
                 };
-                add_action('phpmailer_init', $enableExceptions);
+                add_action('wp_mail_failed', $captureMailError);
 
-                try {
-                    $result = wp_mail($subscriber->email, $campaign->subject, $emailBody, $emailHeaders);
-                } catch (\PHPMailer\PHPMailer\Exception $e) {
-                    $result       = false;
-                    $mailerError  = $e->getMessage();
-                } finally {
-                    remove_action('phpmailer_init', $enableExceptions);
-                }
+                $result = wp_mail($subscriber->email, $campaign->subject, $emailBody, $emailHeaders);
+
+                remove_action('wp_mail_failed', $captureMailError);
 
                 if ($result) {
                     $emailsSent++;
@@ -196,11 +216,22 @@ class CronSend
             }
         }
 
+        Logs::addLog('cron-send', "Batch complete", [
+            'campaignPostId' => $campaignPostId,
+            'batchCount'     => $batchCount,
+            'sent'           => $emailsSent,
+            'failed'         => $emailsFailed,
+            'skipped'        => $emailsSkipped,
+            'unsub'          => $emailsUnsubed,
+            'hasMore'        => $hasMore,
+        ]);
+
         if ($hasMore) {
             wp_schedule_single_event(time() + 60, self::HOOK, [$campaignPostId]);
         } else {
             Campaigns::campaignFinish($campaignPostId);
             Campaigns::backgroundSendStop($campaignPostId);
+            Logs::addLog('cron-send', "Campaign finished", ['campaignPostId' => $campaignPostId]);
         }
     }
 }

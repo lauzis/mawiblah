@@ -48,6 +48,38 @@ class Logs
     }
 
     /**
+     * Logs an error unconditionally — always writes to the Mawiblah log file
+     * AND to PHP's error_log, regardless of whether debug mode is enabled.
+     *
+     * Use this for failures that should never be silent.
+     *
+     * @param string $action            Short label.
+     * @param string $message           Human-readable message.
+     * @param array  $additionalObjects Key-value context to append as JSON.
+     */
+    public static function addError(string $action, string $message = '', array $additionalObjects = []): void
+    {
+        $timestamp = gmdate('Y-m-d H:i:s');
+        $line      = "[{$timestamp}] [{$action}] {$message}";
+
+        if (!empty($additionalObjects)) {
+            $line .= ' | ' . wp_json_encode($additionalObjects);
+        }
+
+        // Always write to PHP error log so it's visible regardless of settings
+        error_log('mawiblah: ' . $line);
+
+        // Also write to our own log file if logging is enabled
+        if (self::enabled()) {
+            $dir = MAWIBLAH_LOG_PATH;
+            if (!is_dir($dir)) {
+                wp_mkdir_p($dir);
+            }
+            file_put_contents(self::filePath(), $line . PHP_EOL, FILE_APPEND | LOCK_EX);
+        }
+    }
+
+    /**
      * Deletes all daily log files from the log directory.
      *
      * @return bool True on success, false if logging is disabled.

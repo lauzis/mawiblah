@@ -343,22 +343,15 @@ class RestRoutes
             'List-Unsubscribe-Post: List-Unsubscribe=One-Click',
         ];
 
-        $mailerError = '';
-        $enableExceptions = function (\PHPMailer\PHPMailer\PHPMailer $phpmailer) {
-            $phpmailer->SMTPDebug  = 0;
-            $phpmailer->Debugoutput = 'error_log';
-            $phpmailer->exceptions = true;
+        $mailerError    = '';
+        $captureMailError = function (\WP_Error $error) use (&$mailerError) {
+            $mailerError = $error->get_error_message();
         };
-        add_action('phpmailer_init', $enableExceptions);
+        add_action('wp_mail_failed', $captureMailError);
 
-        try {
-            $emailSendingResult = wp_mail($email, $campaign->subject, $emailBody, $emailHeaders);
-        } catch (\PHPMailer\PHPMailer\Exception $e) {
-            $emailSendingResult = false;
-            $mailerError        = $e->getMessage();
-        } finally {
-            remove_action('phpmailer_init', $enableExceptions);
-        }
+        $emailSendingResult = wp_mail($email, $campaign->subject, $emailBody, $emailHeaders);
+
+        remove_action('wp_mail_failed', $captureMailError);
 
         if ($emailSendingResult) {
 

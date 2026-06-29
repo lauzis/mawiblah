@@ -88,11 +88,12 @@ $isEdit = isset($scheduler) && $scheduler->id;
 
                 <tr id="row-send-date">
                     <th scope="row">
-                        <label for="scheduler-send-date"><?php esc_html_e('Send Date', 'mawiblah'); ?></label>
+                        <label for="scheduler-send-date"><?php esc_html_e('Send Date', 'mawiblah'); ?> (<?php echo esc_html(current_datetime()->format('Y-m-d')); ?>)</label>
                     </th>
                     <td>
                         <input type="date" id="scheduler-send-date" name="send_date"
-                               value="<?php echo $isEdit ? esc_attr($scheduler->send_date) : ''; ?>">
+                               value="<?php echo $isEdit ? esc_attr($scheduler->send_date) : ''; ?>"
+                               min="<?php echo esc_attr(current_datetime()->format('Y-m-d')); ?>">
                         <p class="description"><?php esc_html_e('Date on which to send (for "Once" type only).', 'mawiblah'); ?></p>
                     </td>
                 </tr>
@@ -145,7 +146,7 @@ $isEdit = isset($scheduler) && $scheduler->id;
 
                 <tr>
                     <th scope="row">
-                        <label for="scheduler-send-time"><?php esc_html_e('Send Time', 'mawiblah'); ?></label>
+                        <label for="scheduler-send-time"><?php esc_html_e('Send Time', 'mawiblah'); ?> (<?php echo esc_html(current_datetime()->format('H:i')); ?>)</label>
                     </th>
                     <td>
                         <input type="time" id="scheduler-send-time" name="send_time"
@@ -182,15 +183,26 @@ $isEdit = isset($scheduler) && $scheduler->id;
         </p>
     </form>
 
+    <div id="scheduler-preview" style="margin-top:16px;max-width:600px;display:none;">
+        <h3><?php esc_html_e('Next 3 send dates', 'mawiblah'); ?></h3>
+        <ul id="scheduler-preview-list" style="list-style:disc;padding-left:1.5em;margin:0;"></ul>
+    </div>
+
 </div>
 
 <script>
 (function () {
-    var typeSelect   = document.getElementById('scheduler-type');
-    var rowDate      = document.getElementById('row-send-date');
-    var rowWeekly    = document.getElementById('row-send-day-weekly');
-    var rowMonthly   = document.getElementById('row-send-day-monthly');
-    var rowEndDate   = document.getElementById('row-end-date');
+    var typeSelect    = document.getElementById('scheduler-type');
+    var rowDate       = document.getElementById('row-send-date');
+    var rowWeekly     = document.getElementById('row-send-day-weekly');
+    var rowMonthly    = document.getElementById('row-send-day-monthly');
+    var rowEndDate    = document.getElementById('row-end-date');
+    var sendDateInput = document.getElementById('scheduler-send-date');
+    var sendTimeInput = document.getElementById('scheduler-send-time');
+    var dayWeekSelect = document.getElementById('scheduler-day-week');
+    var dayMonthSelect= document.getElementById('scheduler-day-month');
+    var preview       = document.getElementById('scheduler-preview');
+    var previewList   = document.getElementById('scheduler-preview-list');
 
     function toggleRows() {
         var type = typeSelect.value;
@@ -198,9 +210,99 @@ $isEdit = isset($scheduler) && $scheduler->id;
         rowWeekly.style.display  = (type === 'weekly')  ? '' : 'none';
         rowMonthly.style.display = (type === 'monthly') ? '' : 'none';
         rowEndDate.style.display = (type !== 'once')    ? '' : 'none';
+        updatePreview();
+    }
+
+    function formatDate(d) {
+        var days   = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+        var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        return days[d.getDay()] + ', ' + d.getDate() + ' ' + months[d.getMonth()] + ' ' + d.getFullYear()
+             + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+    }
+
+    function pad(n) { return n < 10 ? '0' + n : '' + n; }
+
+    function clampDay(year, month, day) {
+        var max = new Date(year, month + 1, 0).getDate();
+        return Math.min(day, max);
+    }
+
+    function computeDates() {
+        var type   = typeSelect.value;
+        var timeParts = sendTimeInput.value.split(':');
+        var hour   = parseInt(timeParts[0], 10) || 0;
+        var minute = parseInt(timeParts[1], 10) || 0;
+        var dates  = [];
+
+        if (type === 'once') {
+            if (!sendDateInput.value) return [];
+            var d = new Date(sendDateInput.value + 'T' + pad(hour) + ':' + pad(minute) + ':00');
+            if (!isNaN(d)) dates.push(d);
+            return dates;
+        }
+
+        if (type === 'weekly') {
+            var targetDay = parseInt(dayWeekSelect.value, 10);
+            var d = new Date();
+            d.setSeconds(0, 0);
+            d.setHours(hour, minute);
+            var diff = (targetDay - d.getDay() + 7) % 7;
+            if (diff === 0 && d <= new Date()) diff = 7;
+            d = new Date(d.getTime() + diff * 86400000);
+            for (var i = 0; i < 3; i++) {
+                dates.push(new Date(d));
+                d = new Date(d.getTime() + 7 * 86400000);
+            }
+            return dates;
+        }
+
+        if (type === 'monthly') {
+            var targetDay = parseInt(dayMonthSelect.value, 10);
+            var now = new Date();
+            var year = now.getFullYear();
+            var month = now.getMonth();
+            var day = clampDay(year, month, targetDay);
+            var d = new Date(year, month, day, hour, minute, 0);
+            if (d <= now) {
+                month++;
+                if (month > 11) { month = 0; year++; }
+                day = clampDay(year, month, targetDay);
+                d = new Date(year, month, day, hour, minute, 0);
+            }
+            for (var i = 0; i < 3; i++) {
+                dates.push(new Date(d));
+                month++;
+                if (month > 11) { month = 0; year++; }
+                day = clampDay(year, month, targetDay);
+                d = new Date(year, month, day, hour, minute, 0);
+            }
+            return dates;
+        }
+
+        return [];
+    }
+
+    function updatePreview() {
+        var dates = computeDates();
+        if (!dates.length) {
+            preview.style.display = 'none';
+            return;
+        }
+        previewList.innerHTML = '';
+        dates.forEach(function (d) {
+            var li = document.createElement('li');
+            li.textContent = formatDate(d);
+            previewList.appendChild(li);
+        });
+        preview.style.display = '';
     }
 
     typeSelect.addEventListener('change', toggleRows);
+    sendDateInput.addEventListener('change', updatePreview);
+    sendTimeInput.addEventListener('change', updatePreview);
+    dayWeekSelect.addEventListener('change', updatePreview);
+    dayMonthSelect.addEventListener('change', updatePreview);
+
     toggleRows();
 }());
 </script>

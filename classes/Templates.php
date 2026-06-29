@@ -15,6 +15,19 @@ class Templates
      */
     public static function getTemplateByNameViaRest($templateName): string | bool
     {
+        // When running under WP Cron there is no logged-in user, so an HTTP
+        // loopback to the authenticated REST endpoint would always 401. Call
+        // the template layer directly instead — identical result.
+        if (defined('DOING_CRON') && DOING_CRON) {
+            $content = self::getEmailTemplateByName($templateName);
+            if ($content === false) {
+                Logs::addError('template', "Template not found (cron direct load)", ['template' => $templateName]);
+                return false;
+            }
+            Logs::addLog('template', "Template loaded directly (cron)", ['template' => $templateName]);
+            return do_shortcode($content);
+        }
+
         $cookies = [];
         foreach ($_COOKIE as $name => $value) {
             if (strpos($name, 'wordpress_logged_in_') !== false || strpos($name, 'wp-settings-') !== false) {
@@ -37,13 +50,20 @@ class Templates
          ]);
 
         if (is_wp_error($response)) {
+            Logs::addError('template', "REST loopback failed (wp_error)", ['template' => $templateName, 'error' => $response->get_error_message()]);
             return false;
         }
 
+        $statusCode = wp_remote_retrieve_response_code($response);
         $body = wp_remote_retrieve_body($response);
         $data = json_decode($body);
 
-        return $data->template ?? false;
+        if ($statusCode !== 200 || empty($data->template)) {
+            Logs::addError('template', "REST loopback returned unexpected response", ['template' => $templateName, 'status' => $statusCode, 'body' => substr($body, 0, 300)]);
+            return $data->template ?? false;
+        }
+
+        return $data->template;
     }
 
     /**

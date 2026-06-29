@@ -3,10 +3,23 @@
     <h1 class="wp-heading-inline"><?php esc_html_e('Mawiblah — Help', 'mawiblah'); ?></h1>
     <hr class="wp-header-end">
 
+    <div style="background:#fff;border:1px solid #c3c4c7;padding:16px 20px;margin-bottom:20px;max-width:600px;">
+        <strong><?php esc_html_e('Contents', 'mawiblah'); ?></strong>
+        <ol style="margin:8px 0 0;padding-left:1.4em;">
+            <li><a href="#help-subscription-form"><?php esc_html_e('Subscription Form', 'mawiblah'); ?></a></li>
+            <li><a href="#help-developer-integration"><?php esc_html_e('Developer Integration', 'mawiblah'); ?></a></li>
+            <li><a href="#help-template-overriding"><?php esc_html_e('Template Overriding', 'mawiblah'); ?></a></li>
+            <li><a href="#help-settings-reference"><?php esc_html_e('Settings Reference', 'mawiblah'); ?></a></li>
+            <li><a href="#help-cron-setup"><?php esc_html_e('Background Send & Real Cron Setup', 'mawiblah'); ?></a></li>
+            <li><a href="#help-settings-background"><?php esc_html_e('Settings Reference — Background Send & Open Tracking', 'mawiblah'); ?></a></li>
+            <li><a href="#help-scheduler"><?php esc_html_e('Campaign Scheduler', 'mawiblah'); ?></a></li>
+        </ol>
+    </div>
+
     <div class="metabox-holder">
 
     <!-- ── Subscription Form ─────────────────────────────────────────────── -->
-    <div class="postbox">
+    <div id="help-subscription-form" class="postbox">
         <div class="postbox-header">
             <h2 class="hndle"><span><?php esc_html_e('Subscription Form', 'mawiblah'); ?></span></h2>
         </div>
@@ -116,7 +129,7 @@
     </div>
 
     <!-- ── Developer Integration ─────────────────────────────────────────── -->
-    <div class="postbox">
+    <div id="help-developer-integration" class="postbox">
         <div class="postbox-header">
             <h2 class="hndle"><span><?php esc_html_e('Developer Integration', 'mawiblah'); ?></span></h2>
         </div>
@@ -187,7 +200,7 @@ if ( $result['status'] === 'ok' ) {
     </div>
 
     <!-- ── Template Overriding ────────────────────────────────────────────── -->
-    <div class="postbox">
+    <div id="help-template-overriding" class="postbox">
         <div class="postbox-header">
             <h2 class="hndle"><span><?php esc_html_e('Template Overriding', 'mawiblah'); ?></span></h2>
         </div>
@@ -277,7 +290,7 @@ if ( $result['status'] === 'ok' ) {
     </div>
 
     <!-- ── Settings ──────────────────────────────────────────────────────── -->
-    <div class="postbox">
+    <div id="help-settings-reference" class="postbox">
         <div class="postbox-header">
             <h2 class="hndle"><span><?php esc_html_e('Settings Reference', 'mawiblah'); ?></span></h2>
         </div>
@@ -387,7 +400,7 @@ if ( $result['status'] === 'ok' ) {
     </div>
 
     <!-- ── Background Send & Cron Setup ─────────────────────────────────── -->
-    <div class="postbox">
+    <div id="help-cron-setup" class="postbox">
         <div class="postbox-header">
             <h2 class="hndle"><span><?php esc_html_e('Background Send & Real Cron Setup', 'mawiblah'); ?></span></h2>
         </div>
@@ -540,7 +553,7 @@ if ( $result['status'] === 'ok' ) {
     </div>
 
     <!-- ── Settings Reference (updated) ─────────────────────────────────── -->
-    <div class="postbox">
+    <div id="help-settings-background" class="postbox">
         <div class="postbox-header">
             <h2 class="hndle"><span><?php esc_html_e('Settings Reference — Background Send & Open Tracking', 'mawiblah'); ?></span></h2>
         </div>
@@ -589,7 +602,7 @@ if ( $result['status'] === 'ok' ) {
     </div>
 
     <!-- ── Scheduler ────────────────────────────────────────────────────── -->
-    <div class="postbox">
+    <div id="help-scheduler" class="postbox">
         <div class="postbox-header">
             <h2 class="hndle"><span><?php esc_html_e('Campaign Scheduler', 'mawiblah'); ?></span></h2>
         </div>
@@ -660,7 +673,7 @@ if ( $result['status'] === 'ok' ) {
                 <tbody>
                     <tr>
                         <td><code>mawiblah_scheduler_check</code></td>
-                        <td><?php esc_html_e('Runs hourly. Checks all active schedules and fires a background campaign send for any whose next_send time has passed.', 'mawiblah'); ?></td>
+                        <td><?php esc_html_e('Checks all active schedules and fires a background campaign send for any whose next_send time has passed. The check frequency is configurable in Settings → Scheduler (default: every 1 hour).', 'mawiblah'); ?></td>
                     </tr>
                     <tr>
                         <td><code>mawiblah_background_send</code></td>
@@ -668,6 +681,13 @@ if ( $result['status'] === 'ok' ) {
                     </tr>
                 </tbody>
             </table>
+
+            <div class="notice notice-warning inline" style="margin:12px 0 0;">
+                <p>
+                    <strong><?php esc_html_e('Send time is approximate:', 'mawiblah'); ?></strong>
+                    <?php esc_html_e('Campaigns will not fire at the exact configured time. The scheduler check runs on a fixed interval (e.g. every hour), so a send can be delayed by up to the full length of that interval depending on when the check last ran. For example, with a 1-hour check interval, a campaign set for 09:00 may not send until 09:59 if the previous check ran at 09:00:01. To minimise the delay, reduce the check interval in Settings → Scheduler.', 'mawiblah'); ?>
+                </p>
+            </div>
 
             <div class="notice notice-info inline" style="margin:12px 0 0;">
                 <p>

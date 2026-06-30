@@ -100,6 +100,8 @@ class Campaigns
         } else {
             update_post_meta($post_id, 'audiences', []);
         }
+
+        update_post_meta($post_id, 'rerender_on_recurring', isset($_POST['rerender_on_recurring']) ? '1' : '0');
     }
 
     /**
@@ -352,6 +354,8 @@ class Campaigns
         $post->campaignFinished     = get_post_meta($post->id, 'campaignFinished', true) ?? false;
         $post->backgroundStarted    = get_post_meta($post->id, 'backgroundStarted', true) ?? false;
         $post->totalSubscribers     = (int) (get_post_meta($post->id, 'totalSubscribers', true) ?: 0);
+        // Default true: empty meta (never saved) is treated as enabled.
+        $post->rerender_on_recurring = get_post_meta($post->id, 'rerender_on_recurring', true) !== '0';
 
         if (!$post->campaignHash) {
             $post->campaignHash = Helpers::generateCampaignHash($post->id);

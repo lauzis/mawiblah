@@ -232,9 +232,14 @@ class Scheduler
      * deletes the sent_{id} meta from every subscriber across the campaign's audiences.
      * This allows CronSend::processBatch() to treat all subscribers as unsent.
      *
-     * @param int $campaignPostId Campaign post ID.
+     * For weekly/monthly (recurring) schedules where the campaign's rerender_on_recurring flag
+     * is enabled, the email_template_copied meta is also deleted so CronSend re-fetches and
+     * re-renders the template fresh (picking up updated shortcode output, WP queries, etc.).
+     *
+     * @param int    $campaignPostId Campaign post ID.
+     * @param string $scheduleType   Scheduler type: 'once', 'weekly', or 'monthly'.
      */
-    public static function resetCampaignForResend(int $campaignPostId): void
+    public static function resetCampaignForResend(int $campaignPostId, string $scheduleType = 'once'): void
     {
         delete_post_meta($campaignPostId, 'campaignStarted');
         delete_post_meta($campaignPostId, 'campaignFinished');
@@ -243,6 +248,10 @@ class Scheduler
         $campaign = Campaigns::getCampaignById($campaignPostId);
         if (!$campaign) {
             return;
+        }
+
+        if (in_array($scheduleType, ['weekly', 'monthly'], true) && !empty($campaign->rerender_on_recurring)) {
+            delete_post_meta($campaignPostId, 'email_template_copied');
         }
 
         foreach ((array) $campaign->audiences as $audienceId) {

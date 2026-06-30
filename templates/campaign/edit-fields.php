@@ -38,5 +38,11 @@ $campaign = $data['campaign'];
             <?php endforeach; ?>
         </select>
     </p>
+    <p>
+        <label>
+            <input type="checkbox" name="rerender_on_recurring" value="1" <?= checked($campaign->rerender_on_recurring, true, false) ?>>
+            <?= __('Re-render template on each recurring send', 'mawiblah') ?>
+        </label>
+    </p>
     <?php wp_nonce_field('mawiblah_save_campaign_details', 'mawiblah_campaign_details_nonce'); ?>
 </div>

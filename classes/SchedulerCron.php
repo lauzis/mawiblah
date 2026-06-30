@@ -132,7 +132,7 @@ class SchedulerCron
             }
 
             // Reset campaign so every subscriber is treated as unsent
-            Scheduler::resetCampaignForResend($campaignPostId);
+            Scheduler::resetCampaignForResend($campaignPostId, $scheduler->schedule_type);
 
             // Trigger a background (cron-driven) send
             Campaigns::backgroundSendStart($campaignPostId);

@@ -64,7 +64,7 @@ flowchart TD
 
 ### Campaign Lifecycle
 
-From creation through test, approval, and final send to all subscribers.
+From creation through test, approval, and final send to all subscribers. For recurring schedules (weekly/monthly), `Scheduler::resetCampaignForResend()` clears the locked template copy before each re-send when `rerender_on_recurring` is enabled (default on), so the template is re-fetched and re-rendered fresh on the next cron batch.
 
 ```mermaid
 flowchart TD
@@ -170,6 +170,7 @@ Each campaign in MAWIBLAH tracks various metrics and metadata stored as WordPres
 - **`template`** - Email template to use
 - **`audiences`** - Array of WordPress taxonomy term IDs representing subscriber audiences (uses `mawiblah_subscriber_category` taxonomy)
 - **`status`** - Current campaign status (draft, sending-in-progress, completed, etc.)
+- **`rerender_on_recurring`** - Boolean (`'1'`/`'0'`). When `'1'` (default), the locked template copy is cleared before each weekly/monthly scheduled send so dynamic content (shortcodes, WP queries) is re-evaluated fresh. Has no effect on `once`-type schedules.
 
 ### Email Delivery Counters
 - **`emailsSend`** - Total number of emails successfully sent

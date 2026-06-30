@@ -148,7 +148,7 @@ defined('ABSPATH') || exit;
                 </td>
                 <td>
                     <a class="btn btn-warning link-delete" href="<?php echo esc_url(Helpers::generatePluginUrl(['action' => 'scheduler-delete', 'schedulerId' => $scheduler->id], 'schedulerId')); ?>"
-                       onclick="return confirm('<?php esc_attr_e('Delete this schedule?', 'mawiblah'); ?>')">
+                       onclick="return confirm('<?php echo esc_js(__('Delete this schedule?', 'mawiblah')); ?>')">
                         <?php esc_html_e('Delete', 'mawiblah'); ?>
                     </a>
                 </td>

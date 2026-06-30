@@ -443,7 +443,7 @@ class RestRoutes
      * Returns live send counters for a background send in progress.
      *
      * @param \WP_REST_Request $request REST request with 'campaignPostId'.
-     * @return array{sent:int, failed:int, skipped:int, unsubed:int, total:int, running:bool}
+     * @return array{sent:int, failed:int, skipped:int, unsubed:int, total:int, total_subscribers:int, running:bool}
      */
     public static function backgroundProgress(\WP_REST_Request $request): array
     {

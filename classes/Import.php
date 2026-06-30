@@ -115,6 +115,9 @@ class Import
                         if (!get_post_meta($existing->id, 'unsub_time', true)) {
                             update_post_meta($existing->id, 'unsub_time', time());
                         }
+                    } else {
+                        delete_post_meta($existing->id, 'unsubed');
+                        delete_post_meta($existing->id, 'unsub_time');
                     }
                 } else {
                     // merge — add selected audiences without removing any existing ones

@@ -679,24 +679,28 @@ class Subscribers
      */
     public static function getTestModeSubscribers(array $audienceIds, int $randomNonTesterLimit = 100): array
     {
-        $testers    = [];
-        $nonTesters = [];
-        $seenEmails = [];
+        $selectedByEmail = [];
 
         foreach ($audienceIds as $audienceId) {
             $subscribers = self::getSubscribersByAudience((int) $audienceId);
             foreach ($subscribers as $subscriber) {
-                $email = trim(strtolower($subscriber->email));
-                if (isset($seenEmails[$email])) {
-                    continue;
-                }
-                $seenEmails[$email] = true;
+                $email    = trim(strtolower($subscriber->email));
+                $isTester = self::isTester($subscriber);
 
-                if (self::isTester($subscriber)) {
-                    $testers[] = $subscriber;
-                } else {
-                    $nonTesters[] = $subscriber;
+                // Prefer tester records: replace a non-tester entry when a tester with the same email is found.
+                if (!isset($selectedByEmail[$email]) || ($isTester && !$selectedByEmail[$email]['isTester'])) {
+                    $selectedByEmail[$email] = ['subscriber' => $subscriber, 'isTester' => $isTester];
                 }
+            }
+        }
+
+        $testers    = [];
+        $nonTesters = [];
+        foreach ($selectedByEmail as $entry) {
+            if ($entry['isTester']) {
+                $testers[] = $entry['subscriber'];
+            } else {
+                $nonTesters[] = $entry['subscriber'];
             }
         }
 

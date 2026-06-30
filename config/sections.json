@@ -135,5 +135,73 @@
         "default_value": ""
       }
     ]
+  },
+  {
+    "id": "mawiblah-open-tracking",
+    "title": "Email Open Tracking",
+    "description": "Embeds a 1×1 tracking pixel in outgoing emails. Requires server-side configuration (nginx must serve the pixel URL and execute PHP). When enabled, unique opens are recorded per subscriber per campaign. Note: inform subscribers in your privacy policy.",
+    "fields": [
+      {
+        "id": "mawiblah-open-tracking-enabled",
+        "title": "Enable open tracking",
+        "type": "select",
+        "value": "",
+        "placeholder": "",
+        "default_value": "disabled",
+        "options": [
+          {
+            "value": "disabled",
+            "title": "Disabled"
+          },
+          {
+            "value": "enabled",
+            "title": "Enabled"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "mawiblah-background-send",
+    "title": "Background Send (WP Cron)",
+    "description": "Settings for background campaign sending via WP Cron. Campaigns can be sent in the background so you can close the browser tab.",
+    "fields": [
+      {
+        "id": "mawiblah-background-batch-size",
+        "title": "Subscribers per cron batch",
+        "type": "number",
+        "value": "",
+        "placeholder": "100",
+        "default_value": "100"
+      }
+    ]
+  },
+  {
+    "id": "mawiblah-scheduler",
+    "title": "Scheduler",
+    "description": "How often WP Cron checks whether a scheduled campaign is due. Lower values mean sends fire closer to the configured time, but generate more cron runs.",
+    "fields": [
+      {
+        "id": "mawiblah-scheduler-interval",
+        "title": "Scheduler check interval",
+        "type": "select",
+        "value": "",
+        "placeholder": "",
+        "default_value": "3600",
+        "options": [
+          { "value": "60",    "title": "Every 1 minute" },
+          { "value": "300",   "title": "Every 5 minutes" },
+          { "value": "600",   "title": "Every 10 minutes" },
+          { "value": "900",   "title": "Every 15 minutes" },
+          { "value": "1800",  "title": "Every 30 minutes" },
+          { "value": "3600",  "title": "Every 1 hour" },
+          { "value": "7200",  "title": "Every 2 hours" },
+          { "value": "14400", "title": "Every 4 hours" },
+          { "value": "28800", "title": "Every 8 hours" },
+          { "value": "43200", "title": "Every 12 hours" },
+          { "value": "86400", "title": "Once per day" }
+        ]
+      }
+    ]
   }
 ]

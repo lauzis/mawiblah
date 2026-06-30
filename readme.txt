@@ -3,7 +3,7 @@ Contributors: lauzis
 Tags: email, newsletter, marketing, mailchimp alternative, subscribers
 Requires at least: 5.0
 Tested up to: 6.9
-Stable tag: 1.0.22
+Stable tag: 1.0.28
 Requires PHP: 8.0
 License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl.html
@@ -68,6 +68,46 @@ Technically yes, but it is not recommended. The plugin sends emails individually
 8. MVP version
 
 == Changelog ==
+
+= 1.0.28 =
+*   New: `rerender_on_recurring` per-campaign setting — when enabled (default on), the locked template is cleared before each recurring (weekly/monthly) send so shortcodes, WP queries, and dynamic content are re-evaluated fresh.
+
+= 1.0.27 =
+*   Fixed: Division by zero in getConversionStatsForCampaign() when no emails have been sent yet (PHP 8 DivisionByZeroError).
+*   Fixed: Import session key contained uppercase chars which sanitize_key() lowercased on read, causing every import confirmation to fail with "session expired".
+*   Fixed: CronSend lockTemplate failure now calls backgroundSendStop() so the campaign is not left permanently stuck as "running".
+*   Fixed: Background send failure path now calls sentEmailFailed() instead of sentEmail(), correctly updating fail count, error meta, and Failing Email audience.
+*   Fixed: Scheduler skips in-progress send but now also advances next_send for recurring schedules, preventing an immediate re-fire after the current send finishes.
+*   Fixed: Templates::getTemplateByNameViaRest() now fails closed on non-200 or malformed REST responses (returns false instead of partial data).
+*   Fixed: backgroundProgress REST route returns a normalized payload shape on campaign-not-found instead of {error: "Not found"}.
+*   Fixed: Scheduler::add() now guards against wp_insert_post() returning 0 (not only WP_Error).
+*   Fixed: AJAX URL in background-progress.php now uses esc_url_raw() to prevent & being HTML-encoded and breaking the nonce query string.
+*   Fixed: Import error display now escapes each message individually so <br> separators render as line breaks.
+*   Fixed: Duplicate array keys for open-rate stats in campaign-conversion and campaign-raw templates (second entry silently overwrote the first).
+*   Fixed: Typo "beeing" corrected to "being" on the unsubscribe confirmation page.
+*   Fixed: Open timestamps in subscriber detail now use date_i18n() to respect site timezone and locale.
+*   Fixed: MAWIBLAH_VERSION no longer appends time() on every request, restoring browser caching of CSS/JS assets.
+*   Fixed: DOCUMENTATION.md flowchart loop-back now points to D2 (per-subscriber processing) rather than D (pre-fetch), matching the actual JS flow.
+
+= 1.0.26 =
+*   Fixed: Background send via WP Cron failed silently when no user is logged in — template fetch now bypasses the authenticated REST loopback and reads the file directly in cron context.
+*   Fixed: Fatal error "Cannot access protected property WPMailSMTP\MailCatcherV6::$exceptions" — replaced phpmailer_init exceptions hook with the wp_mail_failed hook in both manual and background send paths.
+*   Fixed: Scheduler could reset a campaign mid-send if the previous background send was still in progress. Scheduler now skips the occurrence if backgroundStarted is set.
+*   New: Logs::addError() — always writes to PHP error_log and the Mawiblah log file regardless of whether debug mode is enabled. Used for all critical failures.
+*   New: Shutdown handler in CronSend::processBatch() captures PHP fatal errors and logs them.
+*   Improved: Extensive logging added throughout the background send pipeline (batch start/finish, all early-return paths, template load success/failure, REST errors).
+*   Improved: Scheduler create/edit form — past dates are disabled in the date picker, current date and time shown in field labels, and a live preview of the next 3 send dates is displayed below the form.
+*   Improved: Help page — added explanation of why the built-in WP Cron slows down page loads; cron command examples now use the real site URL and WordPress path.
+*   Changed: Admin menu reordered — last items are now Import, Logs, Tests, Settings.
+
+= 1.0.25 =
+*   Removed: Actions admin page removed. Clear Logs is on the Logs page; Gravity Forms sync is in the Import section. Closes #81.
+
+= 1.0.24 =
+*   Fixed: migrateTo1021() now processes log posts in batches of 200 instead of all at once, preventing PHP timeouts on sites with large log histories. Remaining posts are migrated via WP-Cron. Fixes #80.
+
+= 1.0.23 =
+*   Improved: Test-mode send now pre-fetches a capped subscriber list — all testers first, then up to 100 random non-testers — instead of iterating every subscriber in the campaign audiences. Closes #25.
 
 = 1.0.22 =
 *   Fixed: Test sends and real sends now use separate meta keys (sent_test_{id} vs sent_{id}), so testers are no longer skipped when the real campaign runs. testReset() clears test-send flags when a retest is triggered. Fixes #43.

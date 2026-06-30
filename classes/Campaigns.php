@@ -11,6 +11,7 @@ class Campaigns
     const STAT_NEWLY_UNSUBSCRIBED = 'newlyUnsubscribed';
     const STAT_UNIQUE_USERS = 'uniqueUsers';
     const STAT_LINKS_CLICKED = 'linksClicked';
+    const STAT_EMAILS_OPENED = 'emailsOpened';
 
     // exampel http://gudlenieks.test/?utm_source=email&utm_medium=email&utm_campaign=monthly-email&mawiblahId=%7BmawiblahId%7D&unsubscribe=%7Bemail%7D
     /** Registers the campaign post type and hooks campaign meta boxes and save handlers. */
@@ -99,6 +100,8 @@ class Campaigns
         } else {
             update_post_meta($post_id, 'audiences', []);
         }
+
+        update_post_meta($post_id, 'rerender_on_recurring', isset($_POST['rerender_on_recurring']) ? '1' : '0');
     }
 
     /**
@@ -140,6 +143,10 @@ class Campaigns
         \Mawiblah\Templates::loadTemplate('stats/last-links.php', $campaignData);
         \Mawiblah\Templates::loadTemplate('stats/last-days.php', $campaignData);
         \Mawiblah\Templates::loadTemplate('stats/last-hours.php', $campaignData);
+        if (\Mawiblah\Settings::openTrackingEnabled()) {
+            \Mawiblah\Templates::loadTemplate('stats/last-open-days.php', $campaignData);
+            \Mawiblah\Templates::loadTemplate('stats/last-open-hours.php', $campaignData);
+        }
         echo '</div>';
     }
 
@@ -152,6 +159,31 @@ class Campaigns
     public static function deleteCampaign($campaignPostId)
     {
         return wp_delete_post($campaignPostId);
+    }
+
+    /**
+     * Creates a copy of a campaign with "(Copy)" appended to the title.
+     * Copies subject, contentTitle, content, audiences, and template. Workflow state is not copied.
+     *
+     * @param int $campaignPostId Source campaign post ID.
+     * @return int New campaign post ID, or 0 on failure.
+     */
+    public static function duplicateCampaign(int $campaignPostId): int
+    {
+        $source = self::getCampaignById($campaignPostId);
+        if (!$source) {
+            return 0;
+        }
+
+        $newTitle = $source->post_title . ' (Copy)';
+        return self::addCampaign(
+            title: $newTitle,
+            subject: $source->subject,
+            contentTitle: $source->contentTitle,
+            content: $source->post_content,
+            audiences: $source->audiences,
+            template: $source->template
+        );
     }
 
     /**
@@ -181,32 +213,32 @@ class Campaigns
     public static function validateCampaign(string $title, string $subject, array $audiences, string $template): bool
     {
         if (empty($title)) {
-            print("Empty title");
+            echo esc_html__('Empty title', 'mawiblah');
             return false;
         }
 
         if (empty($audiences)) {
-            print("Empty audiences");
+            echo esc_html__('Empty audiences', 'mawiblah');
             return false;
         }
 
         if (empty($template)) {
-            print("Empty template");
+            echo esc_html__('Empty template', 'mawiblah');
             return false;
         }
 
         if (empty($subject)) {
-            print("Empty subject");
+            echo esc_html__('Empty subject', 'mawiblah');
             return false;
         }
 
         if (!self::validateEmailTemplate($template)) {
-            print("Could nog get template $template");
+            echo esc_html(sprintf(__('Could not get template %s', 'mawiblah'), $template));
             return false;
         }
 
         if (!Subscribers::validateAudiences($audiences)) {
-            print("Audiences not found audience");
+            echo esc_html__('Audiences not found', 'mawiblah');
             return false;
         }
 
@@ -312,13 +344,18 @@ class Campaigns
         $post->emailsSkipped = get_post_meta($post->id, 'emailsSkipped', true);
         $post->emailsUnsubed = get_post_meta($post->id, 'emailsUnsubed', true);
         $post->emailsNewlyUnsubed = get_post_meta($post->id, 'emailsNewlyUnsubed', true) ?? 0;
+        $post->emailsOpened = (int) (get_post_meta($post->id, 'emailsOpened', true) ?? 0);
 
         $post->testStarted = get_post_meta($post->id, 'testStarted', true) ?? false;
         $post->testFinished = get_post_meta($post->id, 'testFinished', true) ?? false;
         $post->testApproved = get_post_meta($post->id, 'testApproved', true) ?? false;
 
-        $post->campaignStarted = get_post_meta($post->id, 'campaignStarted', true) ?? false;
-        $post->campaignFinished = get_post_meta($post->id, 'campaignFinished', true) ?? false;
+        $post->campaignStarted      = get_post_meta($post->id, 'campaignStarted', true) ?? false;
+        $post->campaignFinished     = get_post_meta($post->id, 'campaignFinished', true) ?? false;
+        $post->backgroundStarted    = get_post_meta($post->id, 'backgroundStarted', true) ?? false;
+        $post->totalSubscribers     = (int) (get_post_meta($post->id, 'totalSubscribers', true) ?: 0);
+        // Default true: empty meta (never saved) is treated as enabled.
+        $post->rerender_on_recurring = get_post_meta($post->id, 'rerender_on_recurring', true) !== '0';
 
         if (!$post->campaignHash) {
             $post->campaignHash = Helpers::generateCampaignHash($post->id);
@@ -703,6 +740,26 @@ class Campaigns
      * @param int    $emailsSkipped  Total skipped sends.
      * @param int    $emailsUnsubed  Total sends skipped due to unsubscription.
      */
+    /**
+     * Records a unique open for a subscriber+campaign pair and increments the campaign open counter.
+     * No-op if the subscriber has already opened this campaign.
+     *
+     * @param int $subscriberId  Subscriber post ID.
+     * @param int $campaignPostId Campaign post ID.
+     */
+    public static function recordOpen(int $subscriberId, int $campaignPostId): void
+    {
+        $metaKey = 'opened_' . $campaignPostId;
+        if (get_post_meta($subscriberId, $metaKey, true)) {
+            return;
+        }
+        $openTime = time();
+        update_post_meta($subscriberId, $metaKey, $openTime);
+        $current = (int) get_post_meta($campaignPostId, 'emailsOpened', true);
+        update_post_meta($campaignPostId, 'emailsOpened', $current + 1);
+        add_post_meta($campaignPostId, 'open_time', $openTime, false);
+    }
+
     public static function updateCounters(object $campaign, int $emailsSent, int $emailsFailed, int $emailsSkipped, int $emailsUnsubed): void
     {
 
@@ -953,6 +1010,59 @@ class Campaigns
     }
 
     /**
+     * Returns open counts grouped by hour of day (0–23) for a single campaign.
+     *
+     * @param int $campaignPostId Campaign post ID.
+     * @return array Map of hour integer to open count.
+     */
+    public static function getOpenTimesByHourOfDay(int $campaignPostId): array
+    {
+        $hourStats = [];
+        for ($i = 0; $i < 24; $i++) {
+            $hourStats[$i] = 0;
+        }
+
+        $openTimes = get_post_meta($campaignPostId, 'open_time', false);
+        foreach ($openTimes as $timestamp) {
+            $hour = (int) date('G', (int) $timestamp);
+            if (isset($hourStats[$hour])) {
+                $hourStats[$hour]++;
+            }
+        }
+
+        return $hourStats;
+    }
+
+    /**
+     * Returns open counts grouped by day of week for a single campaign.
+     *
+     * @param int $campaignPostId Campaign post ID.
+     * @return array Map of weekday name to open count.
+     */
+    public static function getOpenTimesByDayOfWeek(int $campaignPostId): array
+    {
+        $dayStats = [
+            'Monday'    => 0,
+            'Tuesday'   => 0,
+            'Wednesday' => 0,
+            'Thursday'  => 0,
+            'Friday'    => 0,
+            'Saturday'  => 0,
+            'Sunday'    => 0,
+        ];
+
+        $openTimes = get_post_meta($campaignPostId, 'open_time', false);
+        foreach ($openTimes as $timestamp) {
+            $dayOfWeek = date('l', (int) $timestamp);
+            if (isset($dayStats[$dayOfWeek])) {
+                $dayStats[$dayOfWeek]++;
+            }
+        }
+
+        return $dayStats;
+    }
+
+    /**
      * Returns campaign start counts grouped by day of week for the last N campaigns.
      *
      * Used alongside getClickTimesByDayOfWeekForLastCampaigns() to compute the activity rating.
@@ -1048,6 +1158,51 @@ class Campaigns
     }
 
     /**
+     * Counts unique subscriber emails across all campaign audiences.
+     * Used to populate the totalSubscribers denominator on the progress page.
+     *
+     * @param object $campaign Campaign object.
+     * @return int Unique subscriber count.
+     */
+    public static function countUniqueSubscribers(object $campaign): int
+    {
+        $seen = [];
+        foreach ($campaign->audiences ?? [] as $audienceId) {
+            $subscribers = Subscribers::getSubscribersByAudience((int) $audienceId);
+            foreach ($subscribers as $subscriber) {
+                $seen[trim(strtolower($subscriber->email))] = true;
+            }
+        }
+        return count($seen);
+    }
+
+    /**
+     * Starts a background (cron-driven) send: marks the campaign started, sets backgroundStarted,
+     * and snapshots the total unique subscriber count for progress display.
+     *
+     * @param int $campaignPostId Campaign post ID.
+     */
+    public static function backgroundSendStart(int $campaignPostId): void
+    {
+        self::campaignStart($campaignPostId);
+        update_post_meta($campaignPostId, 'backgroundStarted', time());
+        $campaign = self::getCampaignById($campaignPostId);
+        if ($campaign) {
+            update_post_meta($campaignPostId, 'totalSubscribers', self::countUniqueSubscribers($campaign));
+        }
+    }
+
+    /**
+     * Stops a background send: clears backgroundStarted.
+     *
+     * @param int $campaignPostId Campaign post ID.
+     */
+    public static function backgroundSendStop(int $campaignPostId): void
+    {
+        delete_post_meta($campaignPostId, 'backgroundStarted');
+    }
+
+    /**
      * Records the campaign send completion timestamp.
      *
      * @param int $campaignPostId Campaign post ID.
@@ -1095,6 +1250,7 @@ class Campaigns
         $failed = [];
         $uniqueUsers = [];
         $linksClicked = [];
+        $emailsOpened = [];
 
         foreach ($lastCampaigns as $lastCampaign) {
             $skipped[] = is_numeric($lastCampaign->emailsSkipped) ? $lastCampaign->emailsSkipped : 0;
@@ -1104,6 +1260,7 @@ class Campaigns
             $failed[] = is_numeric($lastCampaign->emailsFailed) ? $lastCampaign->emailsFailed : 0;
             $uniqueUsers[] = is_numeric($lastCampaign->uniqueUserClicks) ? $lastCampaign->uniqueUserClicks : 0;
             $linksClicked[] = is_numeric($lastCampaign->linksClicked) ? $lastCampaign->linksClicked : 0;
+            $emailsOpened[] = $lastCampaign->emailsOpened;
         }
 
         return [
@@ -1114,6 +1271,7 @@ class Campaigns
             self::STAT_FAILED => $failed,
             self::STAT_UNIQUE_USERS => $uniqueUsers,
             self::STAT_LINKS_CLICKED => $linksClicked,
+            self::STAT_EMAILS_OPENED => $emailsOpened,
         ];
     }
 
@@ -1137,6 +1295,7 @@ class Campaigns
         $failed = [];
         $uniqueUsers = [];
         $linksClicked = [];
+        $emailsOpened = [];
 
         foreach ($lastCampaigns as $lastCampaign) {
 
@@ -1147,6 +1306,7 @@ class Campaigns
             $failedCount = is_numeric($lastCampaign->emailsFailed) ? $lastCampaign->emailsFailed : 0;
             $uniqueUsersCount = is_numeric($lastCampaign->uniqueUserClicks) ? $lastCampaign->uniqueUserClicks : 0;
             $linksClickedCount = is_numeric($lastCampaign->linksClicked) ? $lastCampaign->linksClicked : 0;
+            $emailsOpenedCount = is_numeric($lastCampaign->emailsOpened) ? (int)$lastCampaign->emailsOpened : 0;
             $total = $skip + $sentCount + $failedCount;
             $total = $total === 0 ? 1 : $total;
             $unsubed = is_numeric($lastCampaign->emailsUnsubed) ? $lastCampaign->emailsUnsubed : 0;
@@ -1157,6 +1317,7 @@ class Campaigns
             $failed[] = round($failedCount/$total*100,2);
             $uniqueUsers[] = round($uniqueUsersCount/$total*100,2);
             $linksClicked[] = round($linksClickedCount/($totalLinksCount*$total)*100,2);
+            $emailsOpened[] = round($emailsOpenedCount / ($sentCount === 0 ? 1 : $sentCount) * 100, 2);
         }
 
         return [
@@ -1167,6 +1328,7 @@ class Campaigns
             self::STAT_FAILED => $failed,
             self::STAT_UNIQUE_USERS => $uniqueUsers,
             self::STAT_LINKS_CLICKED => $linksClicked,
+            self::STAT_EMAILS_OPENED => $emailsOpened,
         ];
     }
 

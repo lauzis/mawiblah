@@ -29,7 +29,10 @@ use Mawiblah\Helpers;
             <th>Emails unsubed</th>
             <th>Unique visitors</th>
             <th>Links clicked</th>
-            <th colspan="4">Actions</th>
+            <?php if (\Mawiblah\Settings::openTrackingEnabled()): ?>
+            <th>Emails opened</th>
+            <?php endif; ?>
+            <th colspan="5">Actions</th>
         </tr>
         </thead>
         <tbody>
@@ -59,6 +62,12 @@ use Mawiblah\Helpers;
             echo "<td>" . esc_html($campaign->emailsUnsubed) . "</td>";
             echo "<td>" . esc_html($campaign->uniqueUserClicks) . "</td>";
             echo "<td>" . esc_html($campaign->linksClicked) . "</td>";
+            if (\Mawiblah\Settings::openTrackingEnabled()) {
+                $sent = (int) $campaign->emailsSend;
+                $opened = (int) $campaign->emailsOpened;
+                $pct = $sent > 0 ? round($opened / $sent * 100) : 0;
+                echo "<td>" . esc_html($opened) . ($sent > 0 ? ' (' . esc_html($pct) . '%)' : '') . "</td>";
+            }
             $status = $campaign->post_status;
 
             $campaignFinished = false;
@@ -83,22 +92,46 @@ use Mawiblah\Helpers;
                 $campaignFinished = true;
             }
 
+            $backgroundRunning = !empty($campaign->backgroundStarted) && empty($campaign->campaignFinished);
+
             if ($campaignFinished) {
-                echo "<td colspan='4'>
+                echo "<td colspan='5'>
                     Campaign is completed
                     </td>";
             } else {
                 echo "<td>
                     <a class='btn link-send campaign-actions' data-type='send' data-href='" . esc_url(Helpers::generatePluginUrl(['action' => 'test', 'campaignPostId' => $campaign->id])) . "'>" . esc_html($testButtonText) . "</a>
                 </td>";
-                echo "<td>
-                        <a class='btn btn-danger link-send campaign-actions $sendDisabled' data-type='send' data-href='" . esc_url(Helpers::generatePluginUrl(['action' => 'campaign-send', 'campaignPostId' => $campaign->id], 'campaignPostId')) . "'>" . esc_html__('Send', 'mawiblah') . "</a>
+                if ($backgroundRunning) {
+                    $progressUrl = Helpers::generatePluginUrl(['action' => 'campaign-send-background', 'campaignPostId' => $campaign->id], 'campaignPostId');
+                    echo "<td>
+                        <a class='btn btn-secondary' href='" . esc_url($progressUrl) . "'>" . esc_html__('Background: running…', 'mawiblah') . "</a>
                     </td>";
-                echo "<td>
-                    <a class='btn btn-warning link-delete campaign-actions $deleteDisabled' data-type='delete' data-href='" . esc_url(Helpers::generatePluginUrl(['action' => 'campaign-delete', 'campaignPostId' => $campaign->id], 'campaignPostId')) . "'>" . esc_html__('Delete', 'mawiblah') . "</a>
+                } elseif ($sendDisabled) {
+                    echo "<td><span class='btn btn-danger disabled'>" . esc_html__('Send', 'mawiblah') . "</span></td>";
+                } else {
+                    echo "<td>
+                        <a class='btn btn-danger link-send campaign-actions' data-type='send' data-href='" . esc_url(Helpers::generatePluginUrl(['action' => 'campaign-send', 'campaignPostId' => $campaign->id], 'campaignPostId')) . "'>" . esc_html__('Send', 'mawiblah') . "</a>
+                        &nbsp;
+                        <a class='btn btn-secondary link-send campaign-actions' data-type='send' data-href='" . esc_url(Helpers::generatePluginUrl(['action' => 'campaign-send-background', 'campaignPostId' => $campaign->id], 'campaignPostId')) . "'>" . esc_html__('BG', 'mawiblah') . "</a>
                     </td>";
+                }
+                if ($deleteDisabled) {
+                    echo "<td><span class='btn btn-warning disabled'>" . esc_html__('Delete', 'mawiblah') . "</span></td>";
+                } else {
+                    echo "<td>
+                        <a class='btn btn-warning link-delete campaign-actions' data-type='delete' data-href='" . esc_url(Helpers::generatePluginUrl(['action' => 'campaign-delete', 'campaignPostId' => $campaign->id], 'campaignPostId')) . "'>" . esc_html__('Delete', 'mawiblah') . "</a>
+                    </td>";
+                }
+                if ($editDisabled) {
+                    echo "<td><span class='btn disabled'>" . esc_html__('Edit', 'mawiblah') . "</span></td>";
+                } else {
+                    echo "<td>
+                        <a class='btn link-edit campaign-actions' data-type='edit' data-href='" . esc_url(Helpers::generatePluginUrl(['action' => 'campaign-edit', 'campaignPostId' => $campaign->id], 'campaignPostId')) . "'>" . esc_html__('Edit', 'mawiblah') . "</a>
+                    </td>";
+                }
                 echo "<td>
-                    <a class='btn link-edit campaign-actions $editDisabled' data-type='edit' data-href='" . esc_url(Helpers::generatePluginUrl(['action' => 'campaign-edit', 'campaignPostId' => $campaign->id], 'campaignPostId')) . "'>" . esc_html__('Edit', 'mawiblah') . "</a>
+                    <a class='btn campaign-actions' data-type='duplicate' data-href='" . esc_url(Helpers::generatePluginUrl(['action' => 'campaign-duplicate', 'campaignPostId' => $campaign->id], 'campaignPostId')) . "'>" . esc_html__('Duplicate', 'mawiblah') . "</a>
                 </td>";
             }
 

@@ -102,8 +102,8 @@ class Helpers
     public static function getCurrentUrl()
     {
         $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443) ? "https://" : "http://";
-        $host = $_SERVER['HTTP_HOST'];
-        $uri = $_SERVER['REQUEST_URI'];
+        $host = sanitize_text_field(wp_unslash($_SERVER['HTTP_HOST'] ?? ''));
+        $uri = sanitize_url(wp_unslash($_SERVER['REQUEST_URI'] ?? ''));
 
         return $protocol . $host . $uri;
     }

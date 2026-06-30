@@ -70,6 +70,18 @@ The initial version was built by hand. From version 1.0.9 onward, most changes h
 
 ## Change log
 
+### --- 1.0.28 ---
+- **New:** `rerender_on_recurring` per-campaign setting (checkbox in Campaign Details, default checked). When enabled, `Scheduler::resetCampaignForResend()` clears the locked template copy before each weekly/monthly send so shortcodes, WP queries, and dynamic content are re-evaluated fresh rather than replaying the month-old snapshot. Closes #86.
+
+### --- 1.0.25 ---
+- **Removed:** Actions admin page removed. Clear Logs functionality was already present on the Logs page; Gravity Forms sync is covered by the dedicated Import section. No unique functionality remains, so the page, its submenu entry, and all associated code have been deleted. Closes #81.
+
+### --- 1.0.24 ---
+- **Fixed:** `migrateTo1021()` previously fetched all `mawiblah_log` posts in a single query (`posts_per_page => -1`), causing PHP timeout errors on sites with large log histories. The migration now processes posts in batches of 200 per request, deletes each batch, and schedules a WP-Cron event (`mawiblah_migration_1021_continue`) to continue if posts remain. Progress is visible in the daily log files. Fixes #80.
+
+### --- 1.0.23 ---
+- **Improved:** Test-mode send loop now pre-fetches a reduced subscriber list — all testers first, then up to 100 randomly-sampled non-testers — instead of iterating all subscribers in every campaign audience. A 2 000-subscriber list previously triggered 2 000 REST calls in test mode; it now triggers at most `tester_count + 100`. Closes #25.
+
 ### --- 1.0.22 ---
 - **Fixed:** Test sends and real sends now use separate subscriber meta keys (`sent_test_{campaignId}` vs `sent_{campaignId}`), so testers who received the test email are no longer skipped when the real campaign runs. `testReset()` clears the test-send flags so a retest always starts clean. Fixes #43.
 

@@ -3,15 +3,16 @@
  * Plugin Name: Mawiblah
  * Plugin URI: https://github.com/lauzis/
  * Description: Fff-ine, will build my own mailchimp... with blackjack and hookers.
- * Version: 1.0.22
+ * Version: 1.0.28
  * Author: Aivars Lauzis
  * Author URI: https://github.com/lauzis/
  * License: GPL3 - http://www.gnu.org/licenses/gpl.html
  * Requires PHP: 8.0
  */
 
+define('MAWIBLAH_VERSION_BASE', '1.0.28');
 if (!defined('MAWIBLAH_VERSION')) {
-    define('MAWIBLAH_VERSION', '1.0.22.' . time());
+    define('MAWIBLAH_VERSION', MAWIBLAH_VERSION_BASE);
 }
 
 define('MAWIBLAH_PLUGIN_NAME', 'Mawiblah');
@@ -44,7 +45,7 @@ if (!defined('MAWIBLAH_UPLOAD_DIR')) {
     $uploadDir = wp_get_upload_dir();
     $baseDir = $uploadDir['basedir'] . '/mawiblah';
     if (!is_dir($baseDir) && !file_exists($baseDir)) {
-        mkdir($baseDir, 0777);
+        mkdir($baseDir, 0755);
     }
     define('MAWIBLAH_UPLOAD_DIR', untrailingslashit($baseDir));
 }
@@ -89,6 +90,11 @@ require(MAWIBLAH_PLUGIN_DIR . '/classes/Logs.php');
 require(MAWIBLAH_PLUGIN_DIR . '/classes/Migrations.php');
 require(MAWIBLAH_PLUGIN_DIR . '/classes/Actions.php');
 require(MAWIBLAH_PLUGIN_DIR . '/classes/SubscriptionForm.php');
+require(MAWIBLAH_PLUGIN_DIR . '/classes/SetupNotice.php');
+require(MAWIBLAH_PLUGIN_DIR . '/classes/CronSend.php');
+require(MAWIBLAH_PLUGIN_DIR . '/classes/Import.php');
+require(MAWIBLAH_PLUGIN_DIR . '/classes/Scheduler.php');
+require(MAWIBLAH_PLUGIN_DIR . '/classes/SchedulerCron.php');
 
 function mawiblah_init(): void
 {
@@ -101,7 +107,11 @@ function mawiblah_init(): void
     \Mawiblah\Campaigns::init();
     \Mawiblah\Visits::init();
     \Mawiblah\GravityForms::init();
+    \Mawiblah\SetupNotice::init();
     \Mawiblah\SubscriptionForm::init();
+    \Mawiblah\CronSend::init();
+    \Mawiblah\Scheduler::init();
+    \Mawiblah\SchedulerCron::init();
 }
 
 add_action('init', 'mawiblah_init');

@@ -18,8 +18,8 @@
     <section class="message">
 
         <div>
-            <h1><?php _e('Could not create campaign!'); ?></h1>
-            <p><?php _e('Could not create campaign. Missing fields!'); ?></p>
+            <h1><?php esc_html_e('Could not create campaign!', 'mawiblah'); ?></h1>
+            <p><?php esc_html_e('Could not create campaign. Missing fields!', 'mawiblah'); ?></p>
             <pre>
                 <?php echo esc_html(print_r($debug, true)); ?>
             </pre>

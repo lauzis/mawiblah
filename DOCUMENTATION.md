@@ -64,7 +64,7 @@ flowchart TD
 
 ### Campaign Lifecycle
 
-From creation through test, approval, and final send to all subscribers.
+From creation through test, approval, and final send to all subscribers. For recurring schedules (weekly/monthly), `Scheduler::resetCampaignForResend()` clears the locked template copy before each re-send when `rerender_on_recurring` is enabled (default on), so the template is re-fetched and re-rendered fresh on the next cron batch.
 
 ```mermaid
 flowchart TD
@@ -72,13 +72,14 @@ flowchart TD
     B --> B1{Any testers in\ncampaign audiences?}
     B1 -- No --> B2[Show error:\nno testers found\nblock test start]
     B1 -- Yes --> C[testStart\nsets testStarted timestamp]
-    C --> D[JS calls REST API per subscriber]
-    D --> E{testMode?\ntestStarted AND NOT testApproved}
+    C --> D[Pre-fetch: testers + up to 100\nrandom non-testers from audiences\ngetTestModeSubscribers]
+    D --> D2[JS calls REST API per\npre-filtered subscriber]
+    D2 --> E{testMode?\ntestStarted AND NOT testApproved}
     E -- Yes --> F{Subscriber is a tester?}
-    F -- No --> G[Skip: not a tester]
+    F -- No --> G[Skip: not a tester\n(random sample only)]
     F -- Yes --> H[Send test email via wp_mail]
     G & H --> I{Last subscriber?}
-    I -- No --> D
+    I -- No --> D2
     I -- Yes --> J[testFinish\nsets testFinished timestamp]
     J --> K{Admin reviews test emails}
     K -- Redo --> L[testReset\nclears all test timestamps]
@@ -169,6 +170,7 @@ Each campaign in MAWIBLAH tracks various metrics and metadata stored as WordPres
 - **`template`** - Email template to use
 - **`audiences`** - Array of WordPress taxonomy term IDs representing subscriber audiences (uses `mawiblah_subscriber_category` taxonomy)
 - **`status`** - Current campaign status (draft, sending-in-progress, completed, etc.)
+- **`rerender_on_recurring`** - Boolean (`'1'`/`'0'`). When `'1'` (default), the locked template copy is cleared before each weekly/monthly scheduled send so dynamic content (shortcodes, WP queries) is re-evaluated fresh. Has no effect on `once`-type schedules.
 
 ### Email Delivery Counters
 - **`emailsSend`** - Total number of emails successfully sent
@@ -359,7 +361,7 @@ Control the minimum time between emails sent to the same subscriber to avoid ove
 ### Debugging
 - Enable debugging with IP restrictions
 - Skip actual email sending for testing
-- **File logging** — when enabled (`enable-db-log` option value, kept for backwards compatibility), log entries are written to daily files at `{uploads}/gae-logs/mawiblah-YYYY-MM-DD.log`. Each entry is a single line: `[timestamp] [action] message | {json context}`. Use the **Actions** page to view file list and clear all logs. Files can also be read directly via SSH or the hosting file manager.
+- **File logging** — when enabled (`enable-db-log` option value, kept for backwards compatibility), log entries are written to daily files at `{uploads}/gae-logs/mawiblah-YYYY-MM-DD.log`. Each entry is a single line: `[timestamp] [action] message | {json context}`. Use the **Logs** page to view file list and clear all logs. Files can also be read directly via SSH or the hosting file manager.
 
 ### Click Timing
 Campaign click times are logged to analyze when subscribers are most active, helping optimize send times.

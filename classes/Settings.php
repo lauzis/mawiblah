@@ -92,7 +92,7 @@ class Settings
             $ips = explode(",", $ips);
             $ips = array_unique($ips);
             if (count($ips) > 0) {
-                if (!in_array($_SERVER["REMOTE_ADDR"], $ips)) {
+                if (!in_array(sanitize_text_field(wp_unslash($_SERVER['REMOTE_ADDR'] ?? '')), $ips, true)) {
                     return false;
                 }
             }
@@ -298,7 +298,7 @@ class Settings
                 $translationIds = unserialize(file_get_contents($translationIdsFile));
             } else {
                 if (@touch($translationIdsFile)) {
-                    chmod($translationIdsFile, 0777);
+                    chmod($translationIdsFile, 0644);
                 }
             }
 
@@ -373,7 +373,7 @@ msgstr ""
             }
 
             if (!file_exists($potFile)) {
-                if (!@touch($potFile) || !@chmod($potFile, 0777)) {
+                if (!@touch($potFile) || !@chmod($potFile, 0644)) {
                     self::add_message("Could not create ($potFile). Could not generate pot file.", "error");
                 }
             }
@@ -437,6 +437,24 @@ msgstr ""
     public static function recaptchaSecretKey(): string
     {
         return (string) self::getOption('mawiblah-recaptcha-secret-key');
+    }
+
+    /** Returns the background send batch size (subscribers per cron run). Defaults to 100. */
+    public static function backgroundBatchSize(): int
+    {
+        return max(1, (int) (self::getOption('mawiblah-background-batch-size') ?: 100));
+    }
+
+    /** Returns the scheduler check interval in seconds (default 3600). */
+    public static function schedulerInterval(): int
+    {
+        return max(60, (int) (self::getOption('mawiblah-scheduler-interval') ?: 3600));
+    }
+
+    /** Returns true when email open tracking is set to "enabled" in settings. */
+    public static function openTrackingEnabled(): bool
+    {
+        return self::getOption('mawiblah-open-tracking-enabled') === 'enabled';
     }
 
     /** Returns true only when reCAPTCHA is enabled AND both site key and secret key are non-empty. */

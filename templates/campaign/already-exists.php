@@ -18,8 +18,8 @@
     <section class="message">
 
         <div>
-            <h1><?php _e('Could not create campaign with such title!'); ?></h1>
-            <p><?php _e('Could not create campaign with such title! Campaign with such title already exists!'); ?></p>
+            <h1><?php esc_html_e('Could not create campaign with such title!', 'mawiblah'); ?></h1>
+            <p><?php esc_html_e('Could not create campaign with such title! Campaign with such title already exists!', 'mawiblah'); ?></p>
         </div>
 
     </section>

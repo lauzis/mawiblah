@@ -54,21 +54,21 @@
 <main>
     <section class="message">
         <div>
-            <h1><?php _e('Are you sure?', 'mawiblah'); ?></h1>
-            <p><?php _e('Are you sure that you want to unsubscribe?', 'mawiblah'); ?></p>
+            <h1><?php esc_html_e('Are you sure?', 'mawiblah'); ?></h1>
+            <p><?php esc_html_e('Are you sure that you want to unsubscribe?', 'mawiblah'); ?></p>
 
-            <h2><?php _e('Help us to get better', 'mawiblah'); ?></h2>
-            <p><?php _e('We are sad to see you go, but could you provide us feedback? We want to get better. Your opinion is highly valuable to us.', 'mawiblah'); ?></p>
+            <h2><?php esc_html_e('Help us to get better', 'mawiblah'); ?></h2>
+            <p><?php esc_html_e('We are sad to see you go, but could you provide us feedback? We want to get better. Your opinion is highly valuable to us.', 'mawiblah'); ?></p>
             <form action="<?= esc_url($formUrl); ?>" method="POST">
 
-                <label><?php _e('Let us know what we can improve','mawiblah'); ?></label>
+                <label><?php esc_html_e('Let us know what we can improve','mawiblah'); ?></label>
                 <textarea id="feedback" name="feedback" ></textarea>
 
                 <input type="hidden" name="email" value="<?= esc_attr($email); ?>"/>
                 <input type="hidden" name="subscriberHash" value="<?= esc_attr($subscriberHash); ?>"/>
                 <input type="hidden" name="unsubToken" value="<?= esc_attr($unsubToken); ?>"/>
-                <button type="submit" name="submit" value="<?php _e('Unsubscribe','mawiblah'); ?>">
-                    <?php _e('Unsubscribe','mawiblah'); ?>
+                <button type="submit" name="submit" value="<?php esc_attr_e('Unsubscribe','mawiblah'); ?>">
+                    <?php esc_html_e('Unsubscribe','mawiblah'); ?>
                 </button>
             </form>
         </div>

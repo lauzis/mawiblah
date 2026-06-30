@@ -12,6 +12,8 @@ class Migrations
      */
     public static function run()
     {
+        add_action('mawiblah_migration_1021_continue', [self::class, 'continueMigration1021']);
+
         $currentVersion = get_option('mawiblah_db_version');
 
         if (version_compare($currentVersion, '1.0.15', '<')) {
@@ -25,10 +27,25 @@ class Migrations
         }
 
         if (version_compare($currentVersion, '1.0.21', '<')) {
-            self::migrateTo1021();
+            $done = self::migrateTo1021();
+            if ($done) {
+                update_option('mawiblah_db_version', '1.0.21');
+            }
+        }
+    }
+
+    /**
+     * WP-Cron callback to continue the batched 1.0.21 migration.
+     *
+     * Processes the next batch of log posts and updates the schema version once all
+     * posts have been migrated.
+     */
+    public static function continueMigration1021(): void
+    {
+        $done = self::migrateTo1021();
+        if ($done) {
             update_option('mawiblah_db_version', '1.0.21');
         }
-
     }
 
     /**
@@ -64,22 +81,28 @@ class Migrations
     /**
      * Migrates log entries from the mawiblah_log post type to daily log files (introduced in 1.0.21).
      *
+     * Processes up to 200 posts per call to avoid PHP timeouts. If posts remain after the batch,
+     * schedules a WP-Cron event to continue. Returns true only when all posts have been migrated.
+     *
      * Each post is written as a single line to mawiblah-YYYY-MM-DD.log (based on post_date),
      * then permanently deleted from the database.
      */
-    private static function migrateTo1021()
+    private static function migrateTo1021(): bool
     {
         $posts = get_posts([
             'post_type'      => MAWIBLAH_POST_TYPE_PREFIX . 'log',
-            'posts_per_page' => -1,
+            'posts_per_page' => 200,
             'post_status'    => 'any',
             'orderby'        => 'date',
             'order'          => 'ASC',
         ]);
 
         if (empty($posts)) {
-            return;
+            Logs::addLog('migration-1021', 'Migration to 1.0.21 complete: all log posts migrated to files.');
+            return true;
         }
+
+        Logs::addLog('migration-1021', 'Migrating log posts to files.', ['batch' => count($posts)]);
 
         $dir = MAWIBLAH_LOG_PATH;
         if (!is_dir($dir)) {
@@ -109,6 +132,24 @@ class Migrations
 
             wp_delete_post($post->ID, true);
         }
+
+        $remaining = get_posts([
+            'post_type'      => MAWIBLAH_POST_TYPE_PREFIX . 'log',
+            'posts_per_page' => 1,
+            'post_status'    => 'any',
+            'fields'         => 'ids',
+        ]);
+
+        if (!empty($remaining)) {
+            Logs::addLog('migration-1021', 'Batch complete, scheduling next batch.');
+            if (!wp_next_scheduled('mawiblah_migration_1021_continue')) {
+                wp_schedule_single_event(time() + 5, 'mawiblah_migration_1021_continue');
+            }
+            return false;
+        }
+
+        Logs::addLog('migration-1021', 'Migration to 1.0.21 complete: all log posts migrated to files.');
+        return true;
     }
 
     /**

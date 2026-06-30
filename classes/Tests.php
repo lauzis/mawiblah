@@ -56,6 +56,7 @@ class Tests
             'subscribers'       => 'Subscriber CRUD & Audience Hash',
             'unsubscribe'       => 'Unsubscribe Flow',
             'click-tracking'    => 'Click Tracking (triple-count)',
+            'open-tracking'     => 'Open Tracking (unique opens)',
             'subscription-form' => 'Subscription Form',
             'default-audiences'          => 'Default Audiences (Unsubed + Testers)',
             'programmatic-subscribe'     => 'Programmatic Subscribe (mawiblah_subscribe hook)',
@@ -83,6 +84,7 @@ class Tests
             'subscribers'       => self::subscriberScenario(),
             'unsubscribe'       => self::unsubscribeScenario(),
             'click-tracking'    => self::clickTrackingScenario(),
+            'open-tracking'     => self::openTrackingScenario(),
             'subscription-form' => self::subscriptionFormScenario(),
             'default-audiences'          => self::defaultAudiencesScenario(),
             'programmatic-subscribe'     => self::programmaticSubscribeScenario(),
@@ -693,5 +695,55 @@ class Tests
             }
         }
         self::echoResult($found ? 'Entry confirmed in file' : 'Entry not found in file', $found ? 'success' : 'error', $found ? null : ($lines ?? []));
+    }
+
+    // -------------------------------------------------------------------------
+    // Open Tracking
+    // -------------------------------------------------------------------------
+
+    /** In-browser integration test: unique-open tracking via Campaigns::recordOpen(). */
+    public static function openTrackingScenario(): void
+    {
+        self::echoHeading('Open Tracking');
+
+        $cId = Campaigns::addCampaign('Open Test Campaign', 'Subject', 'Title', 'Content', [], 'test-template');
+        $c   = Campaigns::getCampaignById($cId);
+        $sub = Subscribers::addSubscriber('opentest@mawiblah.test');
+
+        self::echoTitle('Open count starts at 0');
+        $opened = (int) get_post_meta($cId, 'emailsOpened', true);
+        self::echoResult($opened === 0 ? 'Zero' : "Not zero ($opened)", $opened === 0 ? 'success' : 'error');
+
+        self::echoTitle('First open — counter increments to 1');
+        Campaigns::recordOpen($sub->id, $cId);
+        $opened = (int) get_post_meta($cId, 'emailsOpened', true);
+        self::echoResult($opened === 1 ? "Count=$opened" : "Expected 1, got $opened", $opened === 1 ? 'success' : 'error');
+
+        self::echoTitle('Second open by same subscriber — counter stays at 1 (unique only)');
+        Campaigns::recordOpen($sub->id, $cId);
+        $opened = (int) get_post_meta($cId, 'emailsOpened', true);
+        self::echoResult($opened === 1 ? "Count=$opened (correct)" : "Expected 1, got $opened", $opened === 1 ? 'success' : 'error');
+
+        self::echoTitle('Subscriber meta records open timestamp');
+        $ts = get_post_meta($sub->id, 'opened_' . $cId, true);
+        self::echoResult($ts > 0 ? "Timestamp=$ts" : 'No timestamp stored', $ts > 0 ? 'success' : 'error');
+
+        self::echoTitle('Campaign meta records open_time for hour/day analysis');
+        $openTimes = get_post_meta($cId, 'open_time', false);
+        self::echoResult(
+            count($openTimes) === 1 ? 'open_time stored (count=' . count($openTimes) . ')' : 'Expected 1 open_time entry, got ' . count($openTimes),
+            count($openTimes) === 1 ? 'success' : 'error'
+        );
+
+        self::echoTitle('REST endpoint URL format');
+        $pixelUrl = add_query_arg([
+            'subscriber' => $sub->subscriberHash,
+            'campaign'   => $c->campaignHash,
+        ], rest_url('mawiblah/v1/open'));
+        self::echoResult('Pixel URL: ' . $pixelUrl, 'info');
+
+        Campaigns::deleteCampaign($cId);
+        wp_delete_post($sub->id, true);
+        self::echoResult('Cleaned up', 'success');
     }
 }

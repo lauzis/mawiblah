@@ -14,9 +14,10 @@ class Init
 
     const MAWIBLAH_SETTINGS = 'mawiblah-settings';
 
-    const MAWIBLAH_ACTIONS = 'mawiblah-actions';
-    const MAWIBLAH_LOGS    = 'mawiblah-logs';
-    const MAWIBLAH_HELP    = 'mawiblah-help';
+    const MAWIBLAH_IMPORT  = 'mawiblah-import';
+    const MAWIBLAH_LOGS      = 'mawiblah-logs';
+    const MAWIBLAH_HELP      = 'mawiblah-help';
+    const MAWIBLAH_SCHEDULER = 'mawiblah-scheduler';
     /** Bootstraps the plugin: runs migrations, registers admin menu, hooks, REST routes, and blocks. */
     public function init(): void
     {
@@ -38,9 +39,10 @@ class Init
             self::MAWIBLAH_EMAIL_TEMPLATES,
             self::MAWIBLAH_TESTS,
             self::MAWIBLAH_SETTINGS,
-            self::MAWIBLAH_ACTIONS,
+            self::MAWIBLAH_IMPORT,
             self::MAWIBLAH_LOGS,
             self::MAWIBLAH_HELP,
+            self::MAWIBLAH_SCHEDULER,
         ];
     }
 
@@ -142,6 +144,38 @@ class Init
                 'methods'             => [ \WP_REST_Server::READABLE, \WP_REST_Server::CREATABLE ],
                 'callback'            => 'Mawiblah\Unsubscribe::oneClickEndpoint',
                 'permission_callback' => '__return_true',
+            ));
+
+            register_rest_route('mawiblah/v1', '/background-progress', array(
+                'methods'             => \WP_REST_Server::READABLE,
+                'callback'            => 'Mawiblah\RestRoutes::backgroundProgress',
+                'permission_callback' => function () {
+                    return current_user_can('edit_others_posts');
+                },
+                'args'                => [
+                    'campaignPostId' => [
+                        'type'     => 'integer',
+                        'required' => true,
+                    ],
+                ],
+            ));
+
+            register_rest_route('mawiblah/v1', '/open', array(
+                'methods'             => \WP_REST_Server::READABLE,
+                'callback'            => 'Mawiblah\RestRoutes::trackOpen',
+                'permission_callback' => '__return_true',
+                'args'                => [
+                    'subscriber' => [
+                        'type'              => 'string',
+                        'default'           => '',
+                        'sanitize_callback' => 'sanitize_text_field',
+                    ],
+                    'campaign'   => [
+                        'type'              => 'string',
+                        'default'           => '',
+                        'sanitize_callback' => 'sanitize_text_field',
+                    ],
+                ],
             ));
 
         });
@@ -264,7 +298,10 @@ class Init
 
         $nonce = wp_create_nonce('wp_rest');
         $inline_script = '
-        var mawiblahNonce = ' . json_encode(['mawiblahNonce' => $nonce]) . ';';
+        var mawiblahNonce = ' . json_encode([
+            'mawiblahNonce'   => $nonce,
+            'campaignListUrl' => esc_url(admin_url('admin.php?page=' . self::MAWIBLAH_CAMPAIGNS)),
+        ]) . ';';
 
         wp_register_script( 'mawiblah-js', '',);
         wp_enqueue_script( 'mawiblah-js' );
@@ -358,38 +395,11 @@ class Init
 
         add_submenu_page(
             'mawiblah',
-            'Tests',
-            '<span class="dashicons dashicons-yes-alt" style="font-size:16px;line-height:1.4;margin-right:6px;vertical-align:middle;"></span>Tests',
+            'Scheduler',
+            '<span class="dashicons dashicons-calendar-alt" style="font-size:16px;line-height:1.4;margin-right:6px;vertical-align:middle;"></span>Scheduler',
             'manage_options',
-            self::MAWIBLAH_TESTS,
-            [$this, 'tests']
-        );
-
-        add_submenu_page(
-            'mawiblah',
-            'Actions',
-            '<span class="dashicons dashicons-admin-tools" style="font-size:16px;line-height:1.4;margin-right:6px;vertical-align:middle;"></span>Actions',
-            'manage_options',
-            self::MAWIBLAH_ACTIONS,
-            [$this, 'actions']
-        );
-
-        add_submenu_page(
-            'mawiblah',
-            'Logs',
-            '<span class="dashicons dashicons-list-view" style="font-size:16px;line-height:1.4;margin-right:6px;vertical-align:middle;"></span>Logs',
-            'manage_options',
-            self::MAWIBLAH_LOGS,
-            [$this, 'logs']
-        );
-
-        add_submenu_page(
-            'mawiblah',
-            'Settings',
-            '<span class="dashicons dashicons-admin-settings" style="font-size:16px;line-height:1.4;margin-right:6px;vertical-align:middle;"></span>Settings',
-            'manage_options',
-            self::MAWIBLAH_SETTINGS,
-            [$this, 'settings']
+            self::MAWIBLAH_SCHEDULER,
+            [$this, 'scheduler']
         );
 
         add_submenu_page(
@@ -399,6 +409,44 @@ class Init
             'manage_options',
             self::MAWIBLAH_HELP,
             [$this, 'help']
+        );
+
+        add_submenu_page(
+            'mawiblah',
+            'Import',
+            '<span class="dashicons dashicons-upload" style="font-size:16px;line-height:1.4;margin-right:6px;vertical-align:middle;"></span>Import',
+            'manage_options',
+            self::MAWIBLAH_IMPORT,
+            [$this, 'import']
+        );
+
+        if (Logs::enabled() || !empty(Logs::getLogFiles())) {
+            add_submenu_page(
+                'mawiblah',
+                'Logs',
+                '<span class="dashicons dashicons-list-view" style="font-size:16px;line-height:1.4;margin-right:6px;vertical-align:middle;"></span>Logs',
+                'manage_options',
+                self::MAWIBLAH_LOGS,
+                [$this, 'logs']
+            );
+        }
+
+        add_submenu_page(
+            'mawiblah',
+            'Tests',
+            '<span class="dashicons dashicons-yes-alt" style="font-size:16px;line-height:1.4;margin-right:6px;vertical-align:middle;"></span>Tests',
+            'manage_options',
+            self::MAWIBLAH_TESTS,
+            [$this, 'tests']
+        );
+
+        add_submenu_page(
+            'mawiblah',
+            'Settings',
+            '<span class="dashicons dashicons-admin-settings" style="font-size:16px;line-height:1.4;margin-right:6px;vertical-align:middle;"></span>Settings',
+            'manage_options',
+            self::MAWIBLAH_SETTINGS,
+            [$this, 'settings']
         );
     }
 
@@ -428,14 +476,19 @@ class Init
         Renderer::settings();
     }
 
-    /** Admin page callback: renders the actions/tools page. */
-    public function actions() {
-        Renderer::actions();
-    }
-
     /** Admin page callback: renders the log viewer page. */
     public function logs() {
         Renderer::logs();
+    }
+
+    /** Admin page callback: renders the CSV import page. */
+    public function import() {
+        Renderer::import();
+    }
+
+    /** Admin page callback: renders the campaign scheduler page. */
+    public function scheduler() {
+        Renderer::scheduler();
     }
 
     /** Admin page callback: renders the in-plugin help page. */

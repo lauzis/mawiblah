@@ -191,6 +191,15 @@ add_action('wp_dashboard_setup', [Actions::class, 'registerDashboardWidget']);
 - Static methods for utility classes
 - Minimal comments (code should be self-explanatory)
 
+### Branching (Gitflow)
+
+- **`main`** — production only. Never commit directly. Receives merges from `develop` at release time.
+- **`develop`** — integration branch. All feature/fix branches merge here via PR.
+- **Feature/fix branches** — branch off `develop`, merge back to `develop`.
+  - Name branches descriptively: `feature/add-unsubscribe-header`, `fix/test-emails-marked-as-sent`, etc.
+  - No `1.0.x` version prefix needed — versions are assigned at release time, not per branch.
+- **Releasing** — when `develop` is stable: bump version in `mawiblah.php`, `readme.txt`, `README.md`; update changelogs; then PR `develop` → `main`.
+
 ### Commit Messages
 - Do **not** add `Co-Authored-By: Claude` or any AI attribution line to commit messages.
 - Claude usage may be noted in `README.md` if appropriate, but not in individual commits.

@@ -3,7 +3,7 @@ Contributors: lauzis
 Tags: email, newsletter, marketing, mailchimp alternative, subscribers
 Requires at least: 5.0
 Tested up to: 6.9
-Stable tag: 1.0.27
+Stable tag: 1.0.28
 Requires PHP: 8.0
 License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl.html
@@ -68,6 +68,9 @@ Technically yes, but it is not recommended. The plugin sends emails individually
 8. MVP version
 
 == Changelog ==
+
+= 1.0.28 =
+*   New: `rerender_on_recurring` per-campaign setting — when enabled (default on), the locked template is cleared before each recurring (weekly/monthly) send so shortcodes, WP queries, and dynamic content are re-evaluated fresh.
 
 = 1.0.27 =
 *   Fixed: Division by zero in getConversionStatsForCampaign() when no emails have been sent yet (PHP 8 DivisionByZeroError).

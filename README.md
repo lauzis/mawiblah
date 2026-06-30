@@ -70,6 +70,9 @@ The initial version was built by hand. From version 1.0.9 onward, most changes h
 
 ## Change log
 
+### --- 1.0.28 ---
+- **New:** `rerender_on_recurring` per-campaign setting (checkbox in Campaign Details, default checked). When enabled, `Scheduler::resetCampaignForResend()` clears the locked template copy before each weekly/monthly send so shortcodes, WP queries, and dynamic content are re-evaluated fresh rather than replaying the month-old snapshot. Closes #86.
+
 ### --- 1.0.25 ---
 - **Removed:** Actions admin page removed. Clear Logs functionality was already present on the Logs page; Gravity Forms sync is covered by the dedicated Import section. No unique functionality remains, so the page, its submenu entry, and all associated code have been deleted. Closes #81.
 

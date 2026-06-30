@@ -79,7 +79,7 @@ flowchart TD
     F -- No --> G[Skip: not a tester\n(random sample only)]
     F -- Yes --> H[Send test email via wp_mail]
     G & H --> I{Last subscriber?}
-    I -- No --> D
+    I -- No --> D2
     I -- Yes --> J[testFinish\nsets testFinished timestamp]
     J --> K{Admin reviews test emails}
     K -- Redo --> L[testReset\nclears all test timestamps]

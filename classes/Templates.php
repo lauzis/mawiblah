@@ -58,9 +58,9 @@ class Templates
         $body = wp_remote_retrieve_body($response);
         $data = json_decode($body);
 
-        if ($statusCode !== 200 || empty($data->template)) {
+        if ($statusCode !== 200 || !is_object($data) || empty($data->template)) {
             Logs::addError('template', "REST loopback returned unexpected response", ['template' => $templateName, 'status' => $statusCode, 'body' => substr($body, 0, 300)]);
-            return $data->template ?? false;
+            return false;
         }
 
         return $data->template;

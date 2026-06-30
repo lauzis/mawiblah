@@ -119,6 +119,15 @@ class SchedulerCron
             // to avoid resetting the campaign mid-send.
             if (!empty($campaign->backgroundStarted)) {
                 Logs::addLog('scheduler', "Scheduler #{$scheduler->id}: previous send still in progress, skipping this occurrence", ['campaignPostId' => $campaignPostId]);
+                if ($scheduler->schedule_type !== 'once') {
+                    Scheduler::updateMeta($scheduler->id, [
+                        'next_send' => Scheduler::computeNextSend(
+                            $scheduler->schedule_type,
+                            $scheduler->send_time,
+                            $scheduler->send_day
+                        ),
+                    ]);
+                }
                 continue;
             }
 

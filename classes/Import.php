@@ -153,7 +153,7 @@ class Import
      */
     public static function storeRows(array $rows): string
     {
-        $key = self::TRANSIENT_PREFIX . wp_generate_password(12, false);
+        $key = self::TRANSIENT_PREFIX . strtolower(wp_generate_password(12, false));
         set_transient($key, $rows, 30 * MINUTE_IN_SECONDS);
         return $key;
     }

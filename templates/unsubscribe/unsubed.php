@@ -19,7 +19,7 @@
 
         <div>
             <h1><?php esc_html_e('You have been unsubscribed!', 'mawiblah'); ?></h1>
-            <p><?php esc_html_e('We hate to see you go. But thanks for beeing with us. And good luck!.', 'mawiblah'); ?></p>
+            <p><?php esc_html_e('We hate to see you go. But thanks for being with us. And good luck!', 'mawiblah'); ?></p>
         </div>
 
     </section>

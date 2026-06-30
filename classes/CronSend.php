@@ -86,6 +86,7 @@ class CronSend
         $template = Campaigns::lockTemplate($campaign, false);
         if ($template === false) {
             Logs::addError('cron-send', "lockTemplate returned false, aborting batch", ['campaignPostId' => $campaignPostId]);
+            Campaigns::backgroundSendStop($campaignPostId);
             return;
         }
 
@@ -207,8 +208,7 @@ class CronSend
                     Subscribers::sentEmail($subscriber->id, $campaignPostId, false);
                 } else {
                     $emailsFailed++;
-                    update_post_meta($subscriber->id, 'lastMailError_' . $campaignPostId, $mailerError ?: 'wp_mail returned false');
-                    Subscribers::sentEmail($subscriber->id, $campaignPostId, false);
+                    Subscribers::sentEmailFailed($subscriber->id, $campaignPostId, $mailerError ?: 'wp_mail returned false');
                 }
 
                 Campaigns::updateCounters($campaign, $emailsSent, $emailsFailed, $emailsSkipped, $emailsUnsubed);

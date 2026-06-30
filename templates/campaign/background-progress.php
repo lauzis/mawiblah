@@ -83,7 +83,7 @@ $totalSubscribers = (int) ($campaign->totalSubscribers ?? 0);
     (function () {
         var interval = setInterval(function () {
             var xhr = new XMLHttpRequest();
-            xhr.open('GET', '<?= esc_url(rest_url('mawiblah/v1/background-progress?campaignPostId=' . intval($campaignPostId) . '&_wpnonce=' . wp_create_nonce('wp_rest'))); ?>');
+            xhr.open('GET', '<?= esc_url_raw(rest_url('mawiblah/v1/background-progress?campaignPostId=' . intval($campaignPostId) . '&_wpnonce=' . wp_create_nonce('wp_rest'))); ?>');
             xhr.setRequestHeader('X-WP-Nonce', '<?= esc_js(wp_create_nonce('wp_rest')); ?>');
             xhr.onload = function () {
                 if (xhr.status === 200) {

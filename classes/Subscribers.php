@@ -71,7 +71,7 @@ class Subscribers
         if ($openEntries) {
             echo '<table><thead><tr><th>' . esc_html__('Campaign', 'mawiblah') . '</th><th>' . esc_html__('Opened at', 'mawiblah') . '</th></tr></thead><tbody>';
             foreach ($openEntries as $entry) {
-                $formattedTime = $entry['time'] ? esc_html(date('Y-m-d H:i:s', $entry['time'])) : '—';
+                $formattedTime = $entry['time'] ? esc_html(date_i18n('Y-m-d H:i:s', $entry['time'])) : '—';
                 echo '<tr><td>' . esc_html($entry['label']) . '</td><td>' . $formattedTime . '</td></tr>';
             }
             echo '</tbody></table>';

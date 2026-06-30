@@ -56,7 +56,7 @@ elseif (!empty($_FILES['csv_file']['tmp_name'])) {
     <hr class="wp-header-end">
 
 <?php if (!empty($errors)): ?>
-    <div class="notice notice-error"><p><?php echo esc_html(implode('<br>', $errors)); ?></p></div>
+    <div class="notice notice-error"><p><?php echo implode('<br>', array_map('esc_html', $errors)); ?></p></div>
 <?php endif; ?>
 
 <?php if ($step === 'upload'): ?>

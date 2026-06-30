@@ -451,7 +451,7 @@ class RestRoutes
         $campaign       = Campaigns::getCampaignById($campaignPostId);
 
         if (!$campaign) {
-            return ['error' => 'Not found'];
+            return ['sent' => 0, 'failed' => 0, 'skipped' => 0, 'unsubed' => 0, 'total' => 0, 'total_subscribers' => 0, 'running' => false];
         }
 
         $counters = Campaigns::getCounters($campaign);

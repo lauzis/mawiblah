@@ -91,7 +91,7 @@ class Scheduler
             'post_status' => 'publish',
         ]);
 
-        if (is_wp_error($id)) {
+        if (is_wp_error($id) || !$id) {
             return null;
         }
 

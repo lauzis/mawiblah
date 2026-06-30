@@ -49,7 +49,7 @@ $campaign = $data['campaign'];
         <label for="send_condition_shortcode"><strong><?= __('Send Condition Shortcode', 'mawiblah') ?></strong></label><br>
         <input type="text" name="send_condition_shortcode" id="send_condition_shortcode"
                value="<?= esc_attr($campaign->send_condition_shortcode) ?>" class="widefat"
-               placeholder="<?= esc_attr__('e.g. mawiblah_we_have_new_posts_since_last_sent_out', 'mawiblah') ?>">
+               placeholder="<?= esc_attr__('e.g. mawiblah_new_posts_since_last_sent', 'mawiblah') ?>">
         <span class="description"><?= __('Optional. Shortcode name (without brackets). Before each scheduled send the shortcode is called with <code>campaign_id</code> attribute. If it returns empty output the send is skipped. Leave blank to always send.', 'mawiblah') ?></span>
     </p>
     <?php wp_nonce_field('mawiblah_save_campaign_details', 'mawiblah_campaign_details_nonce'); ?>

@@ -29,7 +29,7 @@ class ShortCodes
 
         add_shortcode('mawiblah_unsubscribe', [ShortCodes::class, 'unsubscribe']);
 
-        add_shortcode('mawiblah_we_have_new_posts_since_last_sent_out', [ShortCodes::class, 'weHaveNewPostsSinceLastSentOut']);
+        add_shortcode('mawiblah_new_posts_since_last_sent', [ShortCodes::class, 'weHaveNewPostsSinceLastSentOut']);
     }
 
     /** Returns the current post title, falling back to a month-based default. */
@@ -173,14 +173,14 @@ class ShortCodes
      * Send-condition shortcode: returns a non-empty string if any posts were published
      * after the campaign's last send, or empty string if none (→ skip the scheduled send).
      *
-     * Usage: [mawiblah_we_have_new_posts_since_last_sent_out campaign_id="123"]
+     * Usage: [mawiblah_new_posts_since_last_sent campaign_id="123"]
      *
      * @param array $atts Shortcode attributes; requires 'campaign_id'.
      * @return string Non-empty string when new posts exist, empty string otherwise.
      */
     public static function weHaveNewPostsSinceLastSentOut($atts): string
     {
-        $atts = shortcode_atts(['campaign_id' => 0], $atts, 'mawiblah_we_have_new_posts_since_last_sent_out');
+        $atts = shortcode_atts(['campaign_id' => 0], $atts, 'mawiblah_new_posts_since_last_sent');
 
         $campaignId = (int) $atts['campaign_id'];
         if (!$campaignId) {

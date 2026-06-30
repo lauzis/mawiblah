@@ -581,16 +581,16 @@ The shortcode is called as `[shortcode_name campaign_id="N"]`, where `N` is the 
 
 Leave the field blank to always send, regardless of conditions.
 
-### Built-in example: `mawiblah_we_have_new_posts_since_last_sent_out`
+### Built-in example: `mawiblah_new_posts_since_last_sent`
 
 Returns `"yes"` when at least one `post` has been published since the campaign's last `campaignFinished` timestamp, otherwise returns `""`. Ideal for digest newsletters that should only go out when there is fresh content.
 
 ```php
 // Example: in a scheduler entry for campaign ID 42
-// Send Condition Shortcode field value: mawiblah_we_have_new_posts_since_last_sent_out
+// Send Condition Shortcode field value: mawiblah_new_posts_since_last_sent
 //
 // SchedulerCron will call:
-//   do_shortcode("[mawiblah_we_have_new_posts_since_last_sent_out campaign_id='42']")
+//   do_shortcode("[mawiblah_new_posts_since_last_sent campaign_id='42']")
 // → "yes"  if new posts exist  → send proceeds
 // → ""     if no new posts     → send is skipped and logged
 ```

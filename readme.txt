@@ -71,7 +71,7 @@ Technically yes, but it is not recommended. The plugin sends emails individually
 
 = 1.0.29 =
 *   New: `send_condition_shortcode` per-campaign field — enter a shortcode name and the scheduler will call it (with `campaign_id` attribute) before each scheduled send. Empty output skips the send and logs the reason; non-empty output proceeds normally.
-*   New: Built-in example shortcode `mawiblah_we_have_new_posts_since_last_sent_out` — returns non-empty if any posts were published since the campaign's last send, otherwise returns empty to block the send.
+*   New: Built-in example shortcode `mawiblah_new_posts_since_last_sent` — returns non-empty if any posts were published since the campaign's last send, otherwise returns empty to block the send.
 
 = 1.0.28 =
 *   New: `rerender_on_recurring` per-campaign setting — when enabled (default on), the locked template is cleared before each recurring (weekly/monthly) send so shortcodes, WP queries, and dynamic content are re-evaluated fresh.

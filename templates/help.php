@@ -750,14 +750,14 @@ if ( $result['status'] === 'ok' ) {
 
             <h3 style="margin-top:24px;"><?php esc_html_e('Built-in example shortcode', 'mawiblah'); ?></h3>
             <p>
-                <code>[mawiblah_we_have_new_posts_since_last_sent_out campaign_id="N"]</code>
+                <code>[mawiblah_new_posts_since_last_sent campaign_id="N"]</code>
             </p>
             <p>
                 <?php esc_html_e('Returns "yes" when at least one post has been published since the campaign\'s last campaignFinished timestamp. Returns empty string if no new posts exist. Useful for digest newsletters that should only go out when there is fresh content.', 'mawiblah'); ?>
             </p>
             <p>
                 <?php esc_html_e('To use it: enter', 'mawiblah'); ?>
-                <code>mawiblah_we_have_new_posts_since_last_sent_out</code>
+                <code>mawiblah_new_posts_since_last_sent</code>
                 <?php esc_html_e('(without brackets) in the Send Condition Shortcode field of the campaign.', 'mawiblah'); ?>
             </p>
 

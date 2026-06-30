@@ -28,6 +28,8 @@ class ShortCodes
 
 
         add_shortcode('mawiblah_unsubscribe', [ShortCodes::class, 'unsubscribe']);
+
+        add_shortcode('mawiblah_we_have_new_posts_since_last_sent_out', [ShortCodes::class, 'weHaveNewPostsSinceLastSentOut']);
     }
 
     /** Returns the current post title, falling back to a month-based default. */
@@ -165,6 +167,42 @@ class ShortCodes
         ]);
 
         return SubscriptionForm::renderForm($hashes, $options);
+    }
+
+    /**
+     * Send-condition shortcode: returns a non-empty string if any posts were published
+     * after the campaign's last send, or empty string if none (→ skip the scheduled send).
+     *
+     * Usage: [mawiblah_we_have_new_posts_since_last_sent_out campaign_id="123"]
+     *
+     * @param array $atts Shortcode attributes; requires 'campaign_id'.
+     * @return string Non-empty string when new posts exist, empty string otherwise.
+     */
+    public static function weHaveNewPostsSinceLastSentOut($atts): string
+    {
+        $atts = shortcode_atts(['campaign_id' => 0], $atts, 'mawiblah_we_have_new_posts_since_last_sent_out');
+
+        $campaignId = (int) $atts['campaign_id'];
+        if (!$campaignId) {
+            return '';
+        }
+
+        $campaign = Campaigns::getCampaignById($campaignId);
+        if (!$campaign || empty($campaign->campaignFinished)) {
+            // No previous send recorded — allow the send so the first occurrence always goes out.
+            return 'yes';
+        }
+
+        $since = date('Y-m-d H:i:s', (int) $campaign->campaignFinished);
+
+        $posts = get_posts([
+            'post_type'      => 'post',
+            'post_status'    => 'publish',
+            'posts_per_page' => 1,
+            'date_query'     => [['after' => $since, 'inclusive' => false]],
+        ]);
+
+        return !empty($posts) ? 'yes' : '';
     }
 
     /** Returns an unsubscribe anchor tag with subscriber and campaign tracking parameters pre-filled as template placeholders. */

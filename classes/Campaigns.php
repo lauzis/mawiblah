@@ -102,6 +102,7 @@ class Campaigns
         }
 
         update_post_meta($post_id, 'rerender_on_recurring', isset($_POST['rerender_on_recurring']) ? '1' : '0');
+        update_post_meta($post_id, 'send_condition_shortcode', sanitize_text_field($_POST['send_condition_shortcode'] ?? ''));
     }
 
     /**
@@ -355,7 +356,8 @@ class Campaigns
         $post->backgroundStarted    = get_post_meta($post->id, 'backgroundStarted', true) ?? false;
         $post->totalSubscribers     = (int) (get_post_meta($post->id, 'totalSubscribers', true) ?: 0);
         // Default true: empty meta (never saved) is treated as enabled.
-        $post->rerender_on_recurring = get_post_meta($post->id, 'rerender_on_recurring', true) !== '0';
+        $post->rerender_on_recurring        = get_post_meta($post->id, 'rerender_on_recurring', true) !== '0';
+        $post->send_condition_shortcode     = get_post_meta($post->id, 'send_condition_shortcode', true) ?: '';
 
         if (!$post->campaignHash) {
             $post->campaignHash = Helpers::generateCampaignHash($post->id);

@@ -15,7 +15,7 @@ MAWIBLAH is a WordPress plugin that provides Mailchimp-like functionality for se
 - **Renderer.php** - Template rendering
 - **RestRoutes.php** - REST API endpoint for sending individual campaign emails (`/send-email`)
 - **Settings.php** - Plugin settings management; includes `recaptchaReady()` for safe reCAPTCHA gate
-- **ShortCodes.php** - WordPress shortcode handlers including `[mawiblah_subscribe_form]`
+- **ShortCodes.php** - WordPress shortcode handlers including `[mawiblah_subscribe_form]` and the built-in send-condition shortcode `[mawiblah_we_have_new_posts_since_last_sent_out campaign_id="N"]`
 - **Subscribers.php** - Subscriber management, audience taxonomy, audience hash generation
 - **SubscriptionForm.php** - Subscription form rendering, REST `/subscribe` endpoint, re-subscribe flow, programmatic `subscribeByEmail()`
 - **Templates.php** - Email template management with child/parent theme override support

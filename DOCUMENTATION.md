@@ -171,6 +171,7 @@ Each campaign in MAWIBLAH tracks various metrics and metadata stored as WordPres
 - **`audiences`** - Array of WordPress taxonomy term IDs representing subscriber audiences (uses `mawiblah_subscriber_category` taxonomy)
 - **`status`** - Current campaign status (draft, sending-in-progress, completed, etc.)
 - **`rerender_on_recurring`** - Boolean (`'1'`/`'0'`). When `'1'` (default), the locked template copy is cleared before each weekly/monthly scheduled send so dynamic content (shortcodes, WP queries) is re-evaluated fresh. Has no effect on `once`-type schedules.
+- **`send_condition_shortcode`** - Optional shortcode name (string, no brackets). When set, `SchedulerCron` calls `do_shortcode("[{name} campaign_id='{id}']")` before every scheduled send. Empty/whitespace-only output → send is skipped and logged. Non-empty output → send proceeds normally. Leave blank to always send.
 
 ### Email Delivery Counters
 - **`emailsSend`** - Total number of emails successfully sent
@@ -560,4 +561,36 @@ $data = [
     ['Winter Newsletter', '850', '3', '620']
 ];
 Templates::renderTable($headers, $data);
+```
+
+## Send Condition Shortcodes
+
+A campaign can define an optional **Send Condition Shortcode** (Campaign Details → "Send Condition Shortcode" field). Before every scheduled send `SchedulerCron` evaluates the shortcode and decides whether to proceed:
+
+| Shortcode output | Outcome |
+|---|---|
+| Non-empty string | Send proceeds normally |
+| Empty / whitespace only | Send is skipped; reason logged as `scheduler` with action detail |
+
+### Shortcode contract
+
+The shortcode is called as `[shortcode_name campaign_id="N"]`, where `N` is the campaign post ID. The handler must:
+- Accept `campaign_id` as an attribute.
+- Return a **non-empty string** to allow the send.
+- Return an **empty string** (or nothing) to block the send.
+
+Leave the field blank to always send, regardless of conditions.
+
+### Built-in example: `mawiblah_we_have_new_posts_since_last_sent_out`
+
+Returns `"yes"` when at least one `post` has been published since the campaign's last `campaignFinished` timestamp, otherwise returns `""`. Ideal for digest newsletters that should only go out when there is fresh content.
+
+```php
+// Example: in a scheduler entry for campaign ID 42
+// Send Condition Shortcode field value: mawiblah_we_have_new_posts_since_last_sent_out
+//
+// SchedulerCron will call:
+//   do_shortcode("[mawiblah_we_have_new_posts_since_last_sent_out campaign_id='42']")
+// → "yes"  if new posts exist  → send proceeds
+// → ""     if no new posts     → send is skipped and logged
 ```

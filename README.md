@@ -70,6 +70,10 @@ The initial version was built by hand. From version 1.0.9 onward, most changes h
 
 ## Change log
 
+### --- 1.0.29 ---
+- **New:** `send_condition_shortcode` per-campaign field (Campaign Details meta box). Enter a shortcode name (without brackets); before each scheduled send `SchedulerCron` calls it with a `campaign_id` attribute. If the shortcode returns empty output the send is skipped and the skip is written to the activity log. Non-empty output (or no shortcode set) proceeds normally. Closes #88.
+- **New:** Built-in example shortcode `[mawiblah_we_have_new_posts_since_last_sent_out campaign_id="N"]` — returns `"yes"` when posts have been published since the campaign's last `campaignFinished` timestamp, or empty string otherwise. Useful for digest newsletters that should only go out when there is fresh content.
+
 ### --- 1.0.28 ---
 - **New:** `rerender_on_recurring` per-campaign setting (checkbox in Campaign Details, default checked). When enabled, `Scheduler::resetCampaignForResend()` clears the locked template copy before each weekly/monthly send so shortcodes, WP queries, and dynamic content are re-evaluated fresh rather than replaying the month-old snapshot. Closes #86.
 

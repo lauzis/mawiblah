@@ -196,7 +196,7 @@ class Settings
         $sectionsFile = MAWIBLAH_CONFIG_PATH . "/sections.json";
         $sections = json_decode(file_get_contents($sectionsFile), true);
 
-        $is_post = !empty($_POST);
+        $is_post = !empty($_POST) && isset($_GET['page']) && $_GET['page'] === MAWIBLAH_SETTINGS_PAGE;
         if ($is_post) {
             check_admin_referer('gae-settings-group-options');
         }

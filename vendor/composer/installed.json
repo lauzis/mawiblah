@@ -1,0 +1,47 @@
+{
+    "packages": [
+        {
+            "name": "lauzis/wp-logs",
+            "version": "v1.0.0",
+            "version_normalized": "1.0.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/lauzis/wp-logs.git",
+                "reference": "265726605d17a25479adc63f518f66e0f3b93bae"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/lauzis/wp-logs/zipball/265726605d17a25479adc63f518f66e0f3b93bae",
+                "reference": "265726605d17a25479adc63f518f66e0f3b93bae",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.4"
+            },
+            "time": "2026-07-31T21:08:02+00:00",
+            "type": "library",
+            "installation-source": "dist",
+            "autoload": {
+                "files": [
+                    "bootstrap.php"
+                ]
+            },
+            "scripts": {
+                "test": [
+                    "php tests/run.php"
+                ]
+            },
+            "license": [
+                "MIT"
+            ],
+            "description": "Shared file-based logging for WordPress plugins, with version-gated loading so several plugins can bundle it safely.",
+            "support": {
+                "source": "https://github.com/lauzis/wp-logs/tree/v1.0.0",
+                "issues": "https://github.com/lauzis/wp-logs/issues"
+            },
+            "install-path": "../lauzis/wp-logs"
+        }
+    ],
+    "dev": false,
+    "dev-package-names": []
+}

@@ -73,6 +73,12 @@ define('MAWIBLAH_TEMPLATES_PATH', MAWIBLAH_PLUGIN_DIR . "/templates");
 define('MAWIBLAH_SETTINGS_PAGE', 'mawiblah-settings');
 
 
+// Composer dependencies (lauzis/wp-logs). Guarded so a build shipped without
+// vendor/ degrades gracefully instead of fataling — see Mawiblah\Logs.
+if (file_exists(MAWIBLAH_PLUGIN_DIR . '/vendor/autoload.php')) {
+    require_once MAWIBLAH_PLUGIN_DIR . '/vendor/autoload.php';
+}
+
 require(MAWIBLAH_PLUGIN_DIR . '/classes/Settings.php');
 require(MAWIBLAH_PLUGIN_DIR . '/classes/Helpers.php');
 require(MAWIBLAH_PLUGIN_DIR . '/classes/Init.php');

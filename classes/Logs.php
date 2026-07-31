@@ -2,18 +2,51 @@
 
 namespace Mawiblah;
 
+/**
+ * Mawiblah's logging entry point.
+ *
+ * The implementation lives in the shared lauzis/wp-logs package; this class is
+ * a thin facade that keeps Mawiblah's own API and settings semantics, so the
+ * call sites throughout the plugin are unchanged.
+ */
 class Logs
 {
-    /** Returns true when file logging is enabled in Settings. */
+    /** Log stream name — also the log filename prefix. */
+    private const SLUG = 'mawiblah';
+
+    /**
+     * Returns the shared logger, or null when the wp-logs package is not
+     * installed (e.g. a build shipped without vendor/). Logging then becomes a
+     * silent no-op rather than a fatal.
+     *
+     * @return \Lauzis\WpLogs\Logger|null
+     */
+    private static function logger()
+    {
+        if (!class_exists('WpLogs_Registry')) {
+            return null;
+        }
+
+        return \WpLogs_Registry::logger(
+            self::SLUG,
+            [
+                'dir'     => MAWIBLAH_LOG_PATH,
+                'enabled' => [self::class, 'enabled'],
+            ]
+        );
+    }
+
+    /**
+     * Returns true when file logging is enabled in Settings.
+     *
+     * 'enable-db-log' is a legacy option value: it is not offered by the
+     * settings page and there has never been a database log target, but it is
+     * still honoured here so an option left over from an older version keeps
+     * logging switched on rather than silently turning it off.
+     */
     public static function enabled(): bool
     {
         return in_array(get_option('mawiblah-debug', false), ['enable-file-log', 'enable-db-log'], true);
-    }
-
-    /** Returns the absolute path to today's log file. */
-    private static function filePath(): string
-    {
-        return MAWIBLAH_LOG_PATH . 'mawiblah-' . gmdate('Y-m-d') . '.log';
     }
 
     /**
@@ -28,28 +61,14 @@ class Logs
      */
     public static function addLog(string $action, string $message = '', array $additionalObjects = []): bool
     {
-        if (!self::enabled()) {
-            return false;
-        }
+        $logger = self::logger();
 
-        $dir = MAWIBLAH_LOG_PATH;
-        if (!is_dir($dir)) {
-            wp_mkdir_p($dir);
-        }
-
-        $timestamp = gmdate('Y-m-d H:i:s');
-        $line      = "[{$timestamp}] [{$action}] {$message}";
-
-        if (!empty($additionalObjects)) {
-            $line .= ' | ' . wp_json_encode($additionalObjects);
-        }
-
-        return (bool) file_put_contents(self::filePath(), $line . PHP_EOL, FILE_APPEND | LOCK_EX);
+        return $logger ? $logger->add($action, $message, $additionalObjects) : false;
     }
 
     /**
-     * Logs an error unconditionally — always writes to the Mawiblah log file
-     * AND to PHP's error_log, regardless of whether debug mode is enabled.
+     * Logs an error unconditionally — always writes to PHP's error_log, and
+     * additionally to the Mawiblah log file when logging is enabled.
      *
      * Use this for failures that should never be silent.
      *
@@ -59,23 +78,10 @@ class Logs
      */
     public static function addError(string $action, string $message = '', array $additionalObjects = []): void
     {
-        $timestamp = gmdate('Y-m-d H:i:s');
-        $line      = "[{$timestamp}] [{$action}] {$message}";
+        $logger = self::logger();
 
-        if (!empty($additionalObjects)) {
-            $line .= ' | ' . wp_json_encode($additionalObjects);
-        }
-
-        // Always write to PHP error log so it's visible regardless of settings
-        error_log('mawiblah: ' . $line);
-
-        // Also write to our own log file if logging is enabled
-        if (self::enabled()) {
-            $dir = MAWIBLAH_LOG_PATH;
-            if (!is_dir($dir)) {
-                wp_mkdir_p($dir);
-            }
-            file_put_contents(self::filePath(), $line . PHP_EOL, FILE_APPEND | LOCK_EX);
+        if ($logger) {
+            $logger->error($action, $message, $additionalObjects);
         }
     }
 
@@ -90,9 +96,9 @@ class Logs
             return false;
         }
 
-        $files = glob(MAWIBLAH_LOG_PATH . 'mawiblah-*.log');
-        if ($files) {
-            array_map('unlink', $files);
+        $logger = self::logger();
+        if ($logger) {
+            $logger->clear();
         }
 
         return true;
@@ -109,16 +115,9 @@ class Logs
             return 0;
         }
 
-        $count = 0;
-        $files = glob(MAWIBLAH_LOG_PATH . 'mawiblah-*.log');
+        $logger = self::logger();
 
-        if ($files) {
-            foreach ($files as $file) {
-                $count += count(file($file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES));
-            }
-        }
-
-        return $count;
+        return $logger ? $logger->count() : 0;
     }
 
     /**
@@ -128,18 +127,18 @@ class Logs
      */
     public static function getLogFiles(): array
     {
-        $files  = glob(MAWIBLAH_LOG_PATH . 'mawiblah-*.log') ?: [];
+        $logger = self::logger();
+        if (!$logger) {
+            return [];
+        }
+
         $result = [];
 
-        rsort($files);
-
-        foreach ($files as $file) {
-            $date     = preg_replace('/^.*mawiblah-(.+)\.log$/', '$1', $file);
-            $lines    = file($file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+        foreach ($logger->files() as $file) {
             $result[] = [
-                'file'  => $file,
-                'date'  => $date,
-                'count' => count($lines ?: []),
+                'file'  => $file['file'],
+                'date'  => $file['date'],
+                'count' => $file['count'],
             ];
         }
 

@@ -8,6 +8,7 @@ class ComposerStaticInit789ebd5875d1003c434f32e63b5598bd
 {
     public static $files = array (
         '1a073ceb8caada98150cc137b828702d' => __DIR__ . '/..' . '/lauzis/wp-logs/bootstrap.php',
+        'a2d3091dd9ce98bbcc97487ce8e6b85b' => __DIR__ . '/..' . '/lauzis/wp-notices/bootstrap.php',
     );
 
     public static $classMap = array (

@@ -7,4 +7,5 @@ $baseDir = dirname($vendorDir);
 
 return array(
     '1a073ceb8caada98150cc137b828702d' => $vendorDir . '/lauzis/wp-logs/bootstrap.php',
+    'a2d3091dd9ce98bbcc97487ce8e6b85b' => $vendorDir . '/lauzis/wp-notices/bootstrap.php',
 );

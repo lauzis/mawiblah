@@ -40,6 +40,43 @@
                 "issues": "https://github.com/lauzis/wp-logs/issues"
             },
             "install-path": "../lauzis/wp-logs"
+        },
+        {
+            "name": "lauzis/wp-notices",
+            "version": "v1.0.0",
+            "version_normalized": "1.0.0.0",
+            "source": {
+                "type": "git",
+                "url": "git@github.com:lauzis/wp-notices.git",
+                "reference": "4484f61fe324ccba22b0364ce204ae688ce7cff0"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/lauzis/wp-notices/zipball/4484f61fe324ccba22b0364ce204ae688ce7cff0",
+                "reference": "4484f61fe324ccba22b0364ce204ae688ce7cff0",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.4"
+            },
+            "time": "2026-07-31T21:17:57+00:00",
+            "type": "library",
+            "installation-source": "dist",
+            "autoload": {
+                "files": [
+                    "bootstrap.php"
+                ]
+            },
+            "scripts": {
+                "test": [
+                    "php tests/run.php"
+                ]
+            },
+            "license": [
+                "MIT"
+            ],
+            "description": "Shared admin notices and toast messages for WordPress plugins, with version-gated loading so several plugins can bundle it safely.",
+            "install-path": "../lauzis/wp-notices"
         }
     ],
     "dev": false,

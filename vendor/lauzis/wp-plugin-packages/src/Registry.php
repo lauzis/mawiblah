@@ -96,6 +96,35 @@ class WpPackages_Registry {
 	}
 
 	/**
+	 * Returns the settings page for a plugin, creating it on first use.
+	 *
+	 * Cached per slug, so a component can reach the same instance later to read
+	 * its own setting without the plugin passing anything through.
+	 *
+	 * @param string $slug   Plugin slug.
+	 * @param array  $config See Lauzis\WpPackages\Settings\Settings::__construct().
+	 * @return \Lauzis\WpPackages\Settings\Settings
+	 */
+	public static function settings( $slug, array $config = array() ) {
+		return self::instance( 'settings', $slug, $config, '\Lauzis\WpPackages\Settings\Settings' );
+	}
+
+	/**
+	 * Absolute path to a schema file shipped by this package.
+	 *
+	 * Resolved against the winning copy, so the schema always matches the code
+	 * that renders it.
+	 *
+	 * @param string $name Component name, e.g. 'logs'.
+	 * @return string
+	 */
+	public static function schema( $name ) {
+		self::boot();
+
+		return self::active_root() . '/settings/' . $name . '.json';
+	}
+
+	/**
 	 * Boots the library and returns a cached per-slug component instance.
 	 *
 	 * @param string $component Cache bucket.

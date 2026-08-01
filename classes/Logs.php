@@ -46,7 +46,7 @@ class Logs
      */
     public static function enabled(): bool
     {
-        return in_array(get_option('mawiblah-debug', false), ['enable-file-log', 'enable-db-log'], true);
+        return in_array(Settings::getOption('mawiblah-debug'), ['enable-file-log', 'enable-db-log'], true);
     }
 
     /**

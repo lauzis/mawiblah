@@ -8,3 +8,6 @@ require_once __DIR__ . '/Notices/Assets.php';
 require_once __DIR__ . '/Notices/Notice.php';
 require_once __DIR__ . '/Notices/Notices.php';
 require_once __DIR__ . '/Notices/Toasts.php';
+require_once __DIR__ . '/Settings/Schema.php';
+require_once __DIR__ . '/Settings/CarbonFields.php';
+require_once __DIR__ . '/Settings/Settings.php';

@@ -10,6 +10,20 @@ class ComposerStaticInit789ebd5875d1003c434f32e63b5598bd
         '2607275bf2453ac5427a498df4804ddb' => __DIR__ . '/..' . '/lauzis/wp-plugin-packages/bootstrap.php',
     );
 
+    public static $prefixLengthsPsr4 = array (
+        'C' =>
+        array (
+            'Carbon_Fields\\' => 14,
+        ),
+    );
+
+    public static $prefixDirsPsr4 = array (
+        'Carbon_Fields\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/htmlburger/carbon-fields/core',
+        ),
+    );
+
     public static $classMap = array (
         'Composer\\InstalledVersions' => __DIR__ . '/..' . '/composer/InstalledVersions.php',
     );
@@ -17,6 +31,8 @@ class ComposerStaticInit789ebd5875d1003c434f32e63b5598bd
     public static function getInitializer(ClassLoader $loader)
     {
         return \Closure::bind(function () use ($loader) {
+            $loader->prefixLengthsPsr4 = ComposerStaticInit789ebd5875d1003c434f32e63b5598bd::$prefixLengthsPsr4;
+            $loader->prefixDirsPsr4 = ComposerStaticInit789ebd5875d1003c434f32e63b5598bd::$prefixDirsPsr4;
             $loader->classMap = ComposerStaticInit789ebd5875d1003c434f32e63b5598bd::$classMap;
 
         }, null, ClassLoader::class);

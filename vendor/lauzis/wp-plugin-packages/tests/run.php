@@ -42,7 +42,9 @@ function get_current_user_id() { return $GLOBALS['user_id']; }
 function current_user_can( $c ) { return $GLOBALS['caps']; }
 function esc_attr( $s ) { return htmlspecialchars( $s, ENT_QUOTES, 'UTF-8' ); }
 function esc_html__( $s, $d = 'default' ) { return htmlspecialchars( $s, ENT_QUOTES, 'UTF-8' ); }
-function wp_kses_post( $s ) { return strip_tags( $s, '<a><strong><em><code><br>' ); }
+function __( $s, $d = 'default' ) { $GLOBALS['translated'][] = array( $s, $d ); return $s; }
+// Approximates wp_kses_post()'s allow-list: block and inline markup through, scripts out.
+function wp_kses_post( $s ) { return strip_tags( $s, '<a><strong><em><code><br><p><ul><ol><li><span><h2><h3>' ); }
 function sanitize_key( $k ) { return preg_replace( '/[^a-z0-9_\-]/', '', strtolower( $k ) ); }
 function wp_unslash( $v ) { return is_string( $v ) ? stripslashes( $v ) : $v; }
 function wp_create_nonce( $a ) { return 'nonce-' . $a; }
@@ -56,6 +58,7 @@ class WpJsonHalt extends Exception {}
 function wp_send_json_error( $message = '', $code = null ) { throw new WpJsonHalt( is_string( $message ) ? $message : 'error' ); }
 function wp_send_json_success( $data = null ) { throw new WpJsonHalt( 'success' ); }
 
+require __DIR__ . '/fake-carbon-fields.php';
 require dirname( __DIR__ ) . '/bootstrap.php';
 
 $pass = 0;
@@ -312,6 +315,140 @@ check( 'ajax handler hooked', isset( $GLOBALS['hooks']['wp_ajax_booty_dismiss_no
 check( 'slug dashes become underscores in hook names', ( WpPackages_Registry::notices( 'rest-in-sync' ) )->action(), 'rest_in_sync_dismiss_notice' );
 
 
+// ======================================================= Settings component ==
+echo "settings — schema loading\n";
+
+use Lauzis\WpPackages\Settings\Schema;
+
+$fixture = __DIR__ . '/fixtures/plugin.json';
+
+$plugin = Schema::load( $fixture, array( 'prefix' => 'demo_', 'domain' => 'demo' ) );
+check( 'tabs become sections', count( $plugin ), 2 );
+check( 'section id is prefixed', $plugin[0]['id'], 'demo_general' );
+check( 'section keeps its domain', $plugin[0]['domain'], 'demo' );
+check( 'field id is prefixed', $plugin[0]['fields'][0]['id'], 'demo_post_types' );
+check( 'bare id is retained', $plugin[0]['fields'][0]['bare'], 'post_types' );
+
+$advanced = $plugin[1]['fields'];
+$command  = $advanced[1];
+check( 'conditional logic field ref is prefixed', $command['conditional_logic'][0]['field'], 'demo_mode' );
+check( 'conditional logic gets a default compare', $command['conditional_logic'][0]['compare'], '=' );
+
+$keywords = $advanced[3];
+check( 'complex sub-fields are NOT prefixed', $keywords['fields'][0]['id'], 'keyword' );
+check( 'nested complex recurses', $keywords['fields'][1]['fields'][0]['id'], 'variation' );
+
+// map is applied before the prefix, so a legacy key survives adoption.
+$mapped = Schema::load( $fixture, array( 'prefix' => 'maw-', 'map' => array( 'post_types' => 'legacy-types' ) ) );
+check( 'map replaces the id before prefixing', $mapped[0]['fields'][0]['id'], 'maw-legacy-types' );
+check( 'unmapped ids are untouched', $mapped[0]['fields'][1]['id'], 'maw-language' );
+
+$bad = false;
+try { Schema::load( __DIR__ . '/fixtures/nope.json' ); } catch ( \RuntimeException $e ) { $bad = true; }
+check( 'a missing schema throws', $bad, true );
+
+echo "settings — string walking\n";
+$found = array();
+Schema::walk_strings( $plugin, function ( $text, $domain ) use ( &$found ) { $found[ $text ] = $domain; } );
+check( 'section titles collected', isset( $found['General'] ), true );
+check( 'section descriptions collected', isset( $found['Core behaviour.'] ), true );
+check( 'field titles collected', isset( $found['Batch Size'] ), true );
+check( 'help text collected', isset( $found['Which post types to process.'] ), true );
+check( 'option labels collected', isset( $found['Hosted API'] ), true );
+check( 'html collected', isset( $found['<p>Careful.</p>'] ), true );
+check( 'nested field titles collected', isset( $found['Variation'] ), true );
+check( 'default values NOT collected', isset( $found['50'] ), false );
+check( 'callback refs NOT collected', isset( $found['@callback:default_language'] ), false );
+check( 'strings carry the fragment domain', $found['General'], 'demo' );
+
+echo "settings — composition and rendering\n";
+$s = WpPackages_Registry::settings( 'demo', array( 'title' => 'Demo Settings', 'page_parent' => 'demo-root' ) );
+$s->callback( 'public_post_types', function () { return array( 'post' => 'Posts', 'page' => 'Pages' ); } );
+$s->callback( 'default_language', function () { return 'lv'; } );
+$s->register( $fixture, array( 'prefix' => 'demo_', 'domain' => 'demo' ) );
+$s->register( dirname( __DIR__ ) . '/settings/logs.json', array( 'prefix' => 'demo_', 'domain' => 'wp-plugin-packages' ) );
+
+check( 'fragments merge in order', count( $s->sections() ), 3 );
+check( 'component section is last', $s->sections()[2]['id'], 'demo_logging' );
+check( 'component section keeps the package domain', $s->sections()[2]['domain'], 'wp-plugin-packages' );
+check( 'component field lands on the plugin key', $s->key( 'logs_enabled' ), 'demo_logs_enabled' );
+
+$s->render();
+$c = \Carbon_Fields\Container::$last;
+
+check( 'container is theme_options', $c->type, 'theme_options' );
+check( 'container title', $c->title, 'Demo Settings' );
+check( 'page parent passed through', $c->page_parent, 'demo-root' );
+check( 'one tab per section', count( $c->tabs ), 3 );
+check( 'tab titles translated', $c->tabs[0]['title'], 'General' );
+
+check( 'set field built', $c->find( 'demo_post_types' )->type, 'set' );
+check( 'callback options resolved', $c->find( 'demo_post_types' )->options, array( 'post' => 'Posts', 'page' => 'Pages' ) );
+check( 'help text applied', $c->find( 'demo_post_types' )->help_text, 'Which post types to process.' );
+check( 'callback default resolved', $c->find( 'demo_language' )->default_value, 'lv' );
+check( 'literal default kept', $c->find( 'demo_batch_size' )->default_value, '50' );
+check( 'attributes applied', $c->find( 'demo_batch_size' )->attributes, array( 'type' => 'number', 'min' => '1' ) );
+check( 'static options kept', $c->find( 'demo_mode' )->options, array( 'commandline' => 'Commandline', 'api' => 'Hosted API' ) );
+check( 'conditional logic applied', $c->find( 'demo_command' )->conditional_logic[0]['field'], 'demo_mode' );
+check( 'html field carries markup', $c->find( 'demo_notice' )->html, '<p>Careful.</p>' );
+check( 'complex nests one level', count( $c->find( 'demo_keywords' )->children ), 2 );
+check( 'complex nests two levels', $c->find( 'variation' )->type, 'text' );
+check( 'section description becomes an html field', $c->find( 'demo_general_description' )->html, '<p>Core behaviour.</p>' );
+check( 'component field rendered', $c->find( 'demo_logs_enabled' )->type, 'checkbox' );
+
+echo "settings — flat mode\n";
+$flat = new \Lauzis\WpPackages\Settings\Settings( 'flatty', array( 'title' => 'Flat', 'mode' => 'flat' ) );
+$flat->register( dirname( __DIR__ ) . '/settings/logs.json', array( 'prefix' => 'flatty_', 'domain' => 'wp-plugin-packages' ) );
+$flat->render();
+$fc = \Carbon_Fields\Container::$last;
+check( 'flat mode uses no tabs', count( $fc->tabs ), 0 );
+check( 'flat mode emits a separator per section', $fc->fields[0]->type, 'separator' );
+check( 'separator carries the section title', $fc->fields[0]->label, 'Logging' );
+
+echo "settings — reading values\n";
+$GLOBALS['options']['_demo_logs_enabled'] = '1';
+check( 'get() resolves prefix and reads storage', $s->get( 'logs_enabled' ), '1' );
+check( 'get() falls back to the schema default first', $s->get( 'batch_size' ), '50' );
+check( 'then to the caller default when the schema has none', $s->get( 'language', 'fallback' ), 'lv' );
+check( 'and to the caller default when neither exists', $s->get( 'command', 'none' ), 'none' );
+check( 'get() returns default for unknown ids', $s->get( 'no_such_field', 'x' ), 'x' );
+check( 'key() returns null for unknown ids', $s->key( 'no_such_field' ), null );
+
+echo "settings — callback safety\n";
+$orphan = new \Lauzis\WpPackages\Settings\Settings( 'orphan' );
+check( 'unregistered callback resolves to null, not a fatal', $orphan->resolve( '@callback:missing' ), null );
+check( 'literals pass through resolve()', $orphan->resolve( 'plain' ), 'plain' );
+check( 'render() is idempotent', ( $s->render() === $s ), true );
+
+
+echo "settings — defaults, sprintf args, html callbacks\n";
+$ov = new \Lauzis\WpPackages\Settings\Settings( 'ov', array( 'title' => 'Ov' ) );
+$ov->register( dirname( __DIR__ ) . '/settings/logs.json', array(
+    'prefix'   => 'ov_',
+    'domain'   => 'wp-plugin-packages',
+    'defaults' => array( 'logs_enabled' => true ),
+) );
+$ov->render();
+$oc = \Carbon_Fields\Container::$last;
+check( 'defaults override the schema value', $oc->find( 'ov_logs_enabled' )->default_value, true );
+
+$plain = new \Lauzis\WpPackages\Settings\Settings( 'plain', array( 'title' => 'Plain' ) );
+$plain->register( dirname( __DIR__ ) . '/settings/logs.json', array( 'prefix' => 'plain_' ) );
+$plain->render();
+check( 'without an override the schema default stands', \Carbon_Fields\Container::$last->find( 'plain_logs_enabled' )->default_value, null );
+
+$sp = new \Lauzis\WpPackages\Settings\Settings( 'sp', array( 'title' => 'Sp' ) );
+$sp->callback( 'locale', function () { return 'lv'; } );
+$sp->callback( 'test_field', function () { return '<p>rendered late</p>'; } );
+$sp->register( __DIR__ . '/fixtures/dynamic.json', array( 'prefix' => 'sp_', 'domain' => 'sp' ) );
+$sp->render();
+$sc = \Carbon_Fields\Container::$last;
+check( 'sprintf args fill the translated string', $sc->find( 'sp_language' )->help_text, 'Defaults to the site language (lv).' );
+check( 'html callback is passed as a callable, not its result', is_callable( $sc->find( 'sp_widget' )->html ), true );
+check( 'and it renders when invoked', call_user_func( $sc->find( 'sp_widget' )->html ), '<p>rendered late</p>' );
+check( 'a missing html callback leaves the field empty', $sc->find( 'sp_orphan' )->html, null );
+
+
 // ============================================================ version gate ==
 echo "version gate\n";
 check( 'components share one registry', WpPackages_Registry::logger( 'demo' ) === $log, true );
@@ -322,11 +459,17 @@ check( 'logger and notices are separate buckets', WpPackages_Registry::notices( 
 
 // Registering other copies must not disturb anything already resolved, so
 // these assertions come last.
-check( 'bootstrap registered this copy', WpPackages_Registry::active_version(), '1.0.0' );
+$boot_version = WpPackages_Registry::active_version();
 check( 'active root is this copy', WpPackages_Registry::active_root(), dirname( __DIR__ ) );
 
+// The version registered in bootstrap.php and the asset cache-buster must move
+// together, or a newer template could load an older stylesheet.
+preg_match( "/register\\(\\s*'([^']+)'/", file_get_contents( dirname( __DIR__ ) . '/bootstrap.php' ), $m );
+check( 'bootstrap registers its own declared version', $boot_version, $m[1] );
+check( 'Assets::VERSION is in step with it', \Lauzis\WpPackages\Notices\Assets::VERSION, $boot_version );
+
 WpPackages_Registry::register( '0.9.0', '/nonexistent/older.php', '/nonexistent' );
-check( 'an older copy does not win', WpPackages_Registry::active_version(), '1.0.0' );
+check( 'an older copy does not win', WpPackages_Registry::active_version(), $boot_version );
 
 WpPackages_Registry::register( '1.10.0', dirname( __DIR__ ) . '/src/load.php', '/newer' );
 check( 'version compare is semantic, not lexical', WpPackages_Registry::active_version(), '1.10.0' );

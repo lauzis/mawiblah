@@ -74,11 +74,21 @@ define('MAWIBLAH_TEMPLATES_PATH', MAWIBLAH_PLUGIN_DIR . "/templates");
 define('MAWIBLAH_SETTINGS_PAGE', 'mawiblah-settings');
 
 
-// Composer dependencies (lauzis/wp-plugin-packages). Guarded so a build shipped without
-// vendor/ degrades gracefully instead of fataling — see Mawiblah\Logs.
+// Composer dependencies (lauzis/wp-plugin-packages, Carbon Fields). Guarded so a
+// build shipped without vendor/ degrades gracefully instead of fataling.
 if (file_exists(MAWIBLAH_PLUGIN_DIR . '/vendor/autoload.php')) {
     require_once MAWIBLAH_PLUGIN_DIR . '/vendor/autoload.php';
 }
+
+// Carbon Fields renders the settings page. It self-guards against a double
+// boot, so calling it here is safe even if another plugin has already done so.
+add_action('after_setup_theme', static function (): void {
+    if (class_exists('\\Carbon_Fields\\Carbon_Fields')) {
+        \Carbon_Fields\Carbon_Fields::boot();
+    }
+});
+
+add_action('carbon_fields_register_fields', ['\Mawiblah\Settings', 'registerFields']);
 
 require(MAWIBLAH_PLUGIN_DIR . '/classes/Settings.php');
 require(MAWIBLAH_PLUGIN_DIR . '/classes/Helpers.php');

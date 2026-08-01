@@ -32,6 +32,11 @@ class Migrations
                 update_option('mawiblah_db_version', '1.0.21');
             }
         }
+
+        if (version_compare($currentVersion, '1.0.31', '<')) {
+            self::migrateTo1031();
+            update_option('mawiblah_db_version', '1.0.31');
+        }
     }
 
     /**
@@ -46,6 +51,54 @@ class Migrations
         if ($done) {
             update_option('mawiblah_db_version', '1.0.21');
         }
+    }
+
+    /**
+     * Moves settings onto Carbon Fields' storage.
+     *
+     * The settings page used to write plain options; Carbon Fields stores theme
+     * options under an underscore-prefixed key. Without this every setting would
+     * read as unset after the upgrade — logging off, reCAPTCHA off, thresholds
+     * back to their defaults.
+     *
+     * Existing values are copied rather than moved, so rolling back to the
+     * previous version still finds its settings.
+     *
+     * @return void
+     */
+    private static function migrateTo1031(): void
+    {
+        $schemaFile = MAWIBLAH_CONFIG_PATH . '/settings.json';
+
+        if (!is_readable($schemaFile)) {
+            return;
+        }
+
+        $schema = json_decode(file_get_contents($schemaFile), true);
+        $copied = 0;
+
+        foreach ($schema['sections'] ?? [] as $section) {
+            foreach ($section['fields'] as $field) {
+                $legacyKey = 'mawiblah-' . $field['id'];
+                $carbonKey = '_' . $legacyKey;
+
+                // Never clobber a value Carbon Fields has already written.
+                if (null !== get_option($carbonKey, null)) {
+                    continue;
+                }
+
+                $existing = get_option($legacyKey, null);
+
+                if (null === $existing || '' === $existing) {
+                    continue;
+                }
+
+                update_option($carbonKey, $existing);
+                $copied++;
+            }
+        }
+
+        Logs::addLog('migration', 'Copied settings to Carbon Fields storage.', ['keys' => $copied]);
     }
 
     /**

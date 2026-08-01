@@ -440,14 +440,8 @@ class Init
             [$this, 'tests']
         );
 
-        add_submenu_page(
-            'mawiblah',
-            'Settings',
-            '<span class="dashicons dashicons-admin-settings" style="font-size:16px;line-height:1.4;margin-right:6px;vertical-align:middle;"></span>Settings',
-            'manage_options',
-            self::MAWIBLAH_SETTINGS,
-            [$this, 'settings']
-        );
+        // The Settings submenu is registered by Carbon Fields, from the
+        // container declared in Settings::registerFields().
     }
 
     /** Admin page callback: renders the email templates list. */
@@ -469,11 +463,6 @@ class Init
     /** Admin page callback: renders the test scenarios page. */
     public function tests() {
         Renderer::tests();
-    }
-
-    /** Admin page callback: renders the plugin settings page. */
-    public function settings() {
-        Renderer::settings();
     }
 
     /** Admin page callback: renders the log viewer page. */

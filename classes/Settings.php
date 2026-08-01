@@ -5,8 +5,67 @@ namespace Mawiblah;
 class Settings
 {
 
+    /** Bare schema ids are the option keys minus this. */
+    private const PREFIX = 'mawiblah-';
+
     private static $messages = [];
     private static $permissionFailure = false;
+
+    /**
+     * Returns the shared settings page, or null when the package is absent.
+     *
+     * @return \Lauzis\WpPackages\Settings\Settings|null
+     */
+    public static function page()
+    {
+        if (!class_exists('WpPackages_Registry')) {
+            return null;
+        }
+
+        return \WpPackages_Registry::settings('mawiblah', [
+            'title'       => __('Settings', 'mawiblah'),
+            'mode'        => 'flat',
+            'page_parent' => 'mawiblah',
+            'page_file'   => MAWIBLAH_SETTINGS_PAGE,
+        ]);
+    }
+
+    /** Declares the settings fields. Hooked on carbon_fields_register_fields. */
+    public static function registerFields(): void
+    {
+        $page = self::page();
+
+        if (!$page) {
+            return;
+        }
+
+        $page->register(MAWIBLAH_CONFIG_PATH . '/settings.json', [
+            'prefix' => self::PREFIX,
+            'domain' => 'mawiblah',
+        ]);
+
+        $page->render();
+    }
+
+    /**
+     * Reads every option declared in the schema, then deletes it.
+     *
+     * @return void
+     */
+    private static function remove_sections_options()
+    {
+        $schema = json_decode(file_get_contents(MAWIBLAH_CONFIG_PATH . '/settings.json'), true);
+
+        foreach ($schema['sections'] ?? [] as $section) {
+            foreach ($section['fields'] as $field) {
+                $key = self::PREFIX . $field['id'];
+                // Carbon Fields stores theme options under an underscore-prefixed
+                // key; the un-prefixed name is the pre-1.0.31 location.
+                delete_option('_' . $key);
+                delete_option($key);
+            }
+        }
+    }
 
     /** Removes all plugin options and deletes generated files and directories on uninstall. */
     public static function uninstall()
@@ -59,27 +118,6 @@ class Settings
     public static function get_settings_page_relative_path()
     {
         return MAWIBLAH_SETTINGS_PAGE;
-    }
-
-    /** Registers the plugin options page and adds the Settings link in the plugin list. */
-    public static function create_menu()
-    {
-
-        // or create options menu page
-        add_options_page(
-            __('Google Analytics Events', 'mawiblah'),
-            __('Google Analytics Events', 'mawiblah'),
-            "manage_options",
-            self::get_settings_page_relative_path()
-
-        );
-        // or create sub menu page
-        $parent_slug = "index.php";    # For Dashboard
-        #$parent_slug="edit.php";		# For Posts
-        // more examples at http://codex.wordpress.org/Administration_Menus
-        //add_submenu_page( $parent_slug, __("HTML Title 4", EMU2_I18N_DOMAIN), __("Menu title 4", EMU2_I18N_DOMAIN), 9, MAWIBLAH_PLUGIN_DIR.'/mawiblah_settings_page.php');
-        add_filter('plugin_action_links_' . plugin_basename(MAWIBLAH_PLUGIN_FILE), 'Settings::add_settings_link_to_plugin_list');
-
     }
 
     /**
@@ -172,62 +210,6 @@ class Settings
     public static function add_message($text, $type = "success")
     {
         array_push(self::$messages, ["type" => $type, "message" => "MAWIBLAH: " . $text]);
-    }
-
-    /** Reads all section field values from the database and then deletes those options. Called during uninstall. */
-    private static function remove_sections_options()
-    {
-        $sections = json_decode(file_get_contents(MAWIBLAH_CONFIG_PATH . "/sections.json"), true);
-
-        foreach ($sections as $sk => $s) {
-
-            foreach ($s["fields"] as $fk => $f) {
-                $sections[$sk]["fields"][$fk]["value"] = get_option($f["id"]);
-                delete_option($f["id"]);
-            }
-        }
-    }
-
-    /**
-     * Returns all settings sections with current values loaded from the database.
-     *
-     * On POST (settings form submission), validates the nonce, sanitizes each value
-     * by field type, persists it via update_option(), and refreshes the asset version.
-     *
-     * @return array Settings sections with fields populated with their current values.
-     */
-    public static function get_sections()
-    {
-        $options_updated = false;
-        $sectionsFile = MAWIBLAH_CONFIG_PATH . "/sections.json";
-        $sections = json_decode(file_get_contents($sectionsFile), true);
-
-        $is_post = !empty($_POST) && isset($_GET['page']) && $_GET['page'] === MAWIBLAH_SETTINGS_PAGE;
-        if ($is_post) {
-            check_admin_referer('gae-settings-group-options');
-        }
-
-        foreach ($sections as $sk => $s) {
-
-            foreach ($s["fields"] as $fk => $f) {
-
-                if ($is_post && isset($_POST[$f["id"]])) {
-                    $raw   = wp_unslash($_POST[$f["id"]]);
-                    $value = $f['type'] === 'textarea'
-                        ? sanitize_textarea_field($raw)
-                        : sanitize_text_field($raw);
-                    update_option($f["id"], $value);
-                    $sections[$sk]["fields"][$fk]["value"] = $value;
-                    $options_updated = true;
-                } else {
-                    $sections[$sk]["fields"][$fk]["value"] = get_option($f["id"]);
-                }
-            }
-        }
-        if ($options_updated) {
-            update_option("gae-assets-version", time());
-        }
-        return $sections;
     }
 
     /**
@@ -333,30 +315,24 @@ class Settings
     }
 
     /**
-     * Returns a plugin option value, falling back to the field's default_value from sections.json.
+     * Returns a plugin option value, falling back to the schema default.
      *
-     * @param string $optionId WordPress option key matching a field id in sections.json.
+     * @param string $optionId Full option key, e.g. "mawiblah-debug".
      * @return mixed Stored option value, or the field's default_value if not yet saved.
      */
     public static function getOption($optionId)
     {
-        // TODO: return default value if option not set
-        $value = get_option($optionId);
+        $page = self::page();
 
-        if (!$value) {
-            $sections = self::get_sections();
-            foreach ($sections as $section) {
-                foreach ($section['fields'] as $field) {
-                    if ($field['id'] === $optionId) {
-                        if ($field['type']!=='boolean'){
-                            return $field['default_value'];
-                        }
-                        break;
-                    }
-                }
-            }
+        if (!$page) {
+            return null;
         }
 
-        return $value;
+        // Callers pass the full option key; the schema knows it by its bare id.
+        $bare = str_starts_with($optionId, self::PREFIX)
+            ? substr($optionId, strlen(self::PREFIX))
+            : $optionId;
+
+        return $page->get($bare);
     }
 }

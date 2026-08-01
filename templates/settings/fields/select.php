@@ -1,5 +1,4 @@
 <?php
-use Mawiblah\Settings;
 
 /**
  * @var string $id
@@ -23,7 +22,7 @@ use Mawiblah\Settings;
                   <?php if ((strlen($value)>0 && $value===$o["value"]) || (empty($value) && $default_value===$o["value"])): ?>
                       selected="selected"
                   <?php endif; ?>
-                      value="<?= esc_attr($o["value"]) ?>"><?= esc_html(Settings::get_translation($o["title"])) ?></option>
+                      value="<?= esc_attr($o["value"]) ?>"><?= esc_html( __( $o["title"], "mawiblah" ) ) ?></option>
           <?php endforeach; ?>
       </select>
   </div>

@@ -5,7 +5,6 @@ namespace Mawiblah;
 class Settings
 {
 
-    public static $folder_that_should_be_writable = [MAWIBLAH_GENERATE_PATH, MAWIBLAH_LOG_PATH];
     private static $messages = [];
     private static $permissionFailure = false;
 
@@ -14,12 +13,19 @@ class Settings
     {
         // removing options
         self::remove_sections_options();
-        // removing files
-        array_map('unlink', glob(MAWIBLAH_GENERATE_PATH . "*.*"));
-        array_map('unlink', glob(MAWIBLAH_LOG_PATH . "*.*"));
-        //removing dirs
-        rmdir(MAWIBLAH_GENERATE_PATH);
-        rmdir(MAWIBLAH_LOG_PATH);
+
+        // MAWIBLAH_GENERATE_PATH is legacy: it only ever held the translation
+        // string cache and the generated .pot, both of which are gone. It is
+        // still cleaned up here so upgraded installs do not leave the directory
+        // behind, and guarded because new installs never create it.
+        foreach ([MAWIBLAH_GENERATE_PATH, MAWIBLAH_LOG_PATH] as $dir) {
+            if (!is_dir($dir)) {
+                continue;
+            }
+
+            array_map('unlink', glob($dir . "*.*"));
+            rmdir($dir);
+        }
     }
 
     /** Plugin activation hook handler (currently a stub). */
@@ -61,8 +67,8 @@ class Settings
 
         // or create options menu page
         add_options_page(
-            self::get_translation('Google Analytics Events'), //'My Options',
-            self::get_translation("Google Analytics Events"), //'My Plugin',
+            __('Google Analytics Events', 'mawiblah'),
+            __('Google Analytics Events', 'mawiblah'),
             "manage_options",
             self::get_settings_page_relative_path()
 
@@ -239,7 +245,7 @@ class Settings
                 <?= $message; ?>
             </p>
             <button type="button" class="notice-dismiss">
-                <span class="screen-reader-text"><?= Settings::get_translation("Dismiss this notice."); ?></span>
+                <span class="screen-reader-text"><?php echo esc_html__('Dismiss this notice.', 'mawiblah'); ?></span>
             </button>
         </div>
         <?php
@@ -263,145 +269,6 @@ class Settings
     public static function is_settings_page_visited()
     {
         return get_option("gae-settings-page-visited");
-    }
-
-    /** Returns the number of unique translation strings collected so far (developer mode only). */
-    public static function get_translation_count()
-    {
-        $translationIdsFile = MAWIBLAH_TRANSLATION_IDS_FILE;
-        $translationIds = [];
-        if (file_exists($translationIdsFile)) {
-            $translationIds = unserialize(file_get_contents($translationIdsFile));
-        }
-        return count($translationIds);
-    }
-
-    /**
-     * Translates a string and optionally formats it with sprintf-style parameters.
-     *
-     * In developer mode, also records the string to the translation IDs file for POT generation.
-     *
-     * @param string       $text   String to translate.
-     * @param array|string $params Optional sprintf parameters.
-     * @return string Translated and formatted string.
-     */
-    public static function get_translation($text, $params = [])
-    {
-
-        if (MAWIBLAH_DEVELOPER) {
-
-            $text_id = strip_tags($text);
-            $translationIdsFile = MAWIBLAH_TRANSLATION_IDS_FILE;
-            $translationIds = [];
-            $changed = false;
-            if (file_exists($translationIdsFile)) {
-                $translationIds = unserialize(file_get_contents($translationIdsFile));
-            } else {
-                if (@touch($translationIdsFile)) {
-                    chmod($translationIdsFile, 0644);
-                }
-            }
-
-            if (!isset($translationIds[$text])) {
-                $translationIds[$text] = $text;
-                $changed = true;
-            }
-
-            if (is_array($params)) {
-                foreach ($params as $item) {
-                    if (!isset($translationIds[$item])) {
-                        $translationIds[$item] = $item;
-                        $changed = true;
-                    }
-                }
-            }
-
-            if ($changed) {
-                if (is_writable($translationIdsFile)) {
-                    file_put_contents($translationIdsFile, serialize($translationIds));
-                }
-            }
-        }
-
-        $text = __($text, 'mawiblah');
-
-        if (is_array($params) && count($params) > 0) {
-            $text = vsprintf($text, $params);
-        } elseif (!empty($params)) {
-            $text = sprintf($text, $params);
-        }
-        //
-        return $text;
-    }
-
-    /** Generates a .pot translation template file from the collected translation IDs (developer mode only). */
-    public static function generate_pot_file()
-    {
-        if (MAWIBLAH_DEVELOPER) {
-
-            $pot_header = '
-msgid ""
-msgstr ""
-"Project-Id-Version:Google Analytics Events\n"
-"POT-Creation-Date: ' . date("Y-m-d H:i:s") . '\n"
-"PO-Revision-Date: ' . date("Y-m-d H:i:s") . '\n"
-"Last-Translator: Aivars Lauzis\n"
-"Language-Team: \n"
-"Language: en\n"
-"MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
-"Content-Transfer-Encoding: 8bit\n"
-"X-Generator: Poedit 2.0.3\n"
-"X-Poedit-Basepath: ..\n"
-"Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Poedit-KeywordsList: ;__;_e\n"
-"X-Poedit-SearchPath-0: .\n"
-"X-Poedit-SearchPathExcluded-0: assets/css\n"
-"X-Poedit-SearchPathExcluded-1: assets/inc/chosen\n"
-"X-Poedit-SearchPathExcluded-2: assets/js\n"
-"X-Poedit-SearchPathExcluded-3: lang\n"
-
-';
-            $translationIdsFile = MAWIBLAH_TRANSLATION_IDS_FILE;
-            $potFile = MAWIBLAH_GENERATE_PATH . MAWIBLAH_PLUGIN_DIRECTORY_NAME . ".pot";
-
-            $dir_potFile = dirname($potFile);
-
-            if (!is_writable($dir_potFile)) {
-                self::add_message("Directory ($dir_potFile) not writable. Could not generate pot file.", "error");
-                return false;
-            }
-
-            if (!file_exists($potFile)) {
-                if (!@touch($potFile) || !@chmod($potFile, 0644)) {
-                    self::add_message("Could not create ($potFile). Could not generate pot file.", "error");
-                }
-            }
-
-            if (!is_writable($potFile)) {
-                self::add_message("File ($potFile) not writable. Could not generate pot file.", "error");
-                return false;
-            }
-
-            if (!file_exists($translationIdsFile)) {
-                self::add_message("Could not generate POT file no translations collected, cant find file $translationIdsFile", "error");
-                return false;
-            }
-
-            if (file_exists($translationIdsFile)) {
-                $translationIds = unserialize(file_get_contents($translationIdsFile));
-            }
-            file_put_contents($potFile, $pot_header);
-            foreach ($translationIds as $k => $value) {
-                $potText = '
-                
-msgid "' . htmlspecialchars(str_replace(array("\r\n", "\r", "\n"), "", $translationIds[$k])) . '"
-msgstr ""
-';
-                file_put_contents($potFile, $potText, FILE_APPEND);
-            }
-            self::add_message("Pot file generated. You will find it here $potFile");
-        }
     }
 
     /** Returns true when the "Send emails" setting is enabled (email sending is not suppressed). */

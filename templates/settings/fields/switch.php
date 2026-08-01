@@ -8,11 +8,6 @@ $value = $value ?? '';
 $default_value = $default_value ?? '';
 $description = $description ?? '';
 
-// Ensure Settings class is available
-if (!class_exists('\\Mawiblah\\Settings')) {
-    require_once MAWIBLAH_PLUGIN_DIR . '/classes/Settings.php';
-}
-use Mawiblah\Settings;
 ?>
 <div class="mawiblah-form-field mawiblah-form-field-select" id="mawiblah-form-field-<?= esc_attr($id) ?>">
 
@@ -31,7 +26,7 @@ use Mawiblah\Settings;
                     <?php if ((strlen($value) > 0 && $value === $o["value"]) || (empty($value) && $default_value === $o["value"])): ?>
                         selected="selected"
                     <?php endif; ?>
-                        value="<?= esc_attr($o["value"]) ?>"><?= esc_html(Settings::get_translation($o["title"])) ?></option>
+                        value="<?= esc_attr($o["value"]) ?>"><?= esc_html( __( $o["title"], "mawiblah" ) ) ?></option>
             <?php endforeach; ?>
         </select>
     </div>

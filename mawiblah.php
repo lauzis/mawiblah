@@ -64,9 +64,10 @@ if (!defined('MAWIBLAH_REPORT_URL')) {
 
 define('MAWIBLAH_POST_TYPE_PREFIX', 'mawiblah_');
 $uloads_dir = wp_upload_dir();
-define('MAWIBLAH_DEVELOPER', true);
+// Legacy directory: it only ever held the runtime translation-string cache and
+// the generated .pot. Nothing writes here any more; the constant remains so
+// uninstall can still clear it on upgraded installs.
 define('MAWIBLAH_GENERATE_PATH', str_replace('\\', '/', $uloads_dir["basedir"] . '/gae/'));
-define('MAWIBLAH_TRANSLATION_IDS_FILE', MAWIBLAH_GENERATE_PATH . MAWIBLAH_PLUGIN_DIRECTORY_NAME . ".serialized.php");
 
 define('MAWIBLAH_LOG_PATH', str_replace('\\', '/', $uloads_dir["basedir"] . '/gae-logs/'));
 define('MAWIBLAH_TEMPLATES_PATH', MAWIBLAH_PLUGIN_DIR . "/templates");

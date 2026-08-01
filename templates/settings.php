@@ -7,7 +7,7 @@ use Mawiblah\Settings;
 
     <?php Settings::settings_page_visited(); ?>
     <?php $sections = Settings::get_sections(); ?>
-    <h1><?= esc_html(Settings::get_translation('MAWIBLAH settings')); ?>
+    <h1><?= esc_html__('MAWIBLAH settings', 'mawiblah'); ?>
         - <?php print esc_html(MAWIBLAH_PLUGIN_NAME . " " . MAWIBLAH_VERSION); ?></h1>
     <?php Settings::print_all_messages(); ?>
 
@@ -67,39 +67,39 @@ use Mawiblah\Settings;
                     <div id="<?= esc_attr($section["id"]) ?>" class="postbox <?= esc_attr($section["id"]) ?> ">
 
                         <button type="button" class="handlediv section-title" aria-expanded="false">
-                            <span class="screen-reader-text"><?= esc_html(Settings::get_translation("Toggle panel")); ?>: <?= esc_html(Settings::get_translation($section["title"])); ?></span>
+                            <span class="screen-reader-text"><?= esc_html__('Toggle panel', 'mawiblah'); ?>: <?= esc_html( __( $section["title"], "mawiblah" ) ); ?></span>
                             <span class="toggle-indicator" aria-hidden="true"></span>
                         </button>
 
                         <h2 id="section-<?= esc_attr($section["id"]) ?>" class="section-title">
                             <span>
-                                <?= esc_html(Settings::get_translation($section["title"])); ?>
+                                <?= esc_html( __( $section["title"], "mawiblah" ) ); ?>
                             </span>
                         </h2>
 
                         <div class="inside">
 
                             <p class="<?= esc_attr(MAWIBLAH_PLUGIN_DIRECTORY_NAME) ?>-description">
-                                <?= wp_kses_post(Settings::get_translation($section["description"])); ?>
+                                <?= wp_kses_post( __( $section["description"], "mawiblah" ) ); ?>
                             </p>
 
                             <?php if (!empty($section["example"])): ?>
                                 <code class="<?= esc_attr(MAWIBLAH_PLUGIN_DIRECTORY_NAME) ?>-code">
-                                    <?= esc_html(Settings::get_translation($section["example"])); ?>
+                                    <?= esc_html( __( $section["example"], "mawiblah" ) ); ?>
                                 </code>
                             <?php endif; ?>
 
                             <ul id="section-<?= esc_attr($section["id"]) ?>-content" class="<?= esc_attr(MAWIBLAH_PLUGIN_DIRECTORY_NAME) ?>-content">
                                 <?php foreach ($section["fields"] as $field): ?>
-                                    <?php $title = Settings::get_translation($field["title"]) ?>
+                                    <?php $title = __( $field["title"], "mawiblah" ) ?>
                                     <?php $id = $field["id"] ?>
                                     <?php $value = $field["value"] ?>
                                     <?php $default_value = $field["default_value"] ?>
-                                    <?php $placeholder = !empty($field["placeholder"]) ? Settings::get_translation($field["placeholder"]) : "" ?>
+                                    <?php $placeholder = !empty($field["placeholder"]) ? __( $field["placeholder"], "mawiblah" ) : "" ?>
                                     <?php $options = !empty($field["options"]) ? $field["options"] : [] ?>
-                                    <?php $description = !empty($field["description"]) ? Settings::get_translation($field["description"]) : "" ?>
+                                    <?php $description = !empty($field["description"]) ? __( $field["description"], "mawiblah" ) : "" ?>
                                     <?php if ($id === "gea-debug-ip") {
-                                        $description .= Settings::get_translation("<br/>Your current IP address is: ") . esc_html($_SERVER["REMOTE_ADDR"]);
+                                        $description .= __('<br/>Your current IP address is: ', 'mawiblah') . esc_html($_SERVER["REMOTE_ADDR"]);
                                     } ?>
                                     <li><?php
                                         $allowed_types = ['text', 'textarea', 'select', 'checkbox', 'switch']; // Add all valid field types
@@ -121,12 +121,7 @@ use Mawiblah\Settings;
             </div>
         <?php endforeach; ?>
         <section class="<?= MAWIBLAH_PLUGIN_DIRECTORY_NAME ?>-submit">
-            <input type="submit" class="button-primary" value="<?= Settings::get_translation('Save Changes') ?>"/>
-            <?php if (MAWIBLAH_DEVELOPER): ?>
-                <a href="<?= esc_url(Settings::get_settings_page_url() . '&generate-pot-file') ?>" class="button-secondary">
-                    <?= Settings::get_translation('Generate Translation Template') ?> <?= sprintf(Settings::get_translation("(Collected %s items)"),Settings::get_translation_count()); ?></a>
-
-            <?php endif ?>
+            <input type="submit" class="button-primary" value="<?= esc_attr__('Save Changes', 'mawiblah') ?>"/>
         </section>
 
     </form>

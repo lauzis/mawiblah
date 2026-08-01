@@ -1,6 +1,6 @@
 <?php
 
-namespace Lauzis\WpNotices;
+namespace Lauzis\WpPackages\Notices;
 
 /**
  * Resolves the URL of the package's bundled CSS/JS.

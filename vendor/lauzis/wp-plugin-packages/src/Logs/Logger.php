@@ -1,11 +1,11 @@
 <?php
 
-namespace Lauzis\WpLogs;
+namespace Lauzis\WpPackages\Logs;
 
 /**
  * File-based logger shared by the plugins.
  *
- * One instance per plugin, obtained through WpLogs_Registry::logger(). Log
+ * One instance per plugin, obtained through WpPackages_Registry::logger(). Log
  * lines keep the format the plugins already use, so existing log files stay
  * readable after migrating:
  *

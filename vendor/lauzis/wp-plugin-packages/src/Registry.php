@@ -1,8 +1,8 @@
 <?php
 /**
- * Version gate for wp-notices.
+ * Version gate for lauzis/wp-plugin-packages.
  *
- * Every plugin that bundles this package ships its own copy in vendor/.
+ * Every plugin that uses these components ships its own copy in vendor/.
  * Without arbitration PHP would use whichever copy autoloaded first, so a
  * plugin shipping a newer version could silently run an older one — and
  * calling a method that version does not have is a fatal.
@@ -12,13 +12,17 @@
  * registers against that same instance. Because an OLD copy may be the one
  * that wins the race, this API must stay backwards compatible essentially
  * forever. Keep it small, and put new behaviour in the component classes.
+ *
+ * One registry covers every component. That is the reason the components live
+ * in a single package: a registry per component would mean several copies of
+ * this same never-changeable arbitration logic.
  */
 
-if ( class_exists( 'WpNotices_Registry', false ) ) {
+if ( class_exists( 'WpPackages_Registry', false ) ) {
 	return;
 }
 
-class WpNotices_Registry {
+class WpPackages_Registry {
 
 	/** @var array<string, string> version => loader path */
 	private static $copies = array();
@@ -29,11 +33,8 @@ class WpNotices_Registry {
 	/** @var bool */
 	private static $booted = false;
 
-	/** @var array<string, mixed> */
-	private static $notices = array();
-
-	/** @var array<string, mixed> */
-	private static $toasts = array();
+	/** @var array<string, array<string, mixed>> component => slug => instance */
+	private static $instances = array();
 
 	/**
 	 * Announces a bundled copy of the library.
@@ -60,40 +61,61 @@ class WpNotices_Registry {
 	}
 
 	/**
+	 * Returns the file logger for a plugin, creating it on first use.
+	 *
+	 * @param string $slug   Plugin slug — namespaces the log files and the
+	 *                       error_log prefix.
+	 * @param array  $config See Lauzis\WpPackages\Logs\Logger::__construct().
+	 * @return \Lauzis\WpPackages\Logs\Logger
+	 */
+	public static function logger( $slug, array $config = array() ) {
+		return self::instance( 'logger', $slug, $config, '\Lauzis\WpPackages\Logs\Logger' );
+	}
+
+	/**
 	 * Returns the admin-notice manager for a plugin, creating it on first use.
 	 *
 	 * @param string $slug   Plugin slug — namespaces the stored dismissals, the
 	 *                       AJAX action and the nonce.
-	 * @param array  $config See Lauzis\WpNotices\Notices::__construct().
-	 * @return \Lauzis\WpNotices\Notices
+	 * @param array  $config See Lauzis\WpPackages\Notices\Notices::__construct().
+	 * @return \Lauzis\WpPackages\Notices\Notices
 	 */
 	public static function notices( $slug, array $config = array() ) {
-		self::boot();
-
-		if ( ! isset( self::$notices[ $slug ] ) ) {
-			$config['package_root']       = self::active_root();
-			self::$notices[ $slug ]       = new \Lauzis\WpNotices\Notices( $slug, $config );
-		}
-
-		return self::$notices[ $slug ];
+		return self::instance( 'notices', $slug, $config, '\Lauzis\WpPackages\Notices\Notices' );
 	}
 
 	/**
 	 * Returns the toast component for a plugin, creating it on first use.
 	 *
 	 * @param string $slug   Plugin slug.
-	 * @param array  $config See Lauzis\WpNotices\Toasts::__construct().
-	 * @return \Lauzis\WpNotices\Toasts
+	 * @param array  $config See Lauzis\WpPackages\Notices\Toasts::__construct().
+	 * @return \Lauzis\WpPackages\Notices\Toasts
 	 */
 	public static function toasts( $slug, array $config = array() ) {
+		return self::instance( 'toasts', $slug, $config, '\Lauzis\WpPackages\Notices\Toasts' );
+	}
+
+	/**
+	 * Boots the library and returns a cached per-slug component instance.
+	 *
+	 * @param string $component Cache bucket.
+	 * @param string $slug      Plugin slug.
+	 * @param array  $config    Component configuration.
+	 * @param string $class     Fully-qualified class name.
+	 * @return mixed
+	 */
+	private static function instance( $component, $slug, array $config, $class ) {
 		self::boot();
 
-		if ( ! isset( self::$toasts[ $slug ] ) ) {
+		if ( ! isset( self::$instances[ $component ][ $slug ] ) ) {
+			// Assets must come from the same copy as the code, or a newer
+			// template could load an older stylesheet.
 			$config['package_root'] = self::active_root();
-			self::$toasts[ $slug ]  = new \Lauzis\WpNotices\Toasts( $slug, $config );
+
+			self::$instances[ $component ][ $slug ] = new $class( $slug, $config );
 		}
 
-		return self::$toasts[ $slug ];
+		return self::$instances[ $component ][ $slug ];
 	}
 
 	/**
@@ -113,8 +135,7 @@ class WpNotices_Registry {
 	}
 
 	/**
-	 * Package root of the copy actually in use — the assets must come from the
-	 * same copy as the code, or a newer template would load older CSS.
+	 * Package root of the copy actually in use.
 	 *
 	 * @return string|null
 	 */

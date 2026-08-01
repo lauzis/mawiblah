@@ -4,20 +4,20 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "7404c90794d8a28b8acb3aef61d19d4d",
+    "content-hash": "623ebf0c1361e2a211ebad8237ec8dce",
     "packages": [
         {
-            "name": "lauzis/wp-logs",
+            "name": "lauzis/wp-plugin-packages",
             "version": "v1.0.0",
             "source": {
                 "type": "git",
-                "url": "https://github.com/lauzis/wp-logs.git",
-                "reference": "265726605d17a25479adc63f518f66e0f3b93bae"
+                "url": "https://github.com/lauzis/wp-plugin-packages.git",
+                "reference": "df70c61cbf02929fffeb940f4a67f8af25e345fb"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/lauzis/wp-logs/zipball/265726605d17a25479adc63f518f66e0f3b93bae",
-                "reference": "265726605d17a25479adc63f518f66e0f3b93bae",
+                "url": "https://api.github.com/repos/lauzis/wp-plugin-packages/zipball/df70c61cbf02929fffeb940f4a67f8af25e345fb",
+                "reference": "df70c61cbf02929fffeb940f4a67f8af25e345fb",
                 "shasum": ""
             },
             "require": {
@@ -37,46 +37,12 @@
             "license": [
                 "MIT"
             ],
-            "description": "Shared file-based logging for WordPress plugins, with version-gated loading so several plugins can bundle it safely.",
+            "description": "Shared components for the lauzis WordPress plugins: file logging, admin notices and toasts, behind a single version gate.",
             "support": {
-                "source": "https://github.com/lauzis/wp-logs/tree/v1.0.0",
-                "issues": "https://github.com/lauzis/wp-logs/issues"
+                "source": "https://github.com/lauzis/wp-plugin-packages/tree/v1.0.0",
+                "issues": "https://github.com/lauzis/wp-plugin-packages/issues"
             },
-            "time": "2026-07-31T21:08:02+00:00"
-        },
-        {
-            "name": "lauzis/wp-notices",
-            "version": "v1.0.0",
-            "source": {
-                "type": "git",
-                "url": "git@github.com:lauzis/wp-notices.git",
-                "reference": "4484f61fe324ccba22b0364ce204ae688ce7cff0"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/lauzis/wp-notices/zipball/4484f61fe324ccba22b0364ce204ae688ce7cff0",
-                "reference": "4484f61fe324ccba22b0364ce204ae688ce7cff0",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=7.4"
-            },
-            "type": "library",
-            "autoload": {
-                "files": [
-                    "bootstrap.php"
-                ]
-            },
-            "scripts": {
-                "test": [
-                    "php tests/run.php"
-                ]
-            },
-            "license": [
-                "MIT"
-            ],
-            "description": "Shared admin notices and toast messages for WordPress plugins, with version-gated loading so several plugins can bundle it safely.",
-            "time": "2026-07-31T21:17:57+00:00"
+            "time": "2026-08-01T07:00:03+00:00"
         }
     ],
     "packages-dev": [

@@ -1,6 +1,6 @@
 <?php
 
-namespace Lauzis\WpNotices;
+namespace Lauzis\WpPackages\Notices;
 
 /**
  * Dismissible admin notices for a single plugin.

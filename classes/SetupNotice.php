@@ -7,21 +7,21 @@ class SetupNotice
     const NOTICE_ID = 'setup';
 
     /**
-     * Returns the shared notice manager, or null when the wp-notices package
+     * Returns the shared notice manager, or null when the wp-plugin-packages package
      * is not installed, in which case the notice is simply not shown.
      *
      * Dismissals are per user and scoped to the plugin version, so a dismissed
      * notice returns after an upgrade — the setup requirements may have moved.
      *
-     * @return \Lauzis\WpNotices\Notices|null
+     * @return \Lauzis\WpPackages\Notices\Notices|null
      */
     private static function manager()
     {
-        if (!class_exists('WpNotices_Registry')) {
+        if (!class_exists('WpPackages_Registry')) {
             return null;
         }
 
-        return \WpNotices_Registry::notices(
+        return \WpPackages_Registry::notices(
             'mawiblah',
             [
                 'store'      => 'user',
@@ -64,11 +64,11 @@ class SetupNotice
             . '</li></ul>';
 
         $manager->add(
-            new \Lauzis\WpNotices\Notice(
+            new \Lauzis\WpPackages\Notices\Notice(
                 self::NOTICE_ID,
                 $message,
                 'warning',
-                \Lauzis\WpNotices\Notice::VERSION
+                \Lauzis\WpPackages\Notices\Notice::VERSION
             )
         );
     }

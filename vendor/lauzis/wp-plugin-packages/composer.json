@@ -1,6 +1,6 @@
 {
-    "name": "lauzis/wp-logs",
-    "description": "Shared file-based logging for WordPress plugins, with version-gated loading so several plugins can bundle it safely.",
+    "name": "lauzis/wp-plugin-packages",
+    "description": "Shared components for the lauzis WordPress plugins: file logging, admin notices and toasts, behind a single version gate.",
     "type": "library",
     "license": "MIT",
     "require": {

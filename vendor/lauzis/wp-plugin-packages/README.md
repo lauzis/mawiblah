@@ -8,6 +8,8 @@ splecheh, rest-in-sync, and any that follow).
 | **Logs** | File-based logging, daily files, channels. |
 | **Notices** | Dismissible admin notices, with the dismissal stored site-wide or per user. |
 | **Toasts** | Transient floating messages raised from JavaScript. |
+| **Settings** | A settings page composed from JSON schema fragments, rendered by Carbon Fields. |
+| **Llm** | Provider-agnostic LLM calls: OpenAI, Claude, Gemini or a local command. |
 
 They ship together, in one package behind one version gate, on purpose — see
 [Version gating](#version-gating).
@@ -28,7 +30,22 @@ Not on Packagist. Consume it from GitHub:
 ```
 
 The consuming plugin must load `vendor/autoload.php` early — before anything
-that might log or register a notice.
+that might log or register a notice — **and require this package's bootstrap
+explicitly**:
+
+```php
+require_once __DIR__ . '/vendor/autoload.php';
+require_once __DIR__ . '/vendor/lauzis/wp-plugin-packages/bootstrap.php';
+```
+
+The second line is not optional and the package deliberately does not use
+Composer's `files` autoload for it. Composer keys that mechanism on an
+identifier derived from the package name, which is byte-identical in every
+plugin's `vendor/` directory, so it runs exactly **one** copy's bootstrap per
+request and every other copy silently never registers. The version gate then
+cannot see them, and whichever plugin loaded first wins regardless of version.
+`require_once` keys on the resolved path, which differs per plugin, so every
+copy is seen.
 
 Each plugin keeps its own thin facade class over these components, so its own
 call sites and settings semantics stay where they belong. Every facade should
@@ -135,6 +152,70 @@ Types are `success`, `error`, `warning`, `info`. Scripts calling it should
 declare a dependency on the `wp-notices-toasts` handle. Messages are inserted
 with `textContent`, not `innerHTML` — toast text routinely comes from server
 responses and post titles.
+
+## Settings
+
+A settings page is composed from JSON fragments — the plugin's own, plus
+whichever component schemas it registers:
+
+```php
+$settings = WpPackages_Registry::settings( 'my-plugin', array(
+    'title'       => __( 'Settings', 'my-plugin' ),
+    'mode'        => 'tabs',            // or 'flat'
+    'page_parent' => 'my-plugin',
+) );
+
+$settings->register( MY_PLUGIN_DIR . 'config/settings.json', array(
+    'prefix' => 'my_plugin_',
+    'domain' => 'my-plugin',
+) );
+
+$settings->register( WpPackages_Registry::schema( 'logs' ), array(
+    'prefix' => 'my_plugin_',
+    'domain' => 'wp-plugin-packages',
+) );
+
+$settings->render();   // on carbon_fields_register_fields
+```
+
+Ids in a fragment are bare; the loader prefixes them so two plugins never share
+an option. `map` keeps a legacy key, `defaults` overrides a component's default,
+and `conditions` attaches conditional logic the component knows nothing about.
+
+Values that cannot be JSON literals — dynamic option lists, dynamic defaults,
+generated html — use `"@callback:name"`, resolved against callbacks registered
+by name. Nothing in a schema is ever eval'd.
+
+Read a value back by its bare id, wherever it actually lives:
+
+```php
+$settings->get( 'logs_enabled', true );
+```
+
+`bin/schema-i18n` generates a PHP manifest of `__()` calls from the JSON so
+`wp i18n make-pot` can see strings that live in a schema. `--check` makes it a
+CI gate.
+
+## Llm
+
+```php
+$llm = WpPackages_Registry::llm( 'my-plugin' );
+
+$text = $llm->complete( 'You are a translator. Reply with JSON only.', $payload );
+
+if ( is_wp_error( $text ) ) {
+    return $text;
+}
+
+$rows = \Lauzis\WpPackages\Llm\Json::extract_array( $text );
+```
+
+The client covers provider selection, credentials, endpoints, models, timeouts
+and unwrapping each provider's response envelope. The prompt, the expected
+response shape and what to do with the result stay in the plugin.
+
+Register `WpPackages_Registry::schema( 'llm' )` to get the configuration UI —
+provider, access key, endpoint, command and timeout.
 
 ## Assets
 

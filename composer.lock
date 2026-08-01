@@ -148,27 +148,22 @@
         },
         {
             "name": "lauzis/wp-plugin-packages",
-            "version": "v1.5.2",
+            "version": "v1.7.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/lauzis/wp-plugin-packages.git",
-                "reference": "af6bff7afe9bd34b944be539a78ce2138f358506"
+                "reference": "7dadd6510b4dff2231a0f30122cd05a0884e053e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/lauzis/wp-plugin-packages/zipball/af6bff7afe9bd34b944be539a78ce2138f358506",
-                "reference": "af6bff7afe9bd34b944be539a78ce2138f358506",
+                "url": "https://api.github.com/repos/lauzis/wp-plugin-packages/zipball/7dadd6510b4dff2231a0f30122cd05a0884e053e",
+                "reference": "7dadd6510b4dff2231a0f30122cd05a0884e053e",
                 "shasum": ""
             },
             "require": {
                 "php": ">=7.4"
             },
             "type": "library",
-            "autoload": {
-                "files": [
-                    "bootstrap.php"
-                ]
-            },
             "scripts": {
                 "test": [
                     "php tests/run.php"
@@ -179,10 +174,10 @@
             ],
             "description": "Shared components for the lauzis WordPress plugins: file logging, admin notices and toasts, behind a single version gate.",
             "support": {
-                "source": "https://github.com/lauzis/wp-plugin-packages/tree/v1.5.2",
+                "source": "https://github.com/lauzis/wp-plugin-packages/tree/v1.7.0",
                 "issues": "https://github.com/lauzis/wp-plugin-packages/issues"
             },
-            "time": "2026-08-01T15:22:08+00:00"
+            "time": "2026-08-01T21:49:42+00:00"
         }
     ],
     "packages-dev": [

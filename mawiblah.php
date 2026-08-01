@@ -78,6 +78,9 @@ define('MAWIBLAH_SETTINGS_PAGE', 'mawiblah-settings');
 // build shipped without vendor/ degrades gracefully instead of fataling.
 if (file_exists(MAWIBLAH_PLUGIN_DIR . '/vendor/autoload.php')) {
     require_once MAWIBLAH_PLUGIN_DIR . '/vendor/autoload.php';
+    // Required explicitly: Composer's files autoload runs only one copy of this
+    // package per request, so the version gate would never see the others.
+    require_once MAWIBLAH_PLUGIN_DIR . '/vendor/lauzis/wp-plugin-packages/bootstrap.php';
 }
 
 // Carbon Fields renders the settings page. It self-guards against a double

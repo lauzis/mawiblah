@@ -37,6 +37,11 @@ class Migrations
             self::migrateTo1031();
             update_option('mawiblah_db_version', '1.0.31');
         }
+
+        if (version_compare($currentVersion, '1.0.32', '<')) {
+            self::migrateTo1032();
+            update_option('mawiblah_db_version', '1.0.32');
+        }
     }
 
     /**
@@ -50,6 +55,28 @@ class Migrations
         $done = self::migrateTo1021();
         if ($done) {
             update_option('mawiblah_db_version', '1.0.21');
+        }
+    }
+
+    /**
+     * Normalises the legacy 'enable-db-log' logging value.
+     *
+     * The settings page has never offered it and there has never been a
+     * database log target — installs holding it were writing files, exactly as
+     * 'enable-file-log' does. The old hand-rolled renderer read the option
+     * directly and did not care, but Carbon Fields validates a select against
+     * its declared options and silently returns the default for anything else,
+     * which switched logging off on upgrade.
+     *
+     * @return void
+     */
+    private static function migrateTo1032(): void
+    {
+        foreach (['_mawiblah-debug', 'mawiblah-debug'] as $key) {
+            if ('enable-db-log' === get_option($key, null)) {
+                update_option($key, 'enable-file-log');
+                Logs::addLog('migration', 'Normalised legacy logging value.', ['option' => $key]);
+            }
         }
     }
 
@@ -91,6 +118,13 @@ class Migrations
 
                 if (null === $existing || '' === $existing) {
                     continue;
+                }
+
+                // 'enable-db-log' is not among the logging field's options, and
+                // Carbon Fields returns the default for a value it does not
+                // recognise. It always meant file logging anyway.
+                if ('mawiblah-debug' === $legacyKey && 'enable-db-log' === $existing) {
+                    $existing = 'enable-file-log';
                 }
 
                 update_option($carbonKey, $existing);

@@ -409,6 +409,7 @@ echo "settings — reading values\n";
 $GLOBALS['options']['_demo_logs_enabled'] = '1';
 check( 'get() resolves prefix and reads storage', $s->get( 'logs_enabled' ), '1' );
 check( 'get() falls back to the schema default first', $s->get( 'batch_size' ), '50' );
+check( 'default_for() exposes the schema default', $s->default_for( 'batch_size' ), '50' );
 check( 'then to the caller default when the schema has none', $s->get( 'language', 'fallback' ), 'lv' );
 check( 'and to the caller default when neither exists', $s->get( 'command', 'none' ), 'none' );
 check( 'get() returns default for unknown ids', $s->get( 'no_such_field', 'x' ), 'x' );
@@ -448,6 +449,43 @@ check( 'html callback is passed as a callable, not its result', is_callable( $sc
 check( 'and it renders when invoked', call_user_func( $sc->find( 'sp_widget' )->html ), '<p>rendered late</p>' );
 check( 'a missing html callback leaves the field empty', $sc->find( 'sp_orphan' )->html, null );
 
+
+echo "logs — reading its own setting\n";
+$auto = WpPackages_Registry::logger( 'autolog' );
+check( 'no setting registered means off', $auto->isEnabled(), false );
+
+WpPackages_Registry::settings( 'autolog' )->register(
+    dirname( __DIR__ ) . '/settings/logs.json',
+    array( 'prefix' => 'autolog_', 'domain' => 'wp-plugin-packages' )
+);
+$GLOBALS['options']['_autolog_logs_enabled'] = '1';
+check( 'reads logs_enabled from its own schema', $auto->isEnabled(), true );
+$GLOBALS['options']['_autolog_logs_enabled'] = '';
+check( 'and follows it being switched off', $auto->isEnabled(), false );
+
+// A plugin that mapped the field onto a legacy key still resolves by bare id.
+WpPackages_Registry::settings( 'mapped' )->register(
+    dirname( __DIR__ ) . '/settings/logs.json',
+    array( 'prefix' => 'ris_', 'domain' => 'wp-plugin-packages', 'map' => array( 'logs_enabled' => 'enable_logging' ) )
+);
+$GLOBALS['options']['_ris_enable_logging'] = '1';
+check( 'a mapped field is still found by its bare id', WpPackages_Registry::logger( 'mapped' )->isEnabled(), true );
+
+check( 'an explicit enabled config still wins', WpPackages_Registry::logger( 'explicit', array( 'enabled' => true ) )->isEnabled(), true );
+
+// Logging can happen before carbon_fields_register_fields has run, so a plugin
+// whose logging defaults to on must not report off in that window.
+check( 'enabled_default applies before the schema is registered', WpPackages_Registry::logger( 'early', array( 'enabled_default' => true ) )->isEnabled(), true );
+WpPackages_Registry::settings( 'early' )->register(
+    dirname( __DIR__ ) . '/settings/logs.json',
+    array( 'prefix' => 'early_', 'domain' => 'wp-plugin-packages' )
+);
+// An unchecked checkbox stores an empty string; that is a real answer and must
+// not be overridden by the default.
+$GLOBALS['options']['_early_logs_enabled'] = '';
+check( 'a stored empty value beats the default', WpPackages_Registry::logger( 'early' )->isEnabled(), false );
+unset( $GLOBALS['options']['_early_logs_enabled'] );
+check( 'an absent option still falls back', WpPackages_Registry::logger( 'early' )->isEnabled(), true );
 
 // ============================================================ version gate ==
 echo "version gate\n";

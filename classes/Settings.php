@@ -333,6 +333,18 @@ class Settings
             ? substr($optionId, strlen(self::PREFIX))
             : $optionId;
 
-        return $page->get($bare);
+        $value = $page->get($bare);
+
+        // Mawiblah has always treated any falsy stored value as "use the
+        // default"; the package's own rule is stricter (absent only), so the
+        // historical behaviour is applied here rather than changed underneath
+        // callers like getSchedulerInterval() that rely on it.
+        if (null === $value || '' === $value) {
+            $default = $page->default_for($bare);
+
+            return null === $default ? $value : $default;
+        }
+
+        return $value;
     }
 }

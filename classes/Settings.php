@@ -23,10 +23,14 @@ class Settings
         }
 
         return \WpPackages_Registry::settings('mawiblah', [
-            'title'       => __('Settings', 'mawiblah'),
-            'mode'        => 'flat',
-            'page_parent' => 'mawiblah',
-            'page_file'   => MAWIBLAH_SETTINGS_PAGE,
+            'title'           => __('Settings', 'mawiblah'),
+            // Carbon Fields uses the plain title for the menu entry, which lost
+            // the dashicon every other Mawiblah submenu item carries.
+            'page_menu_title' => '<span class="dashicons dashicons-admin-settings" style="font-size:16px;line-height:1.4;margin-right:6px;vertical-align:middle;"></span>'
+                . __('Settings', 'mawiblah'),
+            'mode'            => 'flat',
+            'page_parent'     => 'mawiblah',
+            'page_file'       => MAWIBLAH_SETTINGS_PAGE,
         ]);
     }
 
@@ -45,6 +49,66 @@ class Settings
         ]);
 
         $page->render();
+    }
+
+    /**
+     * Returns the settings sections with their current values, for display.
+     *
+     * The Tests page shows a read-only summary of the configuration. It used to
+     * call the old get_sections(), which both read the schema and wrote on POST;
+     * saving is Carbon Fields' job now, so this only reads. The shape --
+     * fields carrying 'value', and options as {value, title} pairs -- is what
+     * the template consumes.
+     *
+     * @return array[]
+     */
+    public static function get_sections(): array
+    {
+        $page = self::page();
+
+        if (!$page) {
+            return [];
+        }
+
+        $sections = [];
+
+        foreach ($page->sections() as $section) {
+            $fields = [];
+
+            foreach ($section['fields'] as $field) {
+                if ('' === $field['bare']) {
+                    continue;
+                }
+
+                $options = [];
+
+                foreach ((array) ($field['options'] ?? []) as $value => $label) {
+                    // A "@callback:" reference is a string, not a list of options.
+                    if (is_string($field['options'])) {
+                        break;
+                    }
+
+                    $options[] = ['value' => $value, 'title' => $label];
+                }
+
+                $value = $page->get($field['bare']);
+
+                $fields[] = [
+                    'title'   => $field['title'],
+                    'id'      => $field['id'],
+                    'value'   => is_scalar($value) ? (string) $value : '',
+                    'options' => $options,
+                ];
+            }
+
+            $sections[] = [
+                'title'       => $section['title'],
+                'description' => $section['description'],
+                'fields'      => $fields,
+            ];
+        }
+
+        return $sections;
     }
 
     /**

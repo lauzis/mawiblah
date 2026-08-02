@@ -23,7 +23,14 @@ class Init
     {
         Migrations::run();
         if (is_admin()) {
-            add_action('admin_menu', [$this, 'add_menu_links']);
+            // Priority 5 so the top-level menu exists before Carbon Fields
+            // attaches the Settings container on admin_menu at the default 10.
+            // Otherwise CF registers its submenu first, which puts Settings at
+            // the top of the list and makes WordPress compute the page hook
+            // against a parent it cannot see yet -- leaving the menu item
+            // linking to /wp-admin/mawiblah-settings instead of
+            // admin.php?page=mawiblah-settings.
+            add_action('admin_menu', [$this, 'add_menu_links'], 5);
         }
         $this->setup_hooks();
         $this->setup_api_routes();

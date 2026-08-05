@@ -115,6 +115,28 @@ class SchedulerCron
                 continue;
             }
 
+            // Custom send-condition shortcode: skip the send if the shortcode returns empty output.
+            $conditionShortcode = $campaign->send_condition_shortcode ?? '';
+            if (!empty($conditionShortcode)) {
+                $output = trim(do_shortcode("[{$conditionShortcode} campaign_id='{$campaignPostId}']"));
+                if ($output === '') {
+                    Logs::addLog('scheduler', "Scheduler #{$scheduler->id}: send skipped — custom rule returned empty", [
+                        'campaignPostId'       => $campaignPostId,
+                        'send_condition_shortcode' => $conditionShortcode,
+                    ]);
+                    if ($scheduler->schedule_type !== 'once') {
+                        Scheduler::updateMeta($scheduler->id, [
+                            'next_send' => Scheduler::computeNextSend(
+                                $scheduler->schedule_type,
+                                $scheduler->send_time,
+                                $scheduler->send_day
+                            ),
+                        ]);
+                    }
+                    continue;
+                }
+            }
+
             // If the previous scheduled send is still in progress, skip this occurrence
             // to avoid resetting the campaign mid-send.
             if (!empty($campaign->backgroundStarted)) {

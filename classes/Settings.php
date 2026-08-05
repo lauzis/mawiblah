@@ -5,21 +5,150 @@ namespace Mawiblah;
 class Settings
 {
 
-    public static $folder_that_should_be_writable = [MAWIBLAH_GENERATE_PATH, MAWIBLAH_LOG_PATH];
+    /** Bare schema ids are the option keys minus this. */
+    private const PREFIX = 'mawiblah-';
+
     private static $messages = [];
     private static $permissionFailure = false;
+
+    /**
+     * Returns the shared settings page, or null when the package is absent.
+     *
+     * @return \Lauzis\WpPackages\Settings\Settings|null
+     */
+    public static function page()
+    {
+        if (!class_exists('WpPackages_Registry')) {
+            return null;
+        }
+
+        return \WpPackages_Registry::settings('mawiblah', [
+            'title'           => __('Settings', 'mawiblah'),
+            // Carbon Fields uses the plain title for the menu entry, which lost
+            // the dashicon every other Mawiblah submenu item carries.
+            'page_menu_title' => '<span class="dashicons dashicons-admin-settings" style="font-size:16px;line-height:1.4;margin-right:6px;vertical-align:middle;"></span>'
+                . __('Settings', 'mawiblah'),
+            'mode'            => 'flat',
+            'page_parent'     => 'mawiblah',
+            'page_file'       => MAWIBLAH_SETTINGS_PAGE,
+        ]);
+    }
+
+    /** Declares the settings fields. Hooked on carbon_fields_register_fields. */
+    public static function registerFields(): void
+    {
+        $page = self::page();
+
+        if (!$page) {
+            return;
+        }
+
+        $page->register(MAWIBLAH_CONFIG_PATH . '/settings.json', [
+            'prefix' => self::PREFIX,
+            'domain' => 'mawiblah',
+        ]);
+
+        $page->render();
+    }
+
+    /**
+     * Returns the settings sections with their current values, for display.
+     *
+     * The Tests page shows a read-only summary of the configuration. It used to
+     * call the old get_sections(), which both read the schema and wrote on POST;
+     * saving is Carbon Fields' job now, so this only reads. The shape --
+     * fields carrying 'value', and options as {value, title} pairs -- is what
+     * the template consumes.
+     *
+     * @return array[]
+     */
+    public static function get_sections(): array
+    {
+        $page = self::page();
+
+        if (!$page) {
+            return [];
+        }
+
+        $sections = [];
+
+        foreach ($page->sections() as $section) {
+            $fields = [];
+
+            foreach ($section['fields'] as $field) {
+                if ('' === $field['bare']) {
+                    continue;
+                }
+
+                $options = [];
+
+                foreach ((array) ($field['options'] ?? []) as $value => $label) {
+                    // A "@callback:" reference is a string, not a list of options.
+                    if (is_string($field['options'])) {
+                        break;
+                    }
+
+                    $options[] = ['value' => $value, 'title' => $label];
+                }
+
+                $value = $page->get($field['bare']);
+
+                $fields[] = [
+                    'title'   => $field['title'],
+                    'id'      => $field['id'],
+                    'value'   => is_scalar($value) ? (string) $value : '',
+                    'options' => $options,
+                ];
+            }
+
+            $sections[] = [
+                'title'       => $section['title'],
+                'description' => $section['description'],
+                'fields'      => $fields,
+            ];
+        }
+
+        return $sections;
+    }
+
+    /**
+     * Reads every option declared in the schema, then deletes it.
+     *
+     * @return void
+     */
+    private static function remove_sections_options()
+    {
+        $schema = json_decode(file_get_contents(MAWIBLAH_CONFIG_PATH . '/settings.json'), true);
+
+        foreach ($schema['sections'] ?? [] as $section) {
+            foreach ($section['fields'] as $field) {
+                $key = self::PREFIX . $field['id'];
+                // Carbon Fields stores theme options under an underscore-prefixed
+                // key; the un-prefixed name is the pre-1.0.31 location.
+                delete_option('_' . $key);
+                delete_option($key);
+            }
+        }
+    }
 
     /** Removes all plugin options and deletes generated files and directories on uninstall. */
     public static function uninstall()
     {
         // removing options
         self::remove_sections_options();
-        // removing files
-        array_map('unlink', glob(MAWIBLAH_GENERATE_PATH . "*.*"));
-        array_map('unlink', glob(MAWIBLAH_LOG_PATH . "*.*"));
-        //removing dirs
-        rmdir(MAWIBLAH_GENERATE_PATH);
-        rmdir(MAWIBLAH_LOG_PATH);
+
+        // MAWIBLAH_GENERATE_PATH is legacy: it only ever held the translation
+        // string cache and the generated .pot, both of which are gone. It is
+        // still cleaned up here so upgraded installs do not leave the directory
+        // behind, and guarded because new installs never create it.
+        foreach ([MAWIBLAH_GENERATE_PATH, MAWIBLAH_LOG_PATH] as $dir) {
+            if (!is_dir($dir)) {
+                continue;
+            }
+
+            array_map('unlink', glob($dir . "*.*"));
+            rmdir($dir);
+        }
     }
 
     /** Plugin activation hook handler (currently a stub). */
@@ -53,27 +182,6 @@ class Settings
     public static function get_settings_page_relative_path()
     {
         return MAWIBLAH_SETTINGS_PAGE;
-    }
-
-    /** Registers the plugin options page and adds the Settings link in the plugin list. */
-    public static function create_menu()
-    {
-
-        // or create options menu page
-        add_options_page(
-            self::get_translation('Google Analytics Events'), //'My Options',
-            self::get_translation("Google Analytics Events"), //'My Plugin',
-            "manage_options",
-            self::get_settings_page_relative_path()
-
-        );
-        // or create sub menu page
-        $parent_slug = "index.php";    # For Dashboard
-        #$parent_slug="edit.php";		# For Posts
-        // more examples at http://codex.wordpress.org/Administration_Menus
-        //add_submenu_page( $parent_slug, __("HTML Title 4", EMU2_I18N_DOMAIN), __("Menu title 4", EMU2_I18N_DOMAIN), 9, MAWIBLAH_PLUGIN_DIR.'/mawiblah_settings_page.php');
-        add_filter('plugin_action_links_' . plugin_basename(MAWIBLAH_PLUGIN_FILE), 'Settings::add_settings_link_to_plugin_list');
-
     }
 
     /**
@@ -168,62 +276,6 @@ class Settings
         array_push(self::$messages, ["type" => $type, "message" => "MAWIBLAH: " . $text]);
     }
 
-    /** Reads all section field values from the database and then deletes those options. Called during uninstall. */
-    private static function remove_sections_options()
-    {
-        $sections = json_decode(file_get_contents(MAWIBLAH_CONFIG_PATH . "/sections.json"), true);
-
-        foreach ($sections as $sk => $s) {
-
-            foreach ($s["fields"] as $fk => $f) {
-                $sections[$sk]["fields"][$fk]["value"] = get_option($f["id"]);
-                delete_option($f["id"]);
-            }
-        }
-    }
-
-    /**
-     * Returns all settings sections with current values loaded from the database.
-     *
-     * On POST (settings form submission), validates the nonce, sanitizes each value
-     * by field type, persists it via update_option(), and refreshes the asset version.
-     *
-     * @return array Settings sections with fields populated with their current values.
-     */
-    public static function get_sections()
-    {
-        $options_updated = false;
-        $sectionsFile = MAWIBLAH_CONFIG_PATH . "/sections.json";
-        $sections = json_decode(file_get_contents($sectionsFile), true);
-
-        $is_post = !empty($_POST);
-        if ($is_post) {
-            check_admin_referer('gae-settings-group-options');
-        }
-
-        foreach ($sections as $sk => $s) {
-
-            foreach ($s["fields"] as $fk => $f) {
-
-                if ($is_post && isset($_POST[$f["id"]])) {
-                    $raw   = wp_unslash($_POST[$f["id"]]);
-                    $value = $f['type'] === 'textarea'
-                        ? sanitize_textarea_field($raw)
-                        : sanitize_text_field($raw);
-                    update_option($f["id"], $value);
-                    $sections[$sk]["fields"][$fk]["value"] = $value;
-                    $options_updated = true;
-                } else {
-                    $sections[$sk]["fields"][$fk]["value"] = get_option($f["id"]);
-                }
-            }
-        }
-        if ($options_updated) {
-            update_option("gae-assets-version", time());
-        }
-        return $sections;
-    }
-
     /**
      * Outputs a single dismissible WordPress admin notice.
      *
@@ -239,7 +291,7 @@ class Settings
                 <?= $message; ?>
             </p>
             <button type="button" class="notice-dismiss">
-                <span class="screen-reader-text"><?= Settings::get_translation("Dismiss this notice."); ?></span>
+                <span class="screen-reader-text"><?php echo esc_html__('Dismiss this notice.', 'mawiblah'); ?></span>
             </button>
         </div>
         <?php
@@ -263,145 +315,6 @@ class Settings
     public static function is_settings_page_visited()
     {
         return get_option("gae-settings-page-visited");
-    }
-
-    /** Returns the number of unique translation strings collected so far (developer mode only). */
-    public static function get_translation_count()
-    {
-        $translationIdsFile = MAWIBLAH_TRANSLATION_IDS_FILE;
-        $translationIds = [];
-        if (file_exists($translationIdsFile)) {
-            $translationIds = unserialize(file_get_contents($translationIdsFile));
-        }
-        return count($translationIds);
-    }
-
-    /**
-     * Translates a string and optionally formats it with sprintf-style parameters.
-     *
-     * In developer mode, also records the string to the translation IDs file for POT generation.
-     *
-     * @param string       $text   String to translate.
-     * @param array|string $params Optional sprintf parameters.
-     * @return string Translated and formatted string.
-     */
-    public static function get_translation($text, $params = [])
-    {
-
-        if (MAWIBLAH_DEVELOPER) {
-
-            $text_id = strip_tags($text);
-            $translationIdsFile = MAWIBLAH_TRANSLATION_IDS_FILE;
-            $translationIds = [];
-            $changed = false;
-            if (file_exists($translationIdsFile)) {
-                $translationIds = unserialize(file_get_contents($translationIdsFile));
-            } else {
-                if (@touch($translationIdsFile)) {
-                    chmod($translationIdsFile, 0644);
-                }
-            }
-
-            if (!isset($translationIds[$text])) {
-                $translationIds[$text] = $text;
-                $changed = true;
-            }
-
-            if (is_array($params)) {
-                foreach ($params as $item) {
-                    if (!isset($translationIds[$item])) {
-                        $translationIds[$item] = $item;
-                        $changed = true;
-                    }
-                }
-            }
-
-            if ($changed) {
-                if (is_writable($translationIdsFile)) {
-                    file_put_contents($translationIdsFile, serialize($translationIds));
-                }
-            }
-        }
-
-        $text = __($text, 'mawiblah');
-
-        if (is_array($params) && count($params) > 0) {
-            $text = vsprintf($text, $params);
-        } elseif (!empty($params)) {
-            $text = sprintf($text, $params);
-        }
-        //
-        return $text;
-    }
-
-    /** Generates a .pot translation template file from the collected translation IDs (developer mode only). */
-    public static function generate_pot_file()
-    {
-        if (MAWIBLAH_DEVELOPER) {
-
-            $pot_header = '
-msgid ""
-msgstr ""
-"Project-Id-Version:Google Analytics Events\n"
-"POT-Creation-Date: ' . date("Y-m-d H:i:s") . '\n"
-"PO-Revision-Date: ' . date("Y-m-d H:i:s") . '\n"
-"Last-Translator: Aivars Lauzis\n"
-"Language-Team: \n"
-"Language: en\n"
-"MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
-"Content-Transfer-Encoding: 8bit\n"
-"X-Generator: Poedit 2.0.3\n"
-"X-Poedit-Basepath: ..\n"
-"Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Poedit-KeywordsList: ;__;_e\n"
-"X-Poedit-SearchPath-0: .\n"
-"X-Poedit-SearchPathExcluded-0: assets/css\n"
-"X-Poedit-SearchPathExcluded-1: assets/inc/chosen\n"
-"X-Poedit-SearchPathExcluded-2: assets/js\n"
-"X-Poedit-SearchPathExcluded-3: lang\n"
-
-';
-            $translationIdsFile = MAWIBLAH_TRANSLATION_IDS_FILE;
-            $potFile = MAWIBLAH_GENERATE_PATH . MAWIBLAH_PLUGIN_DIRECTORY_NAME . ".pot";
-
-            $dir_potFile = dirname($potFile);
-
-            if (!is_writable($dir_potFile)) {
-                self::add_message("Directory ($dir_potFile) not writable. Could not generate pot file.", "error");
-                return false;
-            }
-
-            if (!file_exists($potFile)) {
-                if (!@touch($potFile) || !@chmod($potFile, 0644)) {
-                    self::add_message("Could not create ($potFile). Could not generate pot file.", "error");
-                }
-            }
-
-            if (!is_writable($potFile)) {
-                self::add_message("File ($potFile) not writable. Could not generate pot file.", "error");
-                return false;
-            }
-
-            if (!file_exists($translationIdsFile)) {
-                self::add_message("Could not generate POT file no translations collected, cant find file $translationIdsFile", "error");
-                return false;
-            }
-
-            if (file_exists($translationIdsFile)) {
-                $translationIds = unserialize(file_get_contents($translationIdsFile));
-            }
-            file_put_contents($potFile, $pot_header);
-            foreach ($translationIds as $k => $value) {
-                $potText = '
-                
-msgid "' . htmlspecialchars(str_replace(array("\r\n", "\r", "\n"), "", $translationIds[$k])) . '"
-msgstr ""
-';
-                file_put_contents($potFile, $potText, FILE_APPEND);
-            }
-            self::add_message("Pot file generated. You will find it here $potFile");
-        }
     }
 
     /** Returns true when the "Send emails" setting is enabled (email sending is not suppressed). */
@@ -466,28 +379,34 @@ msgstr ""
     }
 
     /**
-     * Returns a plugin option value, falling back to the field's default_value from sections.json.
+     * Returns a plugin option value, falling back to the schema default.
      *
-     * @param string $optionId WordPress option key matching a field id in sections.json.
+     * @param string $optionId Full option key, e.g. "mawiblah-debug".
      * @return mixed Stored option value, or the field's default_value if not yet saved.
      */
     public static function getOption($optionId)
     {
-        // TODO: return default value if option not set
-        $value = get_option($optionId);
+        $page = self::page();
 
-        if (!$value) {
-            $sections = self::get_sections();
-            foreach ($sections as $section) {
-                foreach ($section['fields'] as $field) {
-                    if ($field['id'] === $optionId) {
-                        if ($field['type']!=='boolean'){
-                            return $field['default_value'];
-                        }
-                        break;
-                    }
-                }
-            }
+        if (!$page) {
+            return null;
+        }
+
+        // Callers pass the full option key; the schema knows it by its bare id.
+        $bare = str_starts_with($optionId, self::PREFIX)
+            ? substr($optionId, strlen(self::PREFIX))
+            : $optionId;
+
+        $value = $page->get($bare);
+
+        // Mawiblah has always treated any falsy stored value as "use the
+        // default"; the package's own rule is stricter (absent only), so the
+        // historical behaviour is applied here rather than changed underneath
+        // callers like getSchedulerInterval() that rely on it.
+        if (null === $value || '' === $value) {
+            $default = $page->default_for($bare);
+
+            return null === $default ? $value : $default;
         }
 
         return $value;

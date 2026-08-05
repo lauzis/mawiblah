@@ -23,7 +23,14 @@ class Init
     {
         Migrations::run();
         if (is_admin()) {
-            add_action('admin_menu', [$this, 'add_menu_links']);
+            // Priority 5 so the top-level menu exists before Carbon Fields
+            // attaches the Settings container on admin_menu at the default 10.
+            // Otherwise CF registers its submenu first, which puts Settings at
+            // the top of the list and makes WordPress compute the page hook
+            // against a parent it cannot see yet -- leaving the menu item
+            // linking to /wp-admin/mawiblah-settings instead of
+            // admin.php?page=mawiblah-settings.
+            add_action('admin_menu', [$this, 'add_menu_links'], 5);
         }
         $this->setup_hooks();
         $this->setup_api_routes();
@@ -440,14 +447,8 @@ class Init
             [$this, 'tests']
         );
 
-        add_submenu_page(
-            'mawiblah',
-            'Settings',
-            '<span class="dashicons dashicons-admin-settings" style="font-size:16px;line-height:1.4;margin-right:6px;vertical-align:middle;"></span>Settings',
-            'manage_options',
-            self::MAWIBLAH_SETTINGS,
-            [$this, 'settings']
-        );
+        // The Settings submenu is registered by Carbon Fields, from the
+        // container declared in Settings::registerFields().
     }
 
     /** Admin page callback: renders the email templates list. */
@@ -469,11 +470,6 @@ class Init
     /** Admin page callback: renders the test scenarios page. */
     public function tests() {
         Renderer::tests();
-    }
-
-    /** Admin page callback: renders the plugin settings page. */
-    public function settings() {
-        Renderer::settings();
     }
 
     /** Admin page callback: renders the log viewer page. */

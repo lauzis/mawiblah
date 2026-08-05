@@ -1,0 +1,180 @@
+{
+  "sections": [
+    {
+      "id": "mawiblah-dont-disturn-threshold",
+      "title": "Dont disturb threshold",
+      "description": "The threshold/delta between emails to one subcriber. If the threshold is not reached, the email will not be sent. We dont want to bother subscribers that did recieve email aready lately.",
+      "fields": [
+        {
+          "id": "dont-disturb-threshold",
+          "type": "text",
+          "title": "Time between the subscriber is contacred again (in seconds)",
+          "attributes": {
+            "placeholder": "2592000"
+          },
+          "default_value": "2592000"
+        }
+      ]
+    },
+    {
+      "id": "time-between-emails",
+      "title": "Time between emails (in seconds)",
+      "description": "Set the time between emails. If to send out with some delay.",
+      "fields": [
+        {
+          "id": "time-between-emails",
+          "type": "text",
+          "title": "Time between emails (in seconds)",
+          "attributes": {
+            "placeholder": "1"
+          },
+          "default_value": "1"
+        }
+      ]
+    },
+    {
+      "id": "debug",
+      "title": "Logging",
+      "description": "Enable file-based logging to record plugin actions to daily log files. Logs are stored in {uploads}/gae-logs/mawiblah-YYYY-MM-DD.log and can be viewed under Mawiblah → Logs.",
+      "fields": [
+        {
+          "id": "debug",
+          "type": "select",
+          "title": "File logging",
+          "options": {
+            "disabled": "Disabled",
+            "enable-file-log": "Enable - file log"
+          },
+          "default_value": "disabled"
+        },
+        {
+          "id": "debug-ip",
+          "type": "text",
+          "title": "Restrict output by ip (comma separated)",
+          "attributes": {
+            "placeholder": "127.0.0.1"
+          }
+        },
+        {
+          "id": "dont-send-emails",
+          "type": "select",
+          "title": "Can disable actual email sending",
+          "options": {
+            "send-emails": "Send emails",
+            "dont-send-emails": "Dont send emails"
+          },
+          "default_value": "disabled"
+        }
+      ]
+    },
+    {
+      "id": "mawiblah-failing-email",
+      "title": "Failing Email",
+      "description": "If sending to a subscriber fails this many times across all campaigns, they are automatically added to the 'Failing Email' audience and skipped in future sends.",
+      "fields": [
+        {
+          "id": "failing-email-threshold",
+          "type": "text",
+          "title": "Failure threshold (number of failed sends before marking as Failing Email)",
+          "attributes": {
+            "placeholder": "3"
+          },
+          "default_value": "3"
+        }
+      ]
+    },
+    {
+      "id": "mawiblah-recaptcha",
+      "title": "reCAPTCHA v3 (Subscription Form)",
+      "description": "Optional Google reCAPTCHA v3 protection for the subscription form. Leave disabled to rely on honeypot only. Get your keys at https://www.google.com/recaptcha/admin/",
+      "fields": [
+        {
+          "id": "recaptcha-enabled",
+          "type": "select",
+          "title": "Enable reCAPTCHA v3",
+          "options": {
+            "disabled": "Disabled",
+            "enabled": "Enabled"
+          },
+          "default_value": "disabled"
+        },
+        {
+          "id": "recaptcha-site-key",
+          "type": "text",
+          "title": "Site Key (public)",
+          "attributes": {
+            "placeholder": "6Lc..."
+          }
+        },
+        {
+          "id": "recaptcha-secret-key",
+          "type": "text",
+          "title": "Secret Key (private, never expose publicly)",
+          "attributes": {
+            "placeholder": "6Lc..."
+          }
+        }
+      ]
+    },
+    {
+      "id": "mawiblah-open-tracking",
+      "title": "Email Open Tracking",
+      "description": "Embeds a 1×1 tracking pixel in outgoing emails. Requires server-side configuration (nginx must serve the pixel URL and execute PHP). When enabled, unique opens are recorded per subscriber per campaign. Note: inform subscribers in your privacy policy.",
+      "fields": [
+        {
+          "id": "open-tracking-enabled",
+          "type": "select",
+          "title": "Enable open tracking",
+          "options": {
+            "disabled": "Disabled",
+            "enabled": "Enabled"
+          },
+          "default_value": "disabled"
+        }
+      ]
+    },
+    {
+      "id": "mawiblah-background-send",
+      "title": "Background Send (WP Cron)",
+      "description": "Settings for background campaign sending via WP Cron. Campaigns can be sent in the background so you can close the browser tab.",
+      "fields": [
+        {
+          "id": "background-batch-size",
+          "type": "text",
+          "title": "Subscribers per cron batch",
+          "attributes": {
+            "type": "number",
+            "placeholder": "100"
+          },
+          "default_value": "100"
+        }
+      ]
+    },
+    {
+      "id": "mawiblah-scheduler",
+      "title": "Scheduler",
+      "description": "How often WP Cron checks whether a scheduled campaign is due. Lower values mean sends fire closer to the configured time, but generate more cron runs.",
+      "fields": [
+        {
+          "id": "scheduler-interval",
+          "type": "select",
+          "title": "Scheduler check interval",
+          "options": {
+            "60": "Every 1 minute",
+            "300": "Every 5 minutes",
+            "600": "Every 10 minutes",
+            "900": "Every 15 minutes",
+            "1800": "Every 30 minutes",
+            "3600": "Every 1 hour",
+            "7200": "Every 2 hours",
+            "14400": "Every 4 hours",
+            "28800": "Every 8 hours",
+            "43200": "Every 12 hours",
+            "86400": "Once per day"
+          },
+          "default_value": "3600"
+        }
+      ]
+    }
+  ]
+}

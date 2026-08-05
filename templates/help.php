@@ -708,5 +708,61 @@ if ( $result['status'] === 'ok' ) {
         </div>
     </div>
 
+    <!-- ── Send Condition Shortcodes ─────────────────────────────────── -->
+    <div id="help-send-condition" class="postbox">
+        <div class="postbox-header">
+            <h2 class="hndle"><span><?php esc_html_e('Send Condition Shortcodes', 'mawiblah'); ?></span></h2>
+        </div>
+        <div class="inside">
+
+            <p>
+                <?php esc_html_e('A campaign can define an optional Send Condition Shortcode in the Campaign Details meta box. Before every scheduled send the shortcode is evaluated: non-empty output lets the send proceed; empty output skips the send and writes a log entry.', 'mawiblah'); ?>
+            </p>
+
+            <h3><?php esc_html_e('How it works', 'mawiblah'); ?></h3>
+            <table class="wp-list-table widefat fixed striped" style="max-width:700px;">
+                <thead>
+                    <tr>
+                        <th style="width:40%"><?php esc_html_e('Shortcode output', 'mawiblah'); ?></th>
+                        <th><?php esc_html_e('Result', 'mawiblah'); ?></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><?php esc_html_e('Any non-empty string', 'mawiblah'); ?></td>
+                        <td><?php esc_html_e('Send proceeds normally', 'mawiblah'); ?></td>
+                    </tr>
+                    <tr>
+                        <td><?php esc_html_e('Empty string (or blank)', 'mawiblah'); ?></td>
+                        <td><?php esc_html_e('Send is skipped; reason logged', 'mawiblah'); ?></td>
+                    </tr>
+                    <tr>
+                        <td><?php esc_html_e('(field left blank)', 'mawiblah'); ?></td>
+                        <td><?php esc_html_e('Always send — no condition checked', 'mawiblah'); ?></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3 style="margin-top:24px;"><?php esc_html_e('Shortcode contract', 'mawiblah'); ?></h3>
+            <p><?php esc_html_e('The shortcode is called as:', 'mawiblah'); ?></p>
+            <pre style="background:#f6f7f7;padding:8px 12px;border-radius:4px;overflow:auto;">[your_shortcode_name campaign_id="N"]</pre>
+            <p><?php esc_html_e('Where N is the campaign post ID. Your handler must accept a campaign_id attribute and return a non-empty string to allow the send, or an empty string to block it.', 'mawiblah'); ?></p>
+
+            <h3 style="margin-top:24px;"><?php esc_html_e('Built-in example shortcode', 'mawiblah'); ?></h3>
+            <p>
+                <code>[mawiblah_new_posts_since_last_sent campaign_id="N"]</code>
+            </p>
+            <p>
+                <?php esc_html_e('Returns "yes" when at least one post has been published since the campaign\'s last campaignFinished timestamp. Returns empty string if no new posts exist. Useful for digest newsletters that should only go out when there is fresh content.', 'mawiblah'); ?>
+            </p>
+            <p>
+                <?php esc_html_e('To use it: enter', 'mawiblah'); ?>
+                <code>mawiblah_new_posts_since_last_sent</code>
+                <?php esc_html_e('(without brackets) in the Send Condition Shortcode field of the campaign.', 'mawiblah'); ?>
+            </p>
+
+        </div>
+    </div>
+
     </div><!-- /.metabox-holder -->
 </div>

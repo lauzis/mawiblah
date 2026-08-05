@@ -267,13 +267,6 @@ class Renderer
         exit;
     }
 
-    /** Renders the plugin settings page and exits. */
-    public static function settings()
-    {
-        require MAWIBLAH_PLUGIN_DIR . "/templates/settings.php";
-        exit;
-    }
-
     /** Renders the CSV import page. */
     public static function import()
     {

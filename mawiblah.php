@@ -3,14 +3,14 @@
  * Plugin Name: Mawiblah
  * Plugin URI: https://github.com/lauzis/
  * Description: Fff-ine, will build my own mailchimp... with blackjack and hookers.
- * Version: 1.0.28
+ * Version: 1.0.32
  * Author: Aivars Lauzis
  * Author URI: https://github.com/lauzis/
  * License: GPL3 - http://www.gnu.org/licenses/gpl.html
  * Requires PHP: 8.0
  */
 
-define('MAWIBLAH_VERSION_BASE', '1.0.28');
+define('MAWIBLAH_VERSION_BASE', '1.0.32');
 if (!defined('MAWIBLAH_VERSION')) {
     define('MAWIBLAH_VERSION', MAWIBLAH_VERSION_BASE);
 }
@@ -64,14 +64,34 @@ if (!defined('MAWIBLAH_REPORT_URL')) {
 
 define('MAWIBLAH_POST_TYPE_PREFIX', 'mawiblah_');
 $uloads_dir = wp_upload_dir();
-define('MAWIBLAH_DEVELOPER', true);
+// Legacy directory: it only ever held the runtime translation-string cache and
+// the generated .pot. Nothing writes here any more; the constant remains so
+// uninstall can still clear it on upgraded installs.
 define('MAWIBLAH_GENERATE_PATH', str_replace('\\', '/', $uloads_dir["basedir"] . '/gae/'));
-define('MAWIBLAH_TRANSLATION_IDS_FILE', MAWIBLAH_GENERATE_PATH . MAWIBLAH_PLUGIN_DIRECTORY_NAME . ".serialized.php");
 
 define('MAWIBLAH_LOG_PATH', str_replace('\\', '/', $uloads_dir["basedir"] . '/gae-logs/'));
 define('MAWIBLAH_TEMPLATES_PATH', MAWIBLAH_PLUGIN_DIR . "/templates");
 define('MAWIBLAH_SETTINGS_PAGE', 'mawiblah-settings');
 
+
+// Composer dependencies (lauzis/wp-plugin-packages, Carbon Fields). Guarded so a
+// build shipped without vendor/ degrades gracefully instead of fataling.
+if (file_exists(MAWIBLAH_PLUGIN_DIR . '/vendor/autoload.php')) {
+    require_once MAWIBLAH_PLUGIN_DIR . '/vendor/autoload.php';
+    // Required explicitly: Composer's files autoload runs only one copy of this
+    // package per request, so the version gate would never see the others.
+    require_once MAWIBLAH_PLUGIN_DIR . '/vendor/lauzis/wp-plugin-packages/bootstrap.php';
+}
+
+// Carbon Fields renders the settings page. It self-guards against a double
+// boot, so calling it here is safe even if another plugin has already done so.
+add_action('after_setup_theme', static function (): void {
+    if (class_exists('\\Carbon_Fields\\Carbon_Fields')) {
+        \Carbon_Fields\Carbon_Fields::boot();
+    }
+});
+
+add_action('carbon_fields_register_fields', ['\Mawiblah\Settings', 'registerFields']);
 
 require(MAWIBLAH_PLUGIN_DIR . '/classes/Settings.php');
 require(MAWIBLAH_PLUGIN_DIR . '/classes/Helpers.php');

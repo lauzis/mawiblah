@@ -4,25 +4,51 @@ namespace Mawiblah;
 
 class SetupNotice
 {
-    const DISMISSED_META_KEY = 'mawiblah_notice_dismissed';
-    const AJAX_ACTION        = 'mawiblah_dismiss_notice';
+    const NOTICE_ID = 'setup';
+
+    /**
+     * Returns the shared notice manager, or null when the wp-plugin-packages package
+     * is not installed, in which case the notice is simply not shown.
+     *
+     * Dismissals are per user and scoped to the plugin version, so a dismissed
+     * notice returns after an upgrade — the setup requirements may have moved.
+     *
+     * @return \Lauzis\WpPackages\Notices\Notices|null
+     */
+    private static function manager()
+    {
+        if (!class_exists('WpPackages_Registry')) {
+            return null;
+        }
+
+        return \WpPackages_Registry::notices(
+            'mawiblah',
+            [
+                'store'      => 'user',
+                'version'    => MAWIBLAH_VERSION_BASE,
+                'capability' => 'manage_options',
+            ]
+        );
+    }
 
     public static function init(): void
     {
-        add_action('admin_notices', [self::class, 'maybeShowNotice']);
-        add_action('wp_ajax_' . self::AJAX_ACTION, [self::class, 'handleDismiss']);
+        $manager = self::manager();
+        if (!$manager) {
+            return;
+        }
+
+        $manager->boot();
+
+        // The checks query terms and touch the filesystem, so they run on
+        // admin_notices rather than at load time.
+        add_action('admin_notices', [self::class, 'maybeShowNotice'], 5);
     }
 
     public static function maybeShowNotice(): void
     {
-        $page = isset($_GET['page']) ? sanitize_key($_GET['page']) : '';
-        if (strpos($page, 'mawiblah') !== 0) {
-            return;
-        }
-
-        $userId    = get_current_user_id();
-        $dismissed = get_user_meta($userId, self::DISMISSED_META_KEY, true);
-        if ($dismissed === MAWIBLAH_VERSION_BASE) {
+        $manager = self::manager();
+        if (!$manager) {
             return;
         }
 
@@ -31,44 +57,20 @@ class SetupNotice
             return;
         }
 
-        $nonce = wp_create_nonce(self::AJAX_ACTION);
-        ?>
-        <div class="notice notice-warning mawiblah-setup-notice" style="padding-bottom:12px;">
-            <p><strong><?php esc_html_e('Mawiblah — minimal setup needed before you can send emails', 'mawiblah'); ?></strong></p>
-            <ul style="list-style:disc;padding-left:20px;margin-top:4px;">
-                <?php foreach ($issues as $issue) : ?>
-                    <li><?php echo wp_kses_post($issue); ?></li>
-                <?php endforeach; ?>
-            </ul>
-            <p style="margin-top:8px;">
-                <button type="button" class="button mawiblah-dismiss-notice-btn"
-                        data-nonce="<?php echo esc_attr($nonce); ?>">
-                    <?php esc_html_e('Dismiss for this version', 'mawiblah'); ?>
-                </button>
-            </p>
-        </div>
-        <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            var btn = document.querySelector('.mawiblah-dismiss-notice-btn');
-            if (!btn) { return; }
-            btn.addEventListener('click', function () {
-                var nonce = this.getAttribute('data-nonce');
-                var xhr = new XMLHttpRequest();
-                xhr.open('POST', ajaxurl, true);
-                xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-                xhr.send('action=<?php echo esc_js(self::AJAX_ACTION); ?>&_wpnonce=' + encodeURIComponent(nonce));
-                this.closest('.mawiblah-setup-notice').remove();
-            });
-        });
-        </script>
-        <?php
-    }
+        $message = '<strong>'
+            . esc_html__('Mawiblah — minimal setup needed before you can send emails', 'mawiblah')
+            . '</strong><ul style="list-style:disc;padding-left:20px;margin-top:4px;"><li>'
+            . implode('</li><li>', $issues)
+            . '</li></ul>';
 
-    public static function handleDismiss(): void
-    {
-        check_ajax_referer(self::AJAX_ACTION);
-        update_user_meta(get_current_user_id(), self::DISMISSED_META_KEY, MAWIBLAH_VERSION_BASE);
-        wp_send_json_success();
+        $manager->add(
+            new \Lauzis\WpPackages\Notices\Notice(
+                self::NOTICE_ID,
+                $message,
+                'warning',
+                \Lauzis\WpPackages\Notices\Notice::VERSION
+            )
+        );
     }
 
     /** @return string[] Human-readable issues; empty array means all checks passed. */

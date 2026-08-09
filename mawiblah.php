@@ -157,3 +157,20 @@ function mawiblah_subscribe(string $email, array $audienceHashes = []): array
 {
     return \Mawiblah\SubscriptionForm::subscribeByEmail($email, $audienceHashes);
 }
+
+// The plugin's version in the admin footer, beside WordPress's own — the first
+// thing worth knowing about a page misbehaving is which version drew it.
+add_action( 'admin_init', static function () {
+    if ( ! class_exists( '\\Lauzis\\WpPackages\\Admin\\Footer' ) ) {
+        return;
+    }
+
+    \Lauzis\WpPackages\Admin\Footer::show(
+        'mawiblah',
+        array(
+            'name'    => 'Mawiblah',
+            'version' => defined( 'MAWIBLAH_VERSION_BASE' ) ? MAWIBLAH_VERSION_BASE : '',
+            'types'   => array( 'mawiblah_subscriber', 'mawiblah_campaign' ),
+        )
+    );
+} );

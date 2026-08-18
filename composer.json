@@ -12,7 +12,7 @@
   "require": {
     "php": ">=8.0",
     "htmlburger/carbon-fields": "^3.6",
-    "lauzis/wp-plugin-packages": "^1.15"
+    "lauzis/wp-plugin-packages": "^1.16"
   },
   "require-dev": {
     "phpunit/phpunit": "^10",

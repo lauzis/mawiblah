@@ -43,6 +43,15 @@ class Settings
             return;
         }
 
+        // Draws the "Send a test message" button under the Slack webhook field.
+        // An unregistered callback renders nothing, so a build without the
+        // package simply has no button.
+        $tester = Logs::slackTester();
+
+        if ($tester) {
+            $page->callback('logs_slack_test', [$tester, 'render']);
+        }
+
         $page->register(MAWIBLAH_CONFIG_PATH . '/settings.json', [
             'prefix' => self::PREFIX,
             'domain' => 'mawiblah',

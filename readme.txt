@@ -3,7 +3,7 @@ Contributors: lauzis
 Tags: email, newsletter, marketing, mailchimp alternative, subscribers
 Requires at least: 5.0
 Tested up to: 6.9
-Stable tag: 1.0.35
+Stable tag: 1.0.36
 Requires PHP: 8.0
 License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl.html
@@ -68,6 +68,13 @@ Technically yes, but it is not recommended. The plugin sends emails individually
 8. MVP version
 
 == Changelog ==
+
+= 1.0.36 =
+*   New: "Send a test message" button beside the Slack webhook field. It posts to whatever is in the field, saved or not, waits for Slack's answer and reports it — ordinary log traffic is fire-and-forget, so a bad webhook otherwise fails silently.
+*   New: the Tests page's Logging scenario now also posts to Slack when a webhook is configured, and says so when one is not. It runs whether or not file logging is on, since errors reach Slack either way.
+*   Changed: scheduler and send logging says what happened rather than which function ran. The cron tick logs "Scheduled check started" and a matching "Scheduled check finished" with how many schedulers were seen, how many fired and how long it took — so a check that died halfway no longer looks like one that found no work. A scheduled send logs "Scheduled campaign started" with the campaign name and schedule type.
+*   Changed: batch logging carries the campaign name and its progress. "Batch started" records what had already been sent and failed; "Batch finished" (previously "Batch complete") adds how long the batch took; "Campaign finished" carries the final counts.
+*   Changed: the bundled shared library (wp-plugin-packages) updated to 1.16.0.
 
 = 1.0.35 =
 *   New: Log entries can be sent to Slack. Fill in an incoming webhook URL under Logging and pick whether Slack gets errors only (the default) or every entry. Errors are posted even with file logging disabled — a send that failed at 3am is not something anybody finds by opening the log later.

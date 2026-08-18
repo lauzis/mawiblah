@@ -68,10 +68,12 @@ class SchedulerCron
     {
         $schedulers = Scheduler::getAll();
         $now        = time();
+        $started    = microtime(true);
+        $triggered  = 0;
 
-        Logs::addLog('scheduler', 'check() fired', [
+        Logs::addLog('scheduler', 'Scheduled check started', [
             'now'        => gmdate('Y-m-d H:i:s', $now),
-            'count'      => count($schedulers),
+            'schedulers' => count($schedulers),
         ]);
 
         foreach ($schedulers as $scheduler) {
@@ -160,7 +162,14 @@ class SchedulerCron
             Campaigns::backgroundSendStart($campaignPostId);
             CronSend::schedule($campaignPostId);
 
-            Logs::addLog('scheduler', "Scheduler #{$scheduler->id} triggered campaign #{$campaignPostId}");
+            $triggered++;
+
+            Logs::addLog('scheduler', "Scheduled campaign started: {$campaign->post_title}", [
+                'schedulerId'    => $scheduler->id,
+                'campaignPostId' => $campaignPostId,
+                'campaign'       => $campaign->post_title,
+                'scheduleType'   => $scheduler->schedule_type,
+            ]);
 
             if ($scheduler->schedule_type === 'once') {
                 Scheduler::updateMeta($scheduler->id, [
@@ -179,5 +188,13 @@ class SchedulerCron
                 ]);
             }
         }
+
+        // Logged even when nothing was due: without it, a check that died
+        // halfway through looks exactly like one that found no work.
+        Logs::addLog('scheduler', 'Scheduled check finished', [
+            'schedulers' => count($schedulers),
+            'triggered'  => $triggered,
+            'elapsedMs'  => (int) round((microtime(true) - $started) * 1000),
+        ]);
     }
 }

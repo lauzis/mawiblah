@@ -64,6 +64,33 @@
             "dont-send-emails": "Dont send emails"
           },
           "default_value": "disabled"
+        },
+        {
+          "id": "logs_slack_webhook",
+          "type": "text",
+          "title": "Slack webhook URL",
+          "attributes": {
+            "type": "password"
+          },
+          "help_text": "Optional: an incoming webhook URL (https://hooks.slack.com/services/...) that log entries are also posted to. Leave empty to send nothing to Slack. Anyone holding this URL can post to the channel, so treat it as a credential."
+        },
+        {
+          "id": "logs_slack_level",
+          "type": "select",
+          "title": "Send to Slack",
+          "default_value": "errors",
+          "options": {
+            "errors": "Errors only",
+            "all": "Every log entry"
+          },
+          "conditional_logic": [
+            {
+              "field": "logs_slack_webhook",
+              "value": "",
+              "compare": "!="
+            }
+          ],
+          "help_text": "Errors are posted even when file logging is off. Every log entry means one HTTP request per entry, and Slack rate-limits a webhook to about one message per second — only worth it while chasing a specific problem, not during a campaign send."
         }
       ]
     },

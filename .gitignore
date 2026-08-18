@@ -1,3 +1,8 @@
+# vendor/ is built rather than committed: composer install on deploy.
+# The plugin refuses to load without it and says so, rather than fataling.
+# composer.lock stays in git, so that install resolves what was tested.
+/vendor/
+
 .idea
 /mailchimp_audience/
 /email_templates/archieved

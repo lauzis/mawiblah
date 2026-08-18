@@ -3,7 +3,7 @@ Contributors: lauzis
 Tags: email, newsletter, marketing, mailchimp alternative, subscribers
 Requires at least: 5.0
 Tested up to: 6.9
-Stable tag: 1.0.29
+Stable tag: 1.0.35
 Requires PHP: 8.0
 License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl.html
@@ -68,6 +68,12 @@ Technically yes, but it is not recommended. The plugin sends emails individually
 8. MVP version
 
 == Changelog ==
+
+= 1.0.35 =
+*   New: Log entries can be sent to Slack. Fill in an incoming webhook URL under Logging and pick whether Slack gets errors only (the default) or every entry. Errors are posted even with file logging disabled — a send that failed at 3am is not something anybody finds by opening the log later.
+*   Note: sending is fire-and-forget, so a campaign send never waits on Slack; a webhook Slack rejects therefore fails quietly. Only https:// URLs are used, since the webhook URL is itself a credential.
+*   Note: "Every log entry" means one HTTP request per entry and Slack allows roughly one message a second per webhook — leave it on Errors only during a campaign send.
+*   Changed: the bundled shared library (wp-plugin-packages) updated to 1.15.0.
 
 = 1.0.29 =
 *   New: `send_condition_shortcode` per-campaign field — enter a shortcode name and the scheduler will call it (with `campaign_id` attribute) before each scheduled send. Empty output skips the send and logs the reason; non-empty output proceeds normally.

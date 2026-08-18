@@ -3,14 +3,14 @@
  * Plugin Name: Mawiblah
  * Plugin URI: https://github.com/lauzis/
  * Description: Fff-ine, will build my own mailchimp... with blackjack and hookers.
- * Version: 1.0.35
+ * Version: 1.0.36
  * Author: Aivars Lauzis
  * Author URI: https://github.com/lauzis/
  * License: GPL3 - http://www.gnu.org/licenses/gpl.html
  * Requires PHP: 8.0
  */
 
-define('MAWIBLAH_VERSION_BASE', '1.0.35');
+define('MAWIBLAH_VERSION_BASE', '1.0.36');
 if (!defined('MAWIBLAH_VERSION')) {
     define('MAWIBLAH_VERSION', MAWIBLAH_VERSION_BASE);
 }
@@ -92,6 +92,19 @@ add_action('after_setup_theme', static function (): void {
 });
 
 add_action('carbon_fields_register_fields', ['\Mawiblah\Settings', 'registerFields']);
+
+// The Slack test button answers over admin-ajax, which never renders the
+// settings page, so its endpoint has to be registered on every admin request
+// rather than when the button is drawn.
+if (is_admin()) {
+    add_action('admin_init', static function (): void {
+        $tester = \Mawiblah\Logs::slackTester();
+
+        if ($tester) {
+            $tester->boot();
+        }
+    });
+}
 
 require(MAWIBLAH_PLUGIN_DIR . '/classes/Settings.php');
 require(MAWIBLAH_PLUGIN_DIR . '/classes/Helpers.php');

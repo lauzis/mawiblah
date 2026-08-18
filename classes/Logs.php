@@ -50,6 +50,49 @@ class Logs
     }
 
     /**
+     * Returns the Slack test-button component, or null when the package is
+     * absent or too old to have one.
+     *
+     * @return \Lauzis\WpPackages\Logs\SlackTester|null
+     */
+    public static function slackTester()
+    {
+        static $tester = null;
+
+        if (null !== $tester) {
+            return $tester;
+        }
+
+        $logger = self::logger();
+
+        if (!$logger || !class_exists('\\Lauzis\\WpPackages\\Logs\\SlackTester')) {
+            return null;
+        }
+
+        $tester = new \Lauzis\WpPackages\Logs\SlackTester($logger);
+
+        return $tester;
+    }
+
+    /**
+     * Posts a test message to the configured Slack webhook and waits for the
+     * answer. Used by the settings button and by the Tests page.
+     *
+     * @param string $url Webhook to test instead of the configured one.
+     * @return true|string True on success, otherwise the reason it failed.
+     */
+    public static function slackTest(string $url = '')
+    {
+        $logger = self::logger();
+
+        if (!$logger || !method_exists($logger, 'slackTest')) {
+            return 'The shared logging package is missing or too old.';
+        }
+
+        return $logger->slackTest($url);
+    }
+
+    /**
      * Appends a log entry to today's log file if logging is enabled.
      *
      * Each entry is a single line: [timestamp] [action] message | {json context}

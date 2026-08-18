@@ -669,6 +669,21 @@ class Tests
         $enabled = Logs::enabled();
         self::echoResult($enabled ? 'Enabled' : 'Disabled — enable it under Settings → Logging', $enabled ? 'success' : 'error');
 
+        // Slack is checked whether or not file logging is on: errors are posted
+        // to it regardless, which is the case the webhook exists for.
+        self::echoTitle('Slack webhook');
+        $hook = Settings::getOption('mawiblah-logs_slack_webhook');
+
+        if (!$hook) {
+            self::echoResult('Skipped — no webhook configured under Settings → Logging.', 'success');
+        } else {
+            $slack = Logs::slackTest();
+            self::echoResult(
+                true === $slack ? 'Test message posted — check the Slack channel' : 'Slack refused it: ' . $slack,
+                true === $slack ? 'success' : 'error'
+            );
+        }
+
         if (!$enabled) {
             return;
         }

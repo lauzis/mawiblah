@@ -68,7 +68,18 @@ class CronSend
             return;
         }
 
-        Logs::addLog('cron-send', "Batch started", ['campaignPostId' => $campaignPostId]);
+        $batchStarted = microtime(true);
+        $before       = Campaigns::getCounters($campaign);
+
+        // Named and counted: a Slack line or a log read weeks later has to say
+        // which campaign this was and how far along it already is, not just
+        // that some batch began.
+        Logs::addLog('cron-send', "Batch started: {$campaign->post_title}", [
+            'campaignPostId' => $campaignPostId,
+            'campaign'       => $campaign->post_title,
+            'sentSoFar'      => (int) ($before->emailsSend ?? 0),
+            'failedSoFar'    => (int) ($before->emailsFailed ?? 0),
+        ]);
 
         // Register a shutdown handler so fatal errors inside the batch are always logged
         register_shutdown_function(function () use ($campaignPostId) {
@@ -216,14 +227,16 @@ class CronSend
             }
         }
 
-        Logs::addLog('cron-send', "Batch complete", [
+        Logs::addLog('cron-send', "Batch finished: {$campaign->post_title}", [
             'campaignPostId' => $campaignPostId,
+            'campaign'       => $campaign->post_title,
             'batchCount'     => $batchCount,
             'sent'           => $emailsSent,
             'failed'         => $emailsFailed,
             'skipped'        => $emailsSkipped,
             'unsub'          => $emailsUnsubed,
             'hasMore'        => $hasMore,
+            'elapsedMs'      => (int) round((microtime(true) - $batchStarted) * 1000),
         ]);
 
         if ($hasMore) {
@@ -231,7 +244,14 @@ class CronSend
         } else {
             Campaigns::campaignFinish($campaignPostId);
             Campaigns::backgroundSendStop($campaignPostId);
-            Logs::addLog('cron-send', "Campaign finished", ['campaignPostId' => $campaignPostId]);
+            Logs::addLog('cron-send', "Campaign finished: {$campaign->post_title}", [
+                'campaignPostId' => $campaignPostId,
+                'campaign'       => $campaign->post_title,
+                'sent'           => $emailsSent,
+                'failed'         => $emailsFailed,
+                'skipped'        => $emailsSkipped,
+                'unsub'          => $emailsUnsubed,
+            ]);
         }
     }
 }

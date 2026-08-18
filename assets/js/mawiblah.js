@@ -87,7 +87,10 @@ function MAWIBLAH_getHtmlTemplate(template, preview) {
     preview.innerHTML = data.template;
 
   }, function () {
-
+    // A missing template answers 404 now, which never reaches the callback
+    // above. Saying so beats a blank pane -- and beats the literal "false" the
+    // old 200-with-template-false response used to paint in here.
+    preview.textContent = 'Template "' + template + '" could not be loaded. Check that the file exists in a theme or plugin email_templates directory.';
   });
 }
 

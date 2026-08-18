@@ -17,11 +17,22 @@ class RestRoutes
     {
         $template        = sanitize_text_field($request->get_param('template') ?? '');
         $templateContent = Templates::getEmailTemplateByName($template);
-        $templateContent = do_shortcode($templateContent);
+
+        // A template that is not there is not an "ok" answer. Reporting 200 with
+        // template:false made the caller blame the loopback — nonces, cookies,
+        // auth — for a plain missing file. It also fed false to do_shortcode(),
+        // which returns it unchanged (no "[" to find), so the lie travelled.
+        if ($templateContent === false) {
+            return new \WP_REST_Response([
+                'status'       => 'error',
+                'message'      => sprintf('Template not found: %s', $template),
+                'templateName' => $template,
+            ], 404);
+        }
 
         return new \WP_REST_Response([
             'status'       => 'ok',
-            'template'     => $templateContent,
+            'template'     => do_shortcode($templateContent),
             'templateName' => $template,
         ], 200);
     }

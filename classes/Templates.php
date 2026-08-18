@@ -58,6 +58,16 @@ class Templates
         $body = wp_remote_retrieve_body($response);
         $data = json_decode($body);
 
+        // A missing template and a broken loopback need different people to do
+        // different things, so they are no longer reported as the same failure.
+        if ($statusCode === 404) {
+            Logs::addError('template', "Template not found", [
+                'template'    => $templateName,
+                'searched'    => array_values(self::getEmailTemplateDirectories()),
+            ]);
+            return false;
+        }
+
         if ($statusCode !== 200 || !is_object($data) || empty($data->template)) {
             Logs::addError('template', "REST loopback returned unexpected response", ['template' => $templateName, 'status' => $statusCode, 'body' => substr($body, 0, 300)]);
             return false;
@@ -74,7 +84,7 @@ class Templates
      *
      * @return array<string, string> Map of label to directory path.
      */
-    private static function getEmailTemplateDirectories(): array
+    public static function getEmailTemplateDirectories(): array
     {
         $dirs = [];
         $child = trailingslashit(get_stylesheet_directory()) . 'mawiblah/email_templates';

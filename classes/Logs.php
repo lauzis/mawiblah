@@ -90,15 +90,28 @@ class Logs
         $logger = self::logger();
 
         if (!$logger || !method_exists($logger, 'slackTest')) {
-            // Naming the version is the whole point: every plugin here bundles
-            // its own copy and the highest one installed across them all is the
-            // one that runs, so "too old" without a number does not say which
-            // plugin to rebuild.
-            $version = \WpPackages_Registry::active_version();
+            // Two different numbers, and the difference is the diagnosis. The
+            // library is loaded once per request by whichever plugin reaches it
+            // first, so a sibling that logs during its own bootstrap can lock in
+            // an old copy while a newer one sits installed and merely registered.
+            // Reporting the installed version alone produced the nonsense
+            // "in use is 1.16.0, and Slack needs 1.15.0 or newer".
+            $installed = \WpPackages_Registry::active_version();
+            $running   = defined('\Lauzis\WpPackages\Notices\Assets::VERSION')
+                ? \Lauzis\WpPackages\Notices\Assets::VERSION
+                : 'unknown';
+
+            if ($installed && $running !== $installed && 'unknown' !== $running) {
+                return sprintf(
+                    'Slack needs 1.15.0 or newer of the shared package. %1$s is installed, but %2$s is the copy actually running: something loaded the library before plugins_loaded — a plugin logging during its own bootstrap is the usual cause — and PHP keeps whichever copy got there first. Update every lauzis plugin on this site so no copy older than 1.15.0 is left to win that race.',
+                    $installed,
+                    $running
+                );
+            }
 
             return sprintf(
-                'The shared logging package in use is %s, and Slack needs 1.15.0 or newer. Run "composer install" for this plugin — and note that the newest copy installed across all these plugins is the one WordPress runs, so an out-of-date sibling can be the one answering here.',
-                $version ? $version : 'missing'
+                'The shared logging package running here is %s, and Slack needs 1.15.0 or newer. Run "composer install" for this plugin, and for any other lauzis plugin on the site — the copy that loads first is the one WordPress uses, whichever plugin it belongs to.',
+                'unknown' !== $running ? $running : ($installed ? $installed : 'missing')
             );
         }
 

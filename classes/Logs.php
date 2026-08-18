@@ -83,10 +83,23 @@ class Logs
      */
     public static function slackTest(string $url = '')
     {
+        if (!class_exists('WpPackages_Registry')) {
+            return 'The shared logging package is not installed on this site. Run "composer install" in the plugin directory.';
+        }
+
         $logger = self::logger();
 
         if (!$logger || !method_exists($logger, 'slackTest')) {
-            return 'The shared logging package is missing or too old.';
+            // Naming the version is the whole point: every plugin here bundles
+            // its own copy and the highest one installed across them all is the
+            // one that runs, so "too old" without a number does not say which
+            // plugin to rebuild.
+            $version = \WpPackages_Registry::active_version();
+
+            return sprintf(
+                'The shared logging package in use is %s, and Slack needs 1.15.0 or newer. Run "composer install" for this plugin — and note that the newest copy installed across all these plugins is the one WordPress runs, so an out-of-date sibling can be the one answering here.',
+                $version ? $version : 'missing'
+            );
         }
 
         return $logger->slackTest($url);

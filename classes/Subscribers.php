@@ -149,13 +149,22 @@ class Subscribers
             'menu_name' => __('Subscriber Audiences', 'mawiblah'),
         ];
 
+        // Not public, and said explicitly: register_taxonomy() defaults public
+        // to true, which gave every audience a front-end archive at
+        // /subscriber-category/<slug>/ — a page listing how this site segments
+        // the people who signed up to it, and one an SEO plugin will happily
+        // put in the sitemap. Audiences are an admin-side grouping of a post
+        // type that is itself not public.
         $taxonomy_args = [
             'hierarchical' => true,
             'labels' => $taxonomy_labels,
+            'public' => false,
+            'publicly_queryable' => false,
+            'show_in_nav_menus' => false,
             'show_ui' => true,
             'show_admin_column' => true,
-            'query_var' => true,
-            'rewrite' => ['slug' => 'subscriber-category'],
+            'query_var' => false,
+            'rewrite' => false,
         ];
 
         register_taxonomy(Subscribers::postType() . '_category', [Subscribers::postType()], $taxonomy_args);

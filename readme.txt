@@ -3,7 +3,7 @@ Contributors: lauzis
 Tags: email, newsletter, marketing, mailchimp alternative, subscribers
 Requires at least: 5.0
 Tested up to: 6.9
-Stable tag: 1.0.37
+Stable tag: 1.0.38
 Requires PHP: 8.0
 License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl.html
@@ -68,6 +68,10 @@ Technically yes, but it is not recommended. The plugin sends emails individually
 8. MVP version
 
 == Changelog ==
+
+= 1.0.38 =
+*   Fixed: subscriber audiences were public. `register_taxonomy()` defaults `public` to true and the arguments never said otherwise, so every audience had a front-end archive at `/subscriber-category/<slug>/` — a page describing how the site segments the people who signed up to it. An SEO plugin was duly listing nine of them in the sitemap. The taxonomy is now `public => false` with no rewrite; it stays exactly as visible in wp-admin as it was.
+*   Anyone upgrading should visit Settings → Permalinks once, or otherwise flush rewrite rules, to drop the old `/subscriber-category/` routes.
 
 = 1.0.37 =
 *   New: everything a subscriber reads is translated into Latvian, Russian and Spanish — the subscription form and its confirmation mail, the whole unsubscribe flow, and the headings the newsletter shortcode writes into a campaign. 31 strings, carried in the plugin's own languages/ folder under the text domain it already loads, so no translation plugin is required. The admin screens stay in English.

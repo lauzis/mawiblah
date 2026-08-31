@@ -3,7 +3,7 @@ Contributors: lauzis
 Tags: email, newsletter, marketing, mailchimp alternative, subscribers
 Requires at least: 5.0
 Tested up to: 6.9
-Stable tag: 1.0.36
+Stable tag: 1.0.37
 Requires PHP: 8.0
 License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl.html
@@ -68,6 +68,9 @@ Technically yes, but it is not recommended. The plugin sends emails individually
 8. MVP version
 
 == Changelog ==
+
+= 1.0.37 =
+*   New: everything a subscriber reads is translated into Latvian, Russian and Spanish — the subscription form and its confirmation mail, the whole unsubscribe flow, and the headings the newsletter shortcode writes into a campaign. 31 strings, carried in the plugin's own languages/ folder under the text domain it already loads, so no translation plugin is required. The admin screens stay in English.
 
 = 1.0.36 =
 *   New: "Send a test message" button beside the Slack webhook field. It posts to whatever is in the field, saved or not, waits for Slack's answer and reports it — ordinary log traffic is fire-and-forget, so a bad webhook otherwise fails silently.

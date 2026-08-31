@@ -1,0 +1,101 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: mawiblah\n"
+"Language: lv_LV\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"PO-Revision-Date: 2026-08-30 23:58+0000\n"
+
+msgid "Email"
+msgstr "E-pasts"
+
+msgid "your@email.com"
+msgstr "tavs@epasts.lv"
+
+msgid "Subscribe"
+msgstr "Pieteikties"
+
+msgid "You are now subscribed!"
+msgstr "Tu esi pieteicies jaunumiem!"
+
+msgid "Verification failed. Please try again."
+msgstr "Pārbaude neizdevās. Lūdzu, mēģini vēlreiz."
+
+msgid "Invalid email address."
+msgstr "Nederīga e-pasta adrese."
+
+msgid "Check your inbox to confirm your subscription."
+msgstr "Pārbaudi savu e-pastu, lai apstiprinātu pieteikšanos."
+
+msgid "Confirm your subscription to %s"
+msgstr "Apstiprini pieteikšanos jaunumiem — %s"
+
+msgid "Hi,\n\nClick the link below to confirm your re-subscription:\n\n%s\n\nIf you did not request this, please ignore this email."
+msgstr "Sveiks!\n\nSpied saiti zemāk, lai apstiprinātu atkārtotu pieteikšanos:\n\n%s\n\nJa tu to nepieprasīji, šo e-pastu vari ignorēt."
+
+msgid "Summary for the %s"
+msgstr "%s apskats"
+
+msgid "This is our montly report to you, hoepfully you will find something usefull"
+msgstr "Šis ir mūsu ikmēneša apskats — ceram, ka atradīsi ko noderīgu."
+
+msgid "Check Out Our Latest Articles!"
+msgstr "Apskati mūsu jaunākos rakstus!"
+
+msgid "Discover newest articles and printables for parents and kids."
+msgstr "Atklāj jaunākos rakstus un drukājamos uzdevumus vecākiem un bērniem."
+
+msgid "Thank you for reading!"
+msgstr "Paldies, ka lasi!"
+
+msgid "We hope you enjoyed our monthly newsletter. If you have any questions or suggestions, feel free to contact us."
+msgstr "Ceram, ka mūsu ikmēneša jaunumi tev patika. Ja tev ir jautājumi vai ieteikumi, raksti mums."
+
+msgid "Something went wrong. Please try again."
+msgstr "Kaut kas nogāja greizi. Lūdzu, mēģini vēlreiz."
+
+msgid "Unsubscribe"
+msgstr "Atteikties"
+
+msgid "You have been successfully re-subscribed. Welcome back!"
+msgstr "Tu esi veiksmīgi pieteicies atkārtoti. Prieks tevi atkal redzēt!"
+
+msgid "Back to home"
+msgstr "Atpakaļ uz sākumu"
+
+msgid "This confirmation link is invalid or has already been used."
+msgstr "Šī apstiprinājuma saite ir nederīga vai jau izmantota."
+
+msgid "Unsubscribed already!"
+msgstr "Jau atteicies!"
+
+msgid "Looks, like you already are unsubscribed."
+msgstr "Izskatās, ka esi jau atteicies no jaunumiem."
+
+msgid "Are you sure?"
+msgstr "Vai tiešām?"
+
+msgid "Are you sure that you want to unsubscribe?"
+msgstr "Vai tiešām vēlies atteikties no jaunumiem?"
+
+msgid "Help us to get better"
+msgstr "Palīdzi mums kļūt labākiem"
+
+msgid "We are sad to see you go, but could you provide us feedback? We want to get better. Your opinion is highly valuable to us."
+msgstr "Mums ir žēl tevi zaudēt, bet varbūt vari pateikt, kāpēc? Mēs gribam kļūt labāki, un tavs viedoklis mums ir ļoti svarīgs."
+
+msgid "Let us know what we can improve"
+msgstr "Pastāsti, ko varam uzlabot"
+
+msgid "Could not unsubscribe you!"
+msgstr "Neizdevās tevi atteikt!"
+
+msgid "We could not find you in subscribers list."
+msgstr "Neatradām tevi jaunumu saņēmēju sarakstā."
+
+msgid "You have been unsubscribed!"
+msgstr "Tu esi atteicies no jaunumiem!"
+
+msgid "We hate to see you go. But thanks for being with us. And good luck!"
+msgstr "Mums žēl, ka aizej. Paldies, ka biji kopā ar mums, un veiksmi!"

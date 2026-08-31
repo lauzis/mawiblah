@@ -1,0 +1,101 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: mawiblah\n"
+"Language: es_ES\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"PO-Revision-Date: 2026-08-30 23:58+0000\n"
+
+msgid "Email"
+msgstr "Correo electrónico"
+
+msgid "your@email.com"
+msgstr "tu@correo.com"
+
+msgid "Subscribe"
+msgstr "Suscribirme"
+
+msgid "You are now subscribed!"
+msgstr "¡Ya estás suscrito!"
+
+msgid "Verification failed. Please try again."
+msgstr "La verificación ha fallado. Inténtalo de nuevo."
+
+msgid "Invalid email address."
+msgstr "Dirección de correo electrónico no válida."
+
+msgid "Check your inbox to confirm your subscription."
+msgstr "Revisa tu correo para confirmar la suscripción."
+
+msgid "Confirm your subscription to %s"
+msgstr "Confirma tu suscripción a %s"
+
+msgid "Hi,\n\nClick the link below to confirm your re-subscription:\n\n%s\n\nIf you did not request this, please ignore this email."
+msgstr "¡Hola!\n\nPulsa el enlace de abajo para confirmar tu resuscripción:\n\n%s\n\nSi no lo has solicitado, puedes ignorar este correo."
+
+msgid "Summary for the %s"
+msgstr "Resumen de %s"
+
+msgid "This is our montly report to you, hoepfully you will find something usefull"
+msgstr "Este es nuestro resumen mensual — esperamos que encuentres algo útil."
+
+msgid "Check Out Our Latest Articles!"
+msgstr "¡Mira nuestros artículos más recientes!"
+
+msgid "Discover newest articles and printables for parents and kids."
+msgstr "Descubre los artículos y materiales imprimibles más nuevos para padres y niños."
+
+msgid "Thank you for reading!"
+msgstr "¡Gracias por leernos!"
+
+msgid "We hope you enjoyed our monthly newsletter. If you have any questions or suggestions, feel free to contact us."
+msgstr "Esperamos que te haya gustado nuestro boletín mensual. Si tienes preguntas o sugerencias, escríbenos."
+
+msgid "Something went wrong. Please try again."
+msgstr "Algo ha salido mal. Inténtalo de nuevo."
+
+msgid "Unsubscribe"
+msgstr "Cancelar la suscripción"
+
+msgid "You have been successfully re-subscribed. Welcome back!"
+msgstr "Te has vuelto a suscribir correctamente. ¡Bienvenido de nuevo!"
+
+msgid "Back to home"
+msgstr "Volver al inicio"
+
+msgid "This confirmation link is invalid or has already been used."
+msgstr "Este enlace de confirmación no es válido o ya se ha usado."
+
+msgid "Unsubscribed already!"
+msgstr "¡Ya te has dado de baja!"
+
+msgid "Looks, like you already are unsubscribed."
+msgstr "Parece que ya te habías dado de baja."
+
+msgid "Are you sure?"
+msgstr "¿Seguro?"
+
+msgid "Are you sure that you want to unsubscribe?"
+msgstr "¿Seguro que quieres cancelar la suscripción?"
+
+msgid "Help us to get better"
+msgstr "Ayúdanos a mejorar"
+
+msgid "We are sad to see you go, but could you provide us feedback? We want to get better. Your opinion is highly valuable to us."
+msgstr "Sentimos que te vayas. ¿Podrías decirnos por qué? Queremos mejorar y tu opinión es muy valiosa para nosotros."
+
+msgid "Let us know what we can improve"
+msgstr "Cuéntanos qué podemos mejorar"
+
+msgid "Could not unsubscribe you!"
+msgstr "No hemos podido darte de baja."
+
+msgid "We could not find you in subscribers list."
+msgstr "No te hemos encontrado en la lista de suscriptores."
+
+msgid "You have been unsubscribed!"
+msgstr "Te has dado de baja."
+
+msgid "We hate to see you go. But thanks for being with us. And good luck!"
+msgstr "Sentimos que te vayas. Gracias por acompañarnos, ¡y mucha suerte!"

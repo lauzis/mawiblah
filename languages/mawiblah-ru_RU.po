@@ -1,0 +1,101 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: mawiblah\n"
+"Language: ru_RU\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"PO-Revision-Date: 2026-08-30 23:58+0000\n"
+
+msgid "Email"
+msgstr "Электронная почта"
+
+msgid "your@email.com"
+msgstr "your@email.com"
+
+msgid "Subscribe"
+msgstr "Подписаться"
+
+msgid "You are now subscribed!"
+msgstr "Вы подписались!"
+
+msgid "Verification failed. Please try again."
+msgstr "Проверка не пройдена. Пожалуйста, попробуйте ещё раз."
+
+msgid "Invalid email address."
+msgstr "Некорректный адрес электронной почты."
+
+msgid "Check your inbox to confirm your subscription."
+msgstr "Проверьте почту, чтобы подтвердить подписку."
+
+msgid "Confirm your subscription to %s"
+msgstr "Подтвердите подписку на %s"
+
+msgid "Hi,\n\nClick the link below to confirm your re-subscription:\n\n%s\n\nIf you did not request this, please ignore this email."
+msgstr "Здравствуйте!\n\nНажмите ссылку ниже, чтобы подтвердить повторную подписку:\n\n%s\n\nЕсли вы этого не запрашивали, просто проигнорируйте это письмо."
+
+msgid "Summary for the %s"
+msgstr "Обзор за %s"
+
+msgid "This is our montly report to you, hoepfully you will find something usefull"
+msgstr "Это наш ежемесячный обзор — надеемся, вы найдёте что-то полезное."
+
+msgid "Check Out Our Latest Articles!"
+msgstr "Смотрите наши новые статьи!"
+
+msgid "Discover newest articles and printables for parents and kids."
+msgstr "Открывайте новые статьи и печатные задания для родителей и детей."
+
+msgid "Thank you for reading!"
+msgstr "Спасибо, что читаете!"
+
+msgid "We hope you enjoyed our monthly newsletter. If you have any questions or suggestions, feel free to contact us."
+msgstr "Надеемся, вам понравился наш ежемесячный выпуск. Если есть вопросы или предложения — напишите нам."
+
+msgid "Something went wrong. Please try again."
+msgstr "Что-то пошло не так. Пожалуйста, попробуйте ещё раз."
+
+msgid "Unsubscribe"
+msgstr "Отписаться"
+
+msgid "You have been successfully re-subscribed. Welcome back!"
+msgstr "Вы успешно подписались снова. С возвращением!"
+
+msgid "Back to home"
+msgstr "На главную"
+
+msgid "This confirmation link is invalid or has already been used."
+msgstr "Эта ссылка для подтверждения недействительна или уже использована."
+
+msgid "Unsubscribed already!"
+msgstr "Вы уже отписаны!"
+
+msgid "Looks, like you already are unsubscribed."
+msgstr "Похоже, вы уже отписались от рассылки."
+
+msgid "Are you sure?"
+msgstr "Вы уверены?"
+
+msgid "Are you sure that you want to unsubscribe?"
+msgstr "Вы действительно хотите отписаться от рассылки?"
+
+msgid "Help us to get better"
+msgstr "Помогите нам стать лучше"
+
+msgid "We are sad to see you go, but could you provide us feedback? We want to get better. Your opinion is highly valuable to us."
+msgstr "Жаль, что вы уходите. Не могли бы вы сказать почему? Мы хотим стать лучше, и ваше мнение для нас очень важно."
+
+msgid "Let us know what we can improve"
+msgstr "Расскажите, что нам улучшить"
+
+msgid "Could not unsubscribe you!"
+msgstr "Не удалось вас отписать!"
+
+msgid "We could not find you in subscribers list."
+msgstr "Мы не нашли вас в списке подписчиков."
+
+msgid "You have been unsubscribed!"
+msgstr "Вы отписаны от рассылки!"
+
+msgid "We hate to see you go. But thanks for being with us. And good luck!"
+msgstr "Жаль, что вы уходите. Спасибо, что были с нами, и удачи!"

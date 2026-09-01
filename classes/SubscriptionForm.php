@@ -4,6 +4,9 @@ namespace Mawiblah;
 
 class SubscriptionForm
 {
+    /** Template name a theme can override this letter with, in mawiblah/email_templates/. */
+    const RESUBSCRIBE_TEMPLATE = 'resubscribe-confirm';
+
     const RECAPTCHA_VERIFY_URL = 'https://www.google.com/recaptcha/api/siteverify';
     const RECAPTCHA_THRESHOLD  = 0.5;
 
@@ -142,31 +145,35 @@ class SubscriptionForm
             $confirmUrl
         );
 
-        /**
-         * The confirmation email, before it is sent.
+        /*
+         * A theme can dress this letter the way it dresses its own, by putting
+         * `resubscribe-confirm.html` in its `mawiblah/email_templates/` folder
+         * -- the same place, and the same search order, campaign templates come
+         * from. Shortcodes in it are evaluated, then these placeholders are
+         * filled:
          *
-         * A plain-text letter is the right default for a plugin -- it works
-         * anywhere and needs no design decisions. A site that has a house style
-         * for its transactional mail can replace the body with its own HTML
-         * here, and add the Content-Type header that goes with it.
+         *   {{confirm_url}}       the link the letter exists to carry
+         *   {{site_name}}         blog name
+         *   {{subscriber_email}}  who is being asked
          *
-         * @param array  $email       subject, body and headers.
-         * @param object $subscriber  The subscriber being asked to confirm.
-         * @param string $confirmUrl  The link the letter has to carry.
-         * @param string $context     Which letter this is.
+         * With no such file the plain-text letter below is sent, which is what
+         * a plugin should do on a site that has expressed no opinion.
          */
-        $email = apply_filters('mawiblah_transactional_email', [
-            'subject' => $subject,
-            'body'    => $body,
-            'headers' => [],
-        ], $subscriber, $confirmUrl, 'resubscribe-confirm');
+        $template = Templates::getEmailTemplateByName(self::RESUBSCRIBE_TEMPLATE);
 
-        wp_mail(
-            $subscriber->email,
-            (string) ($email['subject'] ?? $subject),
-            (string) ($email['body'] ?? $body),
-            (array) ($email['headers'] ?? [])
-        );
+        if (is_string($template) && trim($template) !== '') {
+            $html = strtr(do_shortcode($template), [
+                '{{confirm_url}}'      => esc_url($confirmUrl),
+                '{{site_name}}'        => esc_html(get_bloginfo('name')),
+                '{{subscriber_email}}' => esc_html($subscriber->email),
+            ]);
+
+            wp_mail($subscriber->email, $subject, $html, ['Content-Type: text/html; charset=UTF-8']);
+
+            return;
+        }
+
+        wp_mail($subscriber->email, $subject, $body);
     }
 
     /** Reads resubscribe URL parameters, calls confirmResubscribe(), and renders the result template. Exits. */

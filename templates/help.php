@@ -263,6 +263,29 @@ if ( $result['status'] === 'ok' ) {
     stats/
       subscriber-growth.php   ← your custom version</code></pre>
 
+            <h3><?php esc_html_e('E-mail letters', 'mawiblah'); ?></h3>
+            <p>
+                <?php esc_html_e('Campaign templates and the subscription confirmation are HTML files, looked for in your theme before the plugin:', 'mawiblah'); ?>
+            </p>
+            <table class="wp-list-table widefat fixed striped" style="max-width:900px;">
+                <thead>
+                    <tr>
+                        <th style="width:55%"><?php esc_html_e('Template', 'mawiblah'); ?></th>
+                        <th><?php esc_html_e('Used for', 'mawiblah'); ?></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td><code>email_templates/&lt;name&gt;.html</code></td><td><?php esc_html_e('Campaign letters, picked per campaign', 'mawiblah'); ?></td></tr>
+                    <tr><td><code>email_templates/resubscribe-confirm.html</code></td><td><?php esc_html_e('Subscription confirmation. Without one, a plain-text letter is sent', 'mawiblah'); ?></td></tr>
+                </tbody>
+            </table>
+            <p style="margin-top:12px;"><?php esc_html_e('Shortcodes in these files are evaluated first. The confirmation letter then gets:', 'mawiblah'); ?></p>
+            <pre><code>{{confirm_url}}       <?php esc_html_e('the confirmation link', 'mawiblah'); ?>
+
+{{site_name}}         <?php esc_html_e('site name', 'mawiblah'); ?>
+
+{{subscriber_email}}  <?php esc_html_e('who is being asked', 'mawiblah'); ?></code></pre>
+
             <h3><?php esc_html_e('Templates that cannot be overridden yet', 'mawiblah'); ?></h3>
             <p>
                 <?php esc_html_e('The following templates use a direct', 'mawiblah'); ?>

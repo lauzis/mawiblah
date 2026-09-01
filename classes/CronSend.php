@@ -64,6 +64,13 @@ class CronSend
         }
 
         if ($campaign->campaignFinished) {
+            // Clear the in-progress flag on the way out. This path is reached
+            // when a batch arrives after the campaign has already finished --
+            // the normal completion at the end of this method clears it, this
+            // one used to return without doing so, and a scheduler that reads
+            // the flag as "still sending" then skipped every occurrence for
+            // ever after.
+            Campaigns::backgroundSendStop($campaignPostId);
             Logs::addLog('cron-send', "Campaign already finished, aborting batch", ['campaignPostId' => $campaignPostId]);
             return;
         }

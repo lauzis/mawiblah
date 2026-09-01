@@ -141,7 +141,13 @@ class SchedulerCron
 
             // If the previous scheduled send is still in progress, skip this occurrence
             // to avoid resetting the campaign mid-send.
-            if (!empty($campaign->backgroundStarted)) {
+            //
+            // In progress means started *and not finished*, which is what the
+            // status endpoint has always reported. Reading `backgroundStarted`
+            // alone made a flag that outlived its send -- and one does, if a
+            // batch aborts after the campaign finished -- silently retire the
+            // schedule: every occurrence after it was skipped, for ever.
+            if (!empty($campaign->backgroundStarted) && empty($campaign->campaignFinished)) {
                 Logs::addLog('scheduler', "Scheduler #{$scheduler->id}: previous send still in progress, skipping this occurrence", ['campaignPostId' => $campaignPostId]);
                 if ($scheduler->schedule_type !== 'once') {
                     Scheduler::updateMeta($scheduler->id, [

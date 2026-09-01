@@ -371,7 +371,7 @@ if ( $result['status'] === 'ok' ) {
                     <?php
                     printf(
                         wp_kses(
-                            __('Register your site at <a href="https://www.google.com/recaptcha/admin/" target="_blank" rel="noopener">google.com/recaptcha/admin</a> and choose <strong>reCAPTCHA v3</strong>.', 'mawiblah'),
+                            __('Register your site at <a href="https://www.google.com/recaptcha/admin/" target="_blank" rel="noopener">google.com/recaptcha/admin</a> and choose the version you want: <strong>v2</strong> asks the visitor to tick a box, <strong>v3</strong> asks nothing and scores the visit. Pick the same version in the settings — the key pairs are not interchangeable.', 'mawiblah'),
                             ['a' => ['href' => [], 'target' => [], 'rel' => []], 'strong' => []]
                         )
                     );

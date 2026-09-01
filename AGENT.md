@@ -18,6 +18,13 @@ MAWIBLAH is a WordPress plugin that provides Mailchimp-like functionality for se
 - **ShortCodes.php** - WordPress shortcode handlers including `[mawiblah_subscribe_form]` and the built-in send-condition shortcode `[mawiblah_new_posts_since_last_sent campaign_id="N"]`
 - **Subscribers.php** - Subscriber management, audience taxonomy, audience hash generation
 - **SubscriptionForm.php** - Subscription form rendering, REST `/subscribe` endpoint, re-subscribe flow, programmatic `subscribeByEmail()`
+- **Subscription form captcha** - `Settings::recaptchaVersion()` answers
+  `disabled`, `v2` or `v3`. v2 renders the checkbox and the browser sends what
+  the visitor ticked; v3 renders nothing and fetches a token on submit, and the
+  answer has to score at least 0.5. `'enabled'`, the value from when v3 was the
+  only option, is migrated to `'v3'` in 1.0.40 -- Carbon Fields returns a
+  select's default for any value not in its options, so leaving it would have
+  read as *disabled*
 - **Templates.php** - Email template management with child/parent theme override
   support. A theme overrides any letter by name from
   `<theme>/mawiblah/email_templates/<name>.html`; `resubscribe-confirm` is the

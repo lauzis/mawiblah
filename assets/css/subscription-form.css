@@ -28,6 +28,14 @@
     margin-top: 0.75em;
 }
 
+/* The v2 checkbox. Google renders a fixed 304px iframe into it, which fits the
+   narrowest phone but not with padding around it, so it is allowed to shrink
+   out of the layout rather than push the page sideways. */
+.mawiblah-subscribe-form__recaptcha {
+    max-width: 100%;
+    overflow: hidden;
+}
+
 .mawiblah-subscribe-form__message {
     display: block;
     margin-top: 0.75em;

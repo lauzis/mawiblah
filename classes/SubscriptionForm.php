@@ -29,6 +29,7 @@ class SubscriptionForm
     {
         $siteKey        = Settings::recaptchaSiteKey();
         $recaptcha      = Settings::recaptchaReady();
+        $recaptchaVersion = $recaptcha ? Settings::recaptchaVersion() : 'disabled';
         $label          = $options['label']          ?? __('Email', 'mawiblah');
         $placeholder    = $options['placeholder']    ?? __('your@email.com', 'mawiblah');
         $buttonText     = $options['buttonText']     ?? __('Subscribe', 'mawiblah');
@@ -239,9 +240,10 @@ class SubscriptionForm
     }
 
     /**
-     * Verifies a reCAPTCHA v3 token against the Google siteverify API.
+     * Verifies a reCAPTCHA token against the Google siteverify API.
      *
-     * Returns false immediately for empty tokens. Requires a score >= RECAPTCHA_THRESHOLD (0.5).
+     * Returns false immediately for empty tokens. A v2 answer only has to be
+     * valid; a v3 one also has to score at least RECAPTCHA_THRESHOLD (0.5).
      *
      * @param string $token reCAPTCHA v3 token from the browser.
      * @return bool True if verification passed, false otherwise.
@@ -251,6 +253,8 @@ class SubscriptionForm
         if (empty($token)) {
             return false;
         }
+
+        $version = Settings::recaptchaVersion();
 
         $response = wp_remote_post(self::RECAPTCHA_VERIFY_URL, [
             'body' => [
@@ -265,8 +269,17 @@ class SubscriptionForm
 
         $data = json_decode(wp_remote_retrieve_body($response), true);
 
-        return isset($data['success'], $data['score'])
-            && $data['success'] === true
-            && $data['score'] >= self::RECAPTCHA_THRESHOLD;
+        if (empty($data['success'])) {
+            return false;
+        }
+
+        // v2 is answered or it is not. v3 always "succeeds" and puts the answer
+        // in the score -- a reply without one means the keys are a v2 pair on a
+        // v3 form, not a visitor to trust.
+        if ($version === 'v2') {
+            return true;
+        }
+
+        return isset($data['score']) && $data['score'] >= self::RECAPTCHA_THRESHOLD;
     }
 }

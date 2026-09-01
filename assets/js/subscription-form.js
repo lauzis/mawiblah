@@ -17,6 +17,20 @@
         target.hidden = false;
     }
 
+    /**
+     * The v2 widget's id for this form.
+     *
+     * Google renders every `.g-recaptcha` on the page in order, so the id is the
+     * index of this form's widget among them. Without it a page with two forms
+     * would read the first widget's answer for all of them.
+     */
+    function getWidgetId(wrapper) {
+        var widget = wrapper.querySelector('.g-recaptcha');
+        var all = Array.prototype.slice.call(document.querySelectorAll('.g-recaptcha'));
+
+        return Math.max(0, all.indexOf(widget));
+    }
+
     function handleSubmit(wrapper, form, event) {
         event.preventDefault();
 
@@ -28,6 +42,7 @@
         var honeypot  = form.querySelector('input[name="website"]').value;
         var audiences = getAudienceHashes(form);
         var siteKey   = wrapper.dataset.recaptchaSiteKey || '';
+        var version   = wrapper.dataset.recaptchaVersion || 'v3';
 
         wrapper.classList.add('mawiblah-subscribe-form--loading');
 
@@ -62,18 +77,40 @@
             });
         }
 
-        if (siteKey && typeof grecaptcha !== 'undefined') {
-            grecaptcha.ready(function () {
-                grecaptcha.execute(siteKey, { action: 'subscribe' }).then(function (token) {
-                    doSubmit(token);
-                }).catch(function () {
-                    clearLoading();
-                    showMessage(wrapper, 'error', wrapper.dataset.errorMessage || mawiblahSubscribeFormData.errorMessage);
-                });
-            });
-        } else {
+        if (!siteKey || typeof grecaptcha === 'undefined') {
             doSubmit('');
+            return;
         }
+
+        // v2 has already asked the visitor: the answer is sitting in the widget,
+        // and an empty one means they have not ticked it yet.
+        if (version === 'v2') {
+            var answer = '';
+
+            try {
+                answer = grecaptcha.getResponse(getWidgetId(wrapper)) || '';
+            } catch (e) {
+                answer = '';
+            }
+
+            if (!answer) {
+                clearLoading();
+                showMessage(wrapper, 'error', mawiblahSubscribeFormData.recaptchaMessage);
+                return;
+            }
+
+            doSubmit(answer);
+            return;
+        }
+
+        grecaptcha.ready(function () {
+            grecaptcha.execute(siteKey, { action: 'subscribe' }).then(function (token) {
+                doSubmit(token);
+            }).catch(function () {
+                clearLoading();
+                showMessage(wrapper, 'error', wrapper.dataset.errorMessage || mawiblahSubscribeFormData.errorMessage);
+            });
+        });
     }
 
     document.addEventListener('DOMContentLoaded', function () {

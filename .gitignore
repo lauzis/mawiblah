@@ -3,6 +3,10 @@
 # composer.lock stays in git, so that install resolves what was tested.
 /vendor/
 
+# node_modules/ is the same: `npm install` brings jest back when the JS tests
+# need running. package-lock.json stays, so it brings back what was tested.
+/node_modules/
+
 .idea
 /mailchimp_audience/
 /email_templates/archieved

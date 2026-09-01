@@ -124,16 +124,17 @@
     },
     {
       "id": "mawiblah-recaptcha",
-      "title": "reCAPTCHA v3 (Subscription Form)",
-      "description": "Optional Google reCAPTCHA v3 protection for the subscription form. Leave disabled to rely on honeypot only. Get your keys at https://www.google.com/recaptcha/admin/",
+      "title": "reCAPTCHA (Subscription Form)",
+      "description": "Optional Google reCAPTCHA protection for the subscription form. v2 is the \"I am not a robot\" checkbox; v3 is invisible and scores the visit, letting it through from 0.5 up. The key pairs are not interchangeable, so the version chosen here has to match the keys below. Leave disabled to rely on the honeypot alone. Get your keys at https://www.google.com/recaptcha/admin/",
       "fields": [
         {
           "id": "recaptcha-enabled",
           "type": "select",
-          "title": "Enable reCAPTCHA v3",
+          "title": "reCAPTCHA",
           "options": {
-            "disabled": "Disabled",
-            "enabled": "Enabled"
+            "disabled": "Disabled — honeypot only",
+            "v2": "v2 — the \"I am not a robot\" checkbox",
+            "v3": "v3 — invisible, scores the visit"
           },
           "default_value": "disabled"
         },
@@ -165,8 +166,9 @@
           "type": "select",
           "title": "Enable open tracking",
           "options": {
-            "disabled": "Disabled",
-            "enabled": "Enabled"
+            "disabled": "Disabled — honeypot only",
+            "v2": "v2 — the \"I am not a robot\" checkbox",
+            "v3": "v3 — invisible, scores the visit"
           },
           "default_value": "disabled"
         }

@@ -42,6 +42,11 @@ class Migrations
             self::migrateTo1032();
             update_option('mawiblah_db_version', '1.0.32');
         }
+
+        if (version_compare($currentVersion, '1.0.40', '<')) {
+            self::migrateTo1040();
+            update_option('mawiblah_db_version', '1.0.40');
+        }
     }
 
     /**
@@ -55,6 +60,27 @@ class Migrations
         $done = self::migrateTo1021();
         if ($done) {
             update_option('mawiblah_db_version', '1.0.21');
+        }
+    }
+
+    /**
+     * Names the reCAPTCHA version an install had already chosen.
+     *
+     * The setting was Disabled/Enabled while v3 was the only version on offer.
+     * It is now Disabled/v2/v3, and Carbon Fields validates a select against
+     * its declared options and silently returns the default for anything else
+     * -- so an install left holding 'enabled' would have read as *disabled* and
+     * quietly stopped checking anything. Same trap as 1.0.32, same fix.
+     *
+     * @return void
+     */
+    private static function migrateTo1040(): void
+    {
+        foreach (['_mawiblah-recaptcha-enabled', 'mawiblah-recaptcha-enabled'] as $key) {
+            if ('enabled' === get_option($key, null)) {
+                update_option($key, 'v3');
+                Logs::addLog('migration', 'Named the reCAPTCHA version as v3.', ['option' => $key]);
+            }
         }
     }
 

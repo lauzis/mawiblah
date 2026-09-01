@@ -8,7 +8,7 @@ require('../../assets/js/subscription-form.js');
 
 function buildForm(options = {}) {
     document.body.innerHTML = `
-        <div class="mawiblah-subscribe-form" data-recaptcha-site-key="${options.siteKey || ''}">
+        <div class="mawiblah-subscribe-form" data-recaptcha-site-key="${options.siteKey || ''}" data-recaptcha-version="${options.version || 'v3'}">
             <form class="mawiblah-subscribe-form__form">
                 <input type="text" name="website" style="display:none" tabindex="-1" autocomplete="off" aria-hidden="true" />
                 ${(options.audiences || []).map(h => `<input type="hidden" class="mawiblah-subscribe-form__audience" value="${h}" />`).join('')}
@@ -26,8 +26,9 @@ function buildForm(options = {}) {
     `;
 
     window.mawiblahSubscribeFormData = {
-        restUrl:      'https://example.com/wp-json/mawiblah/v1/subscribe',
-        errorMessage: 'Something went wrong. Please try again.',
+        restUrl:          'https://example.com/wp-json/mawiblah/v1/subscribe',
+        errorMessage:     'Something went wrong. Please try again.',
+        recaptchaMessage: 'Please confirm that you are not a robot.',
     };
 
     // Bind submit listeners by firing DOMContentLoaded on the fresh DOM
@@ -190,5 +191,51 @@ describe('DOM state', () => {
         expect(wrapper.classList.contains('mawiblah-subscribe-form--submitted')).toBe(false);
         expect(error.hidden).toBe(false);
         expect(error.textContent).toBe('Invalid email address.');
+    });
+});
+
+// ---- reCAPTCHA v2 -----------------------------------------------------------
+
+describe('reCAPTCHA v2', () => {
+    test('sends the answer the visitor ticked', async () => {
+        const dom = buildForm({email: 'a@b.c', siteKey: 'key', version: 'v2'});
+        global.grecaptcha = {getResponse: jest.fn().mockReturnValue('ticked-token')};
+        mockFetch({status: 'ok', message: 'Subscribed'});
+
+        dom.form.dispatchEvent(new Event('submit'));
+        await new Promise(process.nextTick);
+
+        expect(global.grecaptcha.getResponse).toHaveBeenCalled();
+        expect(JSON.parse(global.fetch.mock.calls[0][1].body).recaptchaToken).toBe('ticked-token');
+    });
+
+    test('does not submit when the box has not been ticked', async () => {
+        const dom = buildForm({email: 'a@b.c', siteKey: 'key', version: 'v2'});
+        global.grecaptcha = {getResponse: jest.fn().mockReturnValue('')};
+        mockFetch({status: 'ok', message: 'Subscribed'});
+
+        dom.form.dispatchEvent(new Event('submit'));
+        await new Promise(process.nextTick);
+
+        expect(global.fetch).not.toHaveBeenCalled();
+        expect(dom.error.hidden).toBe(false);
+        expect(dom.error.textContent).toBe('Please confirm that you are not a robot.');
+        expect(dom.wrapper.classList.contains('mawiblah-subscribe-form--loading')).toBe(false);
+    });
+
+    test('v3 still fetches its own token', async () => {
+        const dom = buildForm({email: 'a@b.c', siteKey: 'key', version: 'v3'});
+        global.grecaptcha = {
+            ready: (cb) => cb(),
+            execute: jest.fn().mockResolvedValue('v3-token'),
+        };
+        mockFetch({status: 'ok', message: 'Subscribed'});
+
+        dom.form.dispatchEvent(new Event('submit'));
+        await new Promise(process.nextTick);
+        await new Promise(process.nextTick);
+
+        expect(global.grecaptcha.execute).toHaveBeenCalledWith('key', {action: 'subscribe'});
+        expect(JSON.parse(global.fetch.mock.calls[0][1].body).recaptchaToken).toBe('v3-token');
     });
 });

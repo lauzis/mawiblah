@@ -1,7 +1,8 @@
 <?php
 /**
  * @var array  $audienceHashes  Audience hashes to subscribe to
- * @var bool   $recaptcha       Whether reCAPTCHA v3 is active
+ * @var bool   $recaptcha        Whether reCAPTCHA is active
+ * @var string $recaptchaVersion 'disabled', 'v2' or 'v3'
  * @var string $siteKey         reCAPTCHA site key
  * @var string $label          Email field label
  * @var string $placeholder    Email input placeholder
@@ -11,7 +12,7 @@
  */
 ?>
 <div class="mawiblah-subscribe-form"
-    <?php if ($recaptcha):      ?>data-recaptcha-site-key="<?= esc_attr($siteKey) ?>"<?php endif; ?>
+    <?php if ($recaptcha):      ?>data-recaptcha-site-key="<?= esc_attr($siteKey) ?>" data-recaptcha-version="<?= esc_attr($recaptchaVersion) ?>"<?php endif; ?>
     <?php if ($successMessage): ?>data-success-message="<?= esc_attr($successMessage) ?>"<?php endif; ?>
     <?php if ($errorMessage):   ?>data-error-message="<?= esc_attr($errorMessage) ?>"<?php endif; ?>
 >
@@ -39,6 +40,13 @@
             />
         </div>
 
+        <?php if ($recaptcha && $recaptchaVersion === 'v2'): ?>
+            <?php /* v2 asks the visitor a question, so it needs somewhere to ask it. */ ?>
+            <div class="mawiblah-subscribe-form__field mawiblah-subscribe-form__recaptcha">
+                <div class="g-recaptcha" data-sitekey="<?= esc_attr($siteKey) ?>"></div>
+            </div>
+        <?php endif; ?>
+
         <div class="mawiblah-subscribe-form__actions">
             <button class="mawiblah-subscribe-form__button" type="submit">
                 <?= esc_html($buttonText) ?>
@@ -52,6 +60,8 @@
 
 </div>
 
-<?php if ($recaptcha): ?>
+<?php if ($recaptcha && $recaptchaVersion === 'v3'): ?>
     <script src="https://www.google.com/recaptcha/api.js?render=<?= esc_attr($siteKey) ?>"></script>
+<?php elseif ($recaptcha && $recaptchaVersion === 'v2'): ?>
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 <?php endif; ?>

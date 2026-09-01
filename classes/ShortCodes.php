@@ -162,8 +162,11 @@ class ShortCodes
         wp_enqueue_style('mawiblah-subscription-form-css', MAWIBLAH_PLUGIN_URL . '/assets/css/subscription-form.css', [], MAWIBLAH_VERSION);
         wp_enqueue_script('mawiblah-subscription-form-js', MAWIBLAH_PLUGIN_URL . '/assets/js/subscription-form.js', [], MAWIBLAH_VERSION, true);
         wp_localize_script('mawiblah-subscription-form-js', 'mawiblahSubscribeFormData', [
-            'restUrl'      => rest_url('mawiblah/v1/subscribe'),
-            'errorMessage' => __('Something went wrong. Please try again.', 'mawiblah'),
+            'restUrl'          => rest_url('mawiblah/v1/subscribe'),
+            'errorMessage'     => __('Something went wrong. Please try again.', 'mawiblah'),
+            // Only reachable with the v2 checkbox, which is the one version
+            // that can be left unanswered.
+            'recaptchaMessage' => __('Please confirm that you are not a robot.', 'mawiblah'),
         ]);
 
         return SubscriptionForm::renderForm($hashes, $options);

@@ -344,9 +344,27 @@ class Settings
     }
 
     /** Returns true when reCAPTCHA v3 is set to "enabled" in settings (keys may still be missing). */
+    /**
+     * Which reCAPTCHA the subscription form uses: 'disabled', 'v2' or 'v3'.
+     *
+     * 'enabled' is what the setting held while v3 was the only option, and it
+     * still means v3 -- a site that switched it on does not get switched off by
+     * an update.
+     */
+    public static function recaptchaVersion(): string
+    {
+        $value = (string) self::getOption('mawiblah-recaptcha-enabled');
+
+        if ($value === 'enabled' || $value === 'v3') {
+            return 'v3';
+        }
+
+        return $value === 'v2' ? 'v2' : 'disabled';
+    }
+
     public static function recaptchaEnabled(): bool
     {
-        return self::getOption('mawiblah-recaptcha-enabled') === 'enabled';
+        return self::recaptchaVersion() !== 'disabled';
     }
 
     /** Returns the reCAPTCHA v3 site key (public, used in the browser). Empty string if not configured. */

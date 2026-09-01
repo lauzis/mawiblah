@@ -70,6 +70,30 @@ The initial version was built by hand. From version 1.0.9 onward, most changes h
 
 ## Change log
 
+### --- 1.0.41 ---
+- **Fix:** a scheduled campaign sent once and never again. The guard that stops a
+  schedule resetting a campaign mid-send read `backgroundStarted` alone, and that
+  flag is left behind when a batch arrives after the campaign has already
+  finished — so every later occurrence logged "previous send still in progress"
+  and was skipped. The late-batch abort now clears the flag, and the guard reads
+  *started and not finished*, the definition `RestRoutes` already used for
+  `running`. An install already holding a stale flag recovers without a migration.
+
+### --- 1.0.40 ---
+- **New:** the subscription form's reCAPTCHA is Disabled / v2 / v3 rather than
+  Disabled / Enabled. v2 renders the checkbox and refuses to submit until it is
+  ticked; v3 is unchanged. `Settings::recaptchaVersion()` answers which, and the
+  stored `enabled` from when v3 was the only option is migrated to `v3` — Carbon
+  Fields returns a select's default for anything outside its options, so leaving
+  it would have read as *disabled*.
+
+### --- 1.0.39 ---
+- **New:** a theme can dress the subscription confirmation letter by putting
+  `resubscribe-confirm.html` in its `mawiblah/email_templates/` folder, the same
+  place campaign templates come from. Shortcodes are evaluated, then
+  `{{confirm_url}}`, `{{site_name}}` and `{{subscriber_email}}` are filled. With
+  no such file the plain-text letter is sent exactly as before.
+
 ### --- 1.0.30 ---
 - **Fix:** `Settings::get_sections()` was calling `check_admin_referer('gae-settings-group-options')` on any request with non-empty `$_POST`, not just submissions of mawiblah's own settings page. Since this method is reached from `SchedulerCron::init()` on WordPress's global `init` hook (via `Settings::schedulerInterval()`/`getOption()`), it ran on every single request site-wide — so *any* POST request anywhere on the site (other plugins' settings saves, AJAX calls, even the login form) died with "The link you followed has expired," since none of those carry mawiblah's specific nonce. Now only checks the nonce when `$_GET['page']` is actually mawiblah's settings page slug.
 

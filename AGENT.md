@@ -25,6 +25,17 @@ MAWIBLAH is a WordPress plugin that provides Mailchimp-like functionality for se
   only option, is migrated to `'v3'` in 1.0.40 -- Carbon Fields returns a
   select's default for any value not in its options, so leaving it would have
   read as *disabled*
+- **Scheduler / SchedulerCron** - A scheduler is its own post (`campaign_id`,
+  `status`, `schedule_type` once|weekly|monthly, `send_time`, `send_day`,
+  `send_date`, `next_send`, `end_date`). One WP-Cron event,
+  `mawiblah_scheduler_check`, runs at the interval in settings and walks every
+  active scheduler: past `next_send` and the campaign is reset, background-sent
+  and `next_send` advanced (or the scheduler marked `completed` for a one-off).
+  A send is skipped when the campaign is not test-approved, when the campaign's
+  `send_condition_shortcode` returns nothing, and when a previous send is still
+  running -- **started and not finished**, both halves. Reading
+  `backgroundStarted` alone retired a schedule for ever the first time that flag
+  outlived its send (fixed in 1.0.41)
 - **Templates.php** - Email template management with child/parent theme override
   support. A theme overrides any letter by name from
   `<theme>/mawiblah/email_templates/<name>.html`; `resubscribe-confirm` is the

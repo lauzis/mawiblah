@@ -142,7 +142,31 @@ class SubscriptionForm
             $confirmUrl
         );
 
-        wp_mail($subscriber->email, $subject, $body);
+        /**
+         * The confirmation email, before it is sent.
+         *
+         * A plain-text letter is the right default for a plugin -- it works
+         * anywhere and needs no design decisions. A site that has a house style
+         * for its transactional mail can replace the body with its own HTML
+         * here, and add the Content-Type header that goes with it.
+         *
+         * @param array  $email       subject, body and headers.
+         * @param object $subscriber  The subscriber being asked to confirm.
+         * @param string $confirmUrl  The link the letter has to carry.
+         * @param string $context     Which letter this is.
+         */
+        $email = apply_filters('mawiblah_transactional_email', [
+            'subject' => $subject,
+            'body'    => $body,
+            'headers' => [],
+        ], $subscriber, $confirmUrl, 'resubscribe-confirm');
+
+        wp_mail(
+            $subscriber->email,
+            (string) ($email['subject'] ?? $subject),
+            (string) ($email['body'] ?? $body),
+            (array) ($email['headers'] ?? [])
+        );
     }
 
     /** Reads resubscribe URL parameters, calls confirmResubscribe(), and renders the result template. Exits. */

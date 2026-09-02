@@ -13,3 +13,6 @@
 /email_templates/archived
 /plugin-guidelines/
 Todo.md
+
+# PHPUnit writes this beside the config when the suite runs.
+.phpunit.result.cache

@@ -42,7 +42,18 @@ MAWIBLAH is a WordPress plugin that provides Mailchimp-like functionality for se
   subscription confirmation, and a theme that provides it gets an HTML letter
   with `{{confirm_url}}`, `{{site_name}}` and `{{subscriber_email}}` filled in
   after shortcodes run. Without one, the plain-text default is sent
-- **Tests.php** - In-browser integration test scenarios (button-triggered, self-contained)
+- **Shipped email templates** - `email_templates/mawiblah-newsletter-template.html`
+  is the default letter and renders the latest 3 articles via
+  `[mawiblah_newest_articles count="3"]`.
+  `email_templates/mawiblah-all-variables-test.html` is a diagnostic letter
+  carrying every supported variable exactly once, each wrapped in
+  `<li data-mawiblah-marker="<name>">…</li>`. **A shortcode added to
+  `ShortCodes::register()` must get a marker here** — `EmailTemplateTest` walks
+  `$GLOBALS['shortcode_tags']` and fails on any `mawiblah_` shortcode the
+  template does not exercise
+- **Tests.php** - In-browser integration test scenarios (button-triggered, self-contained).
+  `default-templates` renders the shipped letters and reports any variable left
+  unreplaced by its marker name
 - **Unsubscribe.php** - Unsubscribe confirmation flow + RFC 8058 one-click REST endpoint (`/unsubscribe`)
 - **Visits.php** - Click tracking for campaigns
 
@@ -241,6 +252,27 @@ add_action('wp_dashboard_setup', [Actions::class, 'registerDashboardWidget']);
 - Maintain backward compatibility
 - Don't break existing functionality
 - Validate changes don't affect unrelated features
+
+### Tests
+
+`composer test` runs the PHPUnit integration suite against a wp-phpunit environment. It needs
+PHPUnit **9.x** — WordPress's own `WP_UnitTestCase` calls
+`PHPUnit\Util\Test::parseTestMethodAnnotations()`, which PHPUnit 10 removed — plus
+`yoast/phpunit-polyfills`, which the WP test bootstrap requires and does not ship. Both are
+pinned in `require-dev`; do not raise PHPUnit past `^9.6` without checking wp-phpunit first.
+
+| File | Covers |
+|---|---|
+| `tests/Integration/CampaignTest.php` | Campaign workflow, counters, placeholder filling |
+| `tests/Integration/EmailTemplateTest.php` | Shipped templates: discovery, full render with no variable left behind, faked send via `pre_wp_mail` |
+| `tests/Integration/SchedulerRerenderTest.php` | Recurring schedules release the locked template copy; one-off and `rerender_on_recurring=0` keep it |
+| `tests/Integration/SubscriberTest.php` | Subscriber CRUD, hashes, audience shape |
+| `tests/Integration/SubscriptionFormTest.php` | Subscription form REST endpoint |
+| `tests/Integration/ClickTrackingTest.php` | Click tracking counters |
+
+`Templates::getTemplateByNameViaRest()` posts to the site's own REST route, which has no HTTP
+server behind it under PHPUnit. The template tests answer that loopback in-process through a
+`pre_http_request` filter, so the real `lockTemplate()` path is still what runs.
 
 ### Versioning & Documentation Checklist
 

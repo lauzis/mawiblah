@@ -53,6 +53,7 @@ class Tests
             'campaign-workflow' => 'Campaign Workflow (test / approve / start / finish)',
             'campaign-counters' => 'Campaign Counters',
             'campaign-template' => 'Campaign Template & Placeholders',
+            'default-templates' => 'Default Email Templates (shipped letters & all variables)',
             'subscribers'       => 'Subscriber CRUD & Audience Hash',
             'unsubscribe'       => 'Unsubscribe Flow',
             'click-tracking'    => 'Click Tracking (triple-count)',
@@ -81,6 +82,7 @@ class Tests
             'campaign-workflow' => self::campaignWorkflowScenario(),
             'campaign-counters' => self::campaignCountersScenario(),
             'campaign-template' => self::campaignTemplateScenario(),
+            'default-templates' => self::defaultTemplatesScenario(),
             'subscribers'       => self::subscriberScenario(),
             'unsubscribe'       => self::unsubscribeScenario(),
             'click-tracking'    => self::clickTrackingScenario(),
@@ -773,6 +775,106 @@ class Tests
             'campaign'   => $c->campaignHash,
         ], rest_url('mawiblah/v1/open'));
         self::echoResult('Pixel URL: ' . $pixelUrl, 'info');
+
+        Campaigns::deleteCampaign($cId);
+        wp_delete_post($sub->id, true);
+        self::echoResult('Cleaned up', 'success');
+    }
+
+    // -------------------------------------------------------------------------
+    // Default Email Templates
+    // -------------------------------------------------------------------------
+
+    /**
+     * In-browser integration test: the letters the plugin ships are discoverable, the default
+     * newsletter still lists the latest 3 articles, and a full render of the all-variables
+     * diagnostic template leaves no variable behind. Any leftover is named by its marker.
+     */
+    public static function defaultTemplatesScenario(): void
+    {
+        self::echoHeading('Default Email Templates');
+
+        $defaultTemplate = 'mawiblah-newsletter-template';
+        $allVarsTemplate = 'mawiblah-all-variables-test';
+
+        self::echoTitle('Default newsletter template is shipped');
+        $defaultSource = Templates::getEmailTemplateByName($defaultTemplate);
+        self::echoResult(
+            is_string($defaultSource) ? 'Found: ' . $defaultTemplate : 'Missing: ' . $defaultTemplate,
+            is_string($defaultSource) ? 'success' : 'error'
+        );
+
+        self::echoTitle('Default newsletter template is offered in the template list');
+        $listed = Templates::validateEmailTemplate($defaultTemplate);
+        self::echoResult($listed ? 'Listed' : 'Not listed', $listed ? 'success' : 'error');
+
+        self::echoTitle('Default newsletter template renders the latest 3 articles');
+        $hasLatest = is_string($defaultSource) && str_contains($defaultSource, '[mawiblah_newest_articles count="3"]');
+        self::echoResult($hasLatest ? 'Renders latest 3' : 'Latest-3 shortcode missing', $hasLatest ? 'success' : 'error');
+
+        self::echoTitle('All-variables diagnostic template is shipped');
+        $allVarsSource = Templates::getEmailTemplateByName($allVarsTemplate);
+        self::echoResult(
+            is_string($allVarsSource) ? 'Found: ' . $allVarsTemplate : 'Missing: ' . $allVarsTemplate,
+            is_string($allVarsSource) ? 'success' : 'error'
+        );
+
+        if (!is_string($allVarsSource)) {
+            self::echoResult('Skipping the render checks — the diagnostic template is not installed.', 'error');
+            return;
+        }
+
+        self::echoTitle('Every registered mawiblah_ shortcode appears in the diagnostic template');
+        $missing = [];
+        foreach ($GLOBALS['shortcode_tags'] as $tag => $callback) {
+            if (!is_array($callback) || ($callback[0] ?? null) !== ShortCodes::class) {
+                continue;
+            }
+            if (!str_contains($allVarsSource, '[' . $tag)) {
+                $missing[] = $tag;
+            }
+        }
+        self::echoResult(
+            $missing ? 'Not exercised: ' . implode(', ', $missing) : 'All registered shortcodes covered',
+            $missing ? 'error' : 'success'
+        );
+
+        $cId = Campaigns::addCampaign('All Variables Test', 'Diagnostic subject', 'Diagnostic title', 'Diagnostic body', [], $allVarsTemplate);
+        $c   = Campaigns::getCampaignById($cId);
+        $sub = Subscribers::addSubscriber('alltokens@mawiblah.test');
+
+        self::echoTitle('lockTemplate renders the diagnostic template');
+        $locked = Campaigns::lockTemplate($c, true);
+        self::echoResult($locked === false ? 'Template could not be locked' : 'Locked', $locked === false ? 'error' : 'success');
+
+        if ($locked !== false) {
+            $rendered = Campaigns::fillTemplate($locked, $c, $sub);
+
+            self::echoTitle('Every variable was replaced');
+            $leftovers = [];
+            preg_match_all('/data-mawiblah-marker="([^"]+)">(.*?)<\/li>/s', $allVarsSource, $matches, PREG_SET_ORDER);
+            foreach ($matches as [, $marker, $token]) {
+                $token = trim($token);
+                if ($token !== '' && str_contains($rendered, $token)) {
+                    $leftovers[] = $marker;
+                }
+            }
+            self::echoResult(
+                $leftovers ? 'Not replaced: ' . implode(', ', $leftovers) : 'All ' . count($matches) . ' variables replaced',
+                $leftovers ? 'error' : 'success'
+            );
+
+            self::echoTitle('Unsubscribe link carries the real campaign and subscriber hashes');
+            $hashed = str_contains($rendered, 'unsubscribe=' . $sub->email)
+                && str_contains($rendered, $sub->subscriberHash)
+                && str_contains($rendered, $c->campaignHash);
+            self::echoResult($hashed ? 'Hashes filled in' : 'Placeholders left in the link', $hashed ? 'success' : 'error');
+        }
+
+        $archived = MAWIBLAH_PLUGIN_DIR . '/email_templates/archived/' . $cId . '_' . $allVarsTemplate . '.html';
+        if (file_exists($archived)) {
+            unlink($archived);
+        }
 
         Campaigns::deleteCampaign($cId);
         wp_delete_post($sub->id, true);

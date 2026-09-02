@@ -223,8 +223,18 @@ if ( $result['status'] === 'ok' ) {
                         <td><code>email_templates/mawiblah-newsletter-template.html</code></td>
                         <td><code>your-theme/mawiblah/email_templates/mawiblah-newsletter-template.html</code></td>
                     </tr>
+                    <tr>
+                        <td><code>email_templates/mawiblah-all-variables-test.html</code></td>
+                        <td><code>your-theme/mawiblah/email_templates/mawiblah-all-variables-test.html</code></td>
+                    </tr>
                 </tbody>
             </table>
+            <div class="notice notice-info inline" style="margin:12px 0 0;">
+                <p>
+                    <code>mawiblah-all-variables-test</code>
+                    <?php esc_html_e('is a diagnostic template, not a letter to send. It contains every variable Mawiblah supports exactly once, each labelled with its own name, so you can send yourself one campaign and see at a glance which variables your site fills in and which come out empty. The Mawiblah → Tests page renders it under the "Default Email Templates" scenario.', 'mawiblah'); ?>
+                </p>
+            </div>
             <div class="notice notice-info inline" style="margin:12px 0 0;">
                 <p><?php esc_html_e('Lookup order: child theme → parent theme → plugin. The first file found is used. You can also add entirely new templates by placing additional HTML files in', 'mawiblah'); ?> <code>your-theme/mawiblah/email_templates/</code> — <?php esc_html_e('they will appear in the template selector when creating a campaign.', 'mawiblah'); ?></p>
             </div>

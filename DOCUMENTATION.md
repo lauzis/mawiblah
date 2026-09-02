@@ -293,6 +293,21 @@ This triple-tracking approach gives you:
 
 Email templates are created using shortcodes and can include HTML content. Templates are processed through WordPress's shortcode system before being sent.
 
+### Shipped templates
+
+| File | Purpose |
+|---|---|
+| `email_templates/mawiblah-newsletter-template.html` | The default newsletter. Logo, campaign title and content, the latest 3 articles via `[mawiblah_newest_articles count="3"]`, a sign-off, social profiles and the unsubscribe link. Pick it in the campaign's Template field, or override it from a theme. |
+| `email_templates/mawiblah-all-variables-test.html` | A diagnostic letter, not a letter to send. It carries every variable Mawiblah supports exactly once — all built-in `mawiblah_` shortcodes and all six static placeholders — each wrapped in an element that names it: `<li data-mawiblah-marker="mawiblah_title">[mawiblah_title]</li>`. Render it and any marker still holding its own token is a variable that was not replaced, named. |
+
+There is no shipped HTML default for `resubscribe-confirm`, the subscription confirmation letter:
+without a theme file of that name the plain-text letter is sent.
+
+The diagnostic template is what the automated checks render — `tests/Integration/EmailTemplateTest.php`
+under `composer test`, and the **Default Email Templates** scenario on the Mawiblah → Tests page.
+Both assert that no marker still contains its token, so adding a shortcode to
+`ShortCodes::register()` without adding a marker to the template fails the suite.
+
 ### Template Placeholders
 
 The following placeholders can be used in email templates and will be automatically replaced with actual values:

@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Mawiblah — all variables diagnostic template</title>
+</head>
+<body>
+<div class="container">
+    <h1>Mawiblah diagnostic letter</h1>
+    <p>
+        Every variable Mawiblah supports appears below exactly once, wrapped in a marker
+        element that names it. After a render, no marker may still contain its own token:
+        whatever is left over is a variable that was not replaced, and the marker says which.
+    </p>
+
+    <h2>Shortcodes</h2>
+    <ul>
+        <li data-mawiblah-marker="mawiblah_title">[mawiblah_title]</li>
+        <li data-mawiblah-marker="mawiblah_content">[mawiblah_content]</li>
+        <li data-mawiblah-marker="mawiblah_website_url">[mawiblah_website_url]</li>
+        <li data-mawiblah-marker="mawiblah_logo_alt">[mawiblah_logo_alt]</li>
+        <li data-mawiblah-marker="mawiblah_logo_src">[mawiblah_logo_src]</li>
+        <li data-mawiblah-marker="mawiblah_social_profiles">[mawiblah_social_profiles]</li>
+        <li data-mawiblah-marker="mawiblah_newest_articles_title">[mawiblah_newest_articles_title]</li>
+        <li data-mawiblah-marker="mawiblah_newest_articles_paragraph">[mawiblah_newest_articles_paragraph]</li>
+        <li data-mawiblah-marker="mawiblah_newest_articles">[mawiblah_newest_articles count="3"]</li>
+        <li data-mawiblah-marker="mawiblah_end_title">[mawiblah_end_title]</li>
+        <li data-mawiblah-marker="mawiblah_end_content">[mawiblah_end_content]</li>
+        <li data-mawiblah-marker="mawiblah_unsubscribe">[mawiblah_unsubscribe]</li>
+        <li data-mawiblah-marker="mawiblah_new_posts_since_last_sent">[mawiblah_new_posts_since_last_sent]</li>
+        <li data-mawiblah-marker="mawiblah_subscribe_form">[mawiblah_subscribe_form]</li>
+    </ul>
+
+    <h2>Placeholders</h2>
+    <ul>
+        <li data-mawiblah-marker="campaignHash">{campaignHash}</li>
+        <li data-mawiblah-marker="subscriberHash">{subscriberHash}</li>
+        <li data-mawiblah-marker="email">{email}</li>
+        <li data-mawiblah-marker="campaignHash-urlencoded">%7BcampaignHash%7D</li>
+        <li data-mawiblah-marker="subscriberHash-urlencoded">%7BsubscriberHash%7D</li>
+        <li data-mawiblah-marker="email-urlencoded">%7Bemail%7D</li>
+    </ul>
+</div>
+</body>
+</html>

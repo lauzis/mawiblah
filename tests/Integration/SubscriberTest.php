@@ -44,6 +44,18 @@ class SubscriberTest extends WP_UnitTestCase
         $this->assertSame($this->sub->id, $found->id);
     }
 
+    /**
+     * get_the_terms() answers false, not an empty array, for a subscriber in no audience —
+     * which used to fatal Subscribers::isTester() and with it the whole /send-email route.
+     */
+    public function test_audiences_is_always_a_list(): void
+    {
+        $found = Subscribers::getSubscriberById($this->sub->id);
+
+        $this->assertIsArray($found->audiences);
+        $this->assertFalse(Subscribers::isTester($found));
+    }
+
     public function test_get_subscriber_by_hash(): void
     {
         $found = Subscribers::getSubscriberBySubscriberHash($this->sub->subscriberHash);

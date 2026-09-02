@@ -70,6 +70,26 @@ The initial version was built by hand. From version 1.0.9 onward, most changes h
 
 ## Change log
 
+### --- 1.0.42 ---
+- **Removed:** `[gdlnks_newsletter_title]` and `[gdlnks_newsletter_content]`. These were not
+  shortcodes at all — they were two hardcoded `str_replace` calls in `Campaigns::lockTemplate()`
+  and `Campaigns::fillTemplate()`, named after one particular site's theme and carried in the
+  plugin for everybody. The shipped template never used them (it uses `[mawiblah_title]` and
+  `[mawiblah_content]`), so nothing in a default install changes.
+- **Fixed:** `[mawiblah_title]` and `[mawiblah_content]` now render the campaign being sent. They
+  read the global WordPress post, and an email template is rendered outside the loop, so in a
+  campaign they had been falling through to "Summary for the *month*" and the generic monthly
+  message — the reason the gdlnks tags existed in the first place. `ShortCodes::setCampaign()`
+  now brackets both `do_shortcode()` passes; outside a send the old post-based and default
+  fallbacks are unchanged.
+- **Migration:** a custom template still containing `[gdlnks_newsletter_title]` or
+  `[gdlnks_newsletter_content]` will now print those tags literally in the letter. Replace them
+  with `[mawiblah_title]` and `[mawiblah_content]`, which render the same values.
+- **Docs:** the template documentation no longer implies a fixed list of supported tags. Any
+  shortcode registered in WordPress — the plugin's, the theme's, another plugin's — is evaluated
+  in the email template and in the campaign content, and the built-in `mawiblah_` shortcodes are
+  documented as examples of that rather than as the vocabulary.
+
 ### --- 1.0.41 ---
 - **Fix:** a scheduled campaign sent once and never again. The guard that stops a
   schedule resetting a campaign mid-send read `backgroundStarted` alone, and that

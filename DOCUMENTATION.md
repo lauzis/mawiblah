@@ -305,9 +305,39 @@ The following placeholders can be used in email templates and will be automatica
 - `%7BsubscriberHash%7D` - URL-encoded version of subscriberHash
 - `%7Bemail%7D` - URL-encoded version of email
 
-**Shortcode Placeholders:**
-- `[gdlnks_newsletter_title]` - Campaign title
-- `[gdlnks_newsletter_content]` - Campaign content
+### Shortcodes
+
+There is no fixed list of supported shortcodes. **Any shortcode registered in WordPress** — by
+Mawiblah, your theme, or any other plugin — is evaluated in the email template and in the
+campaign content, and is replaced by whatever that shortcode returns. If it works in a post, it
+works in a letter.
+
+Shortcodes are evaluated twice: once when the template is locked for the campaign
+(`Campaigns::lockTemplate()`), and once per recipient just before sending
+(`Campaigns::fillTemplate()`). The second pass is what expands shortcodes that came in with the
+campaign content, and what lets a shortcode render something different per subscriber.
+
+The built-in `mawiblah_` shortcodes are examples rather than the whole vocabulary:
+
+| Shortcode | Renders |
+|---|---|
+| `[mawiblah_title]` | The campaign's `contentTitle` (falling back to the campaign post title) |
+| `[mawiblah_content]` | The campaign's content |
+| `[mawiblah_unsubscribe]` | The unsubscribe link for this recipient |
+| `[mawiblah_logo_src]`, `[mawiblah_logo_alt]` | Site logo image and alt text |
+| `[mawiblah_website_url]` | Site URL |
+| `[mawiblah_social_profiles]` | Configured social profile links |
+| `[mawiblah_newest_articles count="3"]` | A list of the newest posts |
+| `[mawiblah_subscribe_form]` | The subscription form |
+
+`[mawiblah_title]` and `[mawiblah_content]` know which campaign is being rendered, so they work in
+an email template even though it is rendered outside the WordPress loop. Outside a campaign send
+they fall back to the current post, then to a generic default.
+
+> **Removed in 1.0.42:** `[gdlnks_newsletter_title]` and `[gdlnks_newsletter_content]` were
+> replaced by a hardcoded `str_replace` specific to one site's theme. They are no longer special —
+> use `[mawiblah_title]` and `[mawiblah_content]` instead. A custom template still containing the
+> old tags will now render them literally.
 
 ## Subscriber Management
 

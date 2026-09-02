@@ -319,11 +319,17 @@ class Renderer
                         $sendDay = 1;
                     }
 
+                    // Do-not-disturb override. With the box unticked the submitted number is
+                    // dropped rather than stored, so a value left in the field cannot come
+                    // back to life the next time the box is ticked.
+                    $overrideDnd  = !empty($_POST['override_dnd']);
+                    $dndThreshold = $overrideDnd ? absint($_POST['dnd_threshold'] ?? 0) : 0;
+
                     if ($name && $campaignId) {
                         if ($schedulerId) {
-                            Scheduler::update($schedulerId, $name, $campaignId, $scheduleType, $sendTime, $sendDay, $sendDate, $endDate);
+                            Scheduler::update($schedulerId, $name, $campaignId, $scheduleType, $sendTime, $sendDay, $sendDate, $endDate, $overrideDnd, $dndThreshold);
                         } else {
-                            Scheduler::add($name, $campaignId, $scheduleType, $sendTime, $sendDay, $sendDate, $endDate);
+                            Scheduler::add($name, $campaignId, $scheduleType, $sendTime, $sendDay, $sendDate, $endDate, $overrideDnd, $dndThreshold);
                         }
                     }
                 }

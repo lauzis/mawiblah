@@ -27,7 +27,7 @@ MAWIBLAH is a WordPress plugin that provides Mailchimp-like functionality for se
   read as *disabled*
 - **Scheduler / SchedulerCron** - A scheduler is its own post (`campaign_id`,
   `status`, `schedule_type` once|weekly|monthly, `send_time`, `send_day`,
-  `send_date`, `next_send`, `end_date`). One WP-Cron event,
+  `send_date`, `next_send`, `end_date`, `override_dnd`, `dnd_threshold`). One WP-Cron event,
   `mawiblah_scheduler_check`, runs at the interval in settings and walks every
   active scheduler: past `next_send` and the campaign is reset, background-sent
   and `next_send` advanced (or the scheduler marked `completed` for a one-off).
@@ -36,6 +36,17 @@ MAWIBLAH is a WordPress plugin that provides Mailchimp-like functionality for se
   running -- **started and not finished**, both halves. Reading
   `backgroundStarted` alone retired a schedule for ever the first time that flag
   outlived its send (fixed in 1.0.41)
+- **Per-schedule do-not-disturb** - `override_dnd` + `dnd_threshold` let one
+  schedule replace the global threshold. `SchedulerCron::check()` resolves the
+  value and writes it to the campaign as `CronSend::DND_OVERRIDE_META`
+  (`dnd_threshold_override`) just before the send starts, or deletes that meta
+  when the schedule does not override; `CronSend::doNotDisturbThreshold()`
+  prefers it over `Settings::dontDisturbThreshold()` and
+  `CronSend::clearDoNotDisturbOverride()` removes it when the send finishes.
+  **The meta's presence decides, not its truthiness** -- an override of `0` means
+  "no do-not-disturb check for this run", not "fall back to the global value".
+  `RestRoutes` keeps the global setting: browser-driven sends are not scheduled
+  sends
 - **Templates.php** - Email template management with child/parent theme override
   support. A theme overrides any letter by name from
   `<theme>/mawiblah/email_templates/<name>.html`; `resubscribe-confirm` is the
@@ -266,6 +277,7 @@ pinned in `require-dev`; do not raise PHPUnit past `^9.6` without checking wp-ph
 | `tests/Integration/CampaignTest.php` | Campaign workflow, counters, placeholder filling |
 | `tests/Integration/EmailTemplateTest.php` | Shipped templates: discovery, full render with no variable left behind, faked send via `pre_wp_mail` |
 | `tests/Integration/SchedulerRerenderTest.php` | Recurring schedules release the locked template copy; one-off and `rerender_on_recurring=0` keep it |
+| `tests/Integration/SchedulerDontDisturbTest.php` | Per-schedule do-not-disturb override: written for the run, honoured by `CronSend`, removed when the send finishes |
 | `tests/Integration/SubscriberTest.php` | Subscriber CRUD, hashes, audience shape |
 | `tests/Integration/SubscriptionFormTest.php` | Subscription form REST endpoint |
 | `tests/Integration/ClickTrackingTest.php` | Click tracking counters |

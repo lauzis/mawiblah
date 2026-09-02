@@ -3,7 +3,7 @@ Contributors: lauzis
 Tags: email, newsletter, marketing, mailchimp alternative, subscribers
 Requires at least: 5.0
 Tested up to: 6.9
-Stable tag: 1.0.43
+Stable tag: 1.0.44
 Requires PHP: 8.0
 License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl.html
@@ -68,6 +68,12 @@ Technically yes, but it is not recommended. The plugin sends emails individually
 8. MVP version
 
 == Changelog ==
+
+= 1.0.44 =
+*   New: per-schedule do-not-disturb override. Tick the checkbox on a schedule and set your own threshold in seconds; the send that schedule starts uses it instead of the global setting. 0 means send regardless of when the subscriber was last contacted.
+*   The override applies only to the run the schedule started — `SchedulerCron` writes it to the campaign and `CronSend` removes it when the send finishes, so manual and browser-driven sends keep using the global setting.
+*   Switching the override off falls straight back to the global threshold on the next occurrence; no stale value is carried over.
+*   New: PHPUnit coverage and a Tests page scenario for the override's storage, resolution order and cleanup.
 
 = 1.0.43 =
 *   New: `email_templates/mawiblah-all-variables-test.html` — a diagnostic letter carrying every supported variable once (all built-in `mawiblah_` shortcodes and all six placeholders), each named by a marker so an unreplaced one identifies itself. It appears in the campaign template selector.

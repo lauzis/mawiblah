@@ -70,6 +70,27 @@ The initial version was built by hand. From version 1.0.9 onward, most changes h
 
 ## Change log
 
+### --- 1.0.44 ---
+- **New:** a schedule can carry its own do-not-disturb threshold. Tick **Don't Disturb
+  Threshold → Override the global threshold for this schedule** on a schedule and the number
+  field appears, prefilled with the global value; the send that schedule starts then uses that
+  number instead of the site-wide setting. A threshold of `0` sends regardless of when the
+  subscriber was last contacted. Two new scheduler meta fields carry it: `override_dnd` and
+  `dnd_threshold`.
+- **Scope:** the override belongs to the *run*, not to the campaign. `SchedulerCron` writes it
+  to the campaign as `dnd_threshold_override` just before the send starts and `CronSend` drops
+  it again when the send finishes, so the same campaign sent by hand, by another schedule, or
+  from the browser is unaffected. A schedule whose override is switched off clears the meta on
+  its next occurrence rather than inheriting yesterday's number. The `/send-email` route, test
+  sends and the campaign list all keep reading the global setting.
+- **New:** `tests/Integration/SchedulerDontDisturbTest.php` — a schedule without an override
+  uses the global threshold, one with an override releases a subscriber the global threshold
+  would have held back, the override is gone once the send finishes, and a leftover override is
+  cleared when the schedule stops asking for one.
+- **New:** Tests page scenario "Scheduled Do-Not-Disturb Override" — the same resolution order
+  in the browser, including that an override of `0` disables the check rather than falling back
+  to the global value.
+
 ### --- 1.0.43 ---
 - **New:** `email_templates/mawiblah-all-variables-test.html` — a diagnostic letter that carries
   every variable Mawiblah supports exactly once: all fourteen built-in `mawiblah_` shortcodes and

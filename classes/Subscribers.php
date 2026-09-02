@@ -238,7 +238,10 @@ class Subscribers
             update_post_meta($post->id, 'subscriberHash', Helpers::generateSubscriberHash($post->id));
         }
 
-        $post->audiences = get_the_terms($post->id, Subscribers::postType() . '_category');
+        // get_the_terms() answers false for a subscriber in no audience and a WP_Error
+        // when the taxonomy is missing; isTester() iterates this, so it is always a list.
+        $audiences = get_the_terms($post->id, Subscribers::postType() . '_category');
+        $post->audiences = is_array($audiences) ? $audiences : [];
 
         return $post;
     }

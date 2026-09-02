@@ -3,7 +3,7 @@ Contributors: lauzis
 Tags: email, newsletter, marketing, mailchimp alternative, subscribers
 Requires at least: 5.0
 Tested up to: 6.9
-Stable tag: 1.0.42
+Stable tag: 1.0.43
 Requires PHP: 8.0
 License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl.html
@@ -68,6 +68,15 @@ Technically yes, but it is not recommended. The plugin sends emails individually
 8. MVP version
 
 == Changelog ==
+
+= 1.0.43 =
+*   New: `email_templates/mawiblah-all-variables-test.html` — a diagnostic letter carrying every supported variable once (all built-in `mawiblah_` shortcodes and all six placeholders), each named by a marker so an unreplaced one identifies itself. It appears in the campaign template selector.
+*   Note: the default newsletter template is unchanged — it already renders the latest 3 articles — and is now covered by tests that fail if that stops being true.
+*   New: PHPUnit coverage for the shipped templates: discovery, a full render with no variable left behind, and a faked send that inspects the letter `wp_mail()` was handed, headers included.
+*   New: PHPUnit coverage for recurring schedules — a weekly or monthly send re-renders with content published since the last send; a one-off send, or `rerender_on_recurring` off, keeps its snapshot.
+*   New: Tests page scenario "Default Email Templates" runs the same checks in the browser.
+*   Fixed: a subscriber in no audience crashed `Subscribers::isTester()` and with it the `/send-email` route — `$subscriber->audiences` is now always a list.
+*   Fixed: `composer test` could not run at all. PHPUnit is pinned to `^9.6` and the required PHPUnit Polyfills are now declared.
 
 = 1.0.42 =
 *   Removed: `[gdlnks_newsletter_title]` and `[gdlnks_newsletter_content]`. They were never shortcodes — just two hardcoded `str_replace` calls named after one site's theme. The bundled template does not use them, so a default install is unaffected.

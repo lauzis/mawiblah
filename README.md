@@ -70,6 +70,40 @@ The initial version was built by hand. From version 1.0.9 onward, most changes h
 
 ## Change log
 
+### --- 1.0.43 ---
+- **New:** `email_templates/mawiblah-all-variables-test.html` — a diagnostic letter that carries
+  every variable Mawiblah supports exactly once: all fourteen built-in `mawiblah_` shortcodes and
+  all six static placeholders, each wrapped in a marker element that names it. Render it and
+  anything left unreplaced says which variable failed, by name. It appears in the campaign
+  template selector like any other template.
+- **Note on the default template:** the plugin already shipped one, and still does —
+  `mawiblah-newsletter-template.html`, which renders the latest 3 articles via
+  `[mawiblah_newest_articles count="3"]`. Nothing about it changed; it is now covered by tests
+  that fail if that stops being true. The subscription confirmation letter
+  (`resubscribe-confirm`) still has no shipped HTML default and stays plain text unless a theme
+  provides one.
+- **New:** `tests/Integration/EmailTemplateTest.php` — the shipped letters are discoverable
+  through `Templates`, the default one still lists the latest 3 articles and really renders the
+  three newest posts, every registered `mawiblah_` shortcode is exercised by the diagnostic
+  template, and a full `lockTemplate()` → `fillTemplate()` pass leaves no variable behind. One
+  test fakes a send: it hooks `pre_wp_mail`, drives a real send through the `/send-email` route,
+  and reads the letter the mailer was handed — asserting every variable is filled and that the
+  `List-Unsubscribe` header carries the subscriber's real hash and token.
+- **New:** `tests/Integration/SchedulerRerenderTest.php` — a weekly or monthly schedule releases
+  the locked template copy, so the next occurrence re-renders with a post published since the
+  last send and rewrites the archived snapshot. A one-off schedule, and a recurring one with
+  `rerender_on_recurring` off, must keep the snapshot they froze.
+- **New:** Tests page scenario "Default Email Templates" — the same discovery, render and
+  no-leftover-variable checks, in the browser.
+- **Fixed:** a subscriber belonging to no audience crashed `Subscribers::isTester()`, and with it
+  the whole `/send-email` route. `get_the_terms()` answers `false` rather than an empty array
+  when a post has no terms, and `appendMeta()` passed that straight through to a `foreach`.
+  `$subscriber->audiences` is now always a list.
+- **Fixed:** `composer test` could not run at all. The suite pinned PHPUnit `^10`, whose
+  `PHPUnit\Util\Test::parseTestMethodAnnotations()` removal breaks WordPress's own test case, and
+  it never declared the PHPUnit Polyfills that the WP test bootstrap requires. Now `^9.6` plus
+  `yoast/phpunit-polyfills ^2`.
+
 ### --- 1.0.42 ---
 - **Removed:** `[gdlnks_newsletter_title]` and `[gdlnks_newsletter_content]`. These were not
   shortcodes at all — they were two hardcoded `str_replace` calls in `Campaigns::lockTemplate()`

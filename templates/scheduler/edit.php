@@ -78,6 +78,9 @@ $globalDndThreshold = max(0, (int) Settings::dontDisturbThreshold());
                             <option value="once"    <?php selected($isEdit && $scheduler->schedule_type === 'once');    ?>>
                                 <?php esc_html_e('Once (send on a specific date)', 'mawiblah'); ?>
                             </option>
+                            <option value="daily"   <?php selected($isEdit && $scheduler->schedule_type === 'daily');   ?>>
+                                <?php esc_html_e('Daily (every day at the same time)', 'mawiblah'); ?>
+                            </option>
                             <option value="weekly"  <?php selected($isEdit && $scheduler->schedule_type === 'weekly');  ?>>
                                 <?php esc_html_e('Weekly (same day each week)', 'mawiblah'); ?>
                             </option>
@@ -276,6 +279,18 @@ $globalDndThreshold = max(0, (int) Settings::dontDisturbThreshold());
             if (!sendDateInput.value) return [];
             var d = new Date(sendDateInput.value + 'T' + pad(hour) + ':' + pad(minute) + ':00');
             if (!isNaN(d)) dates.push(d);
+            return dates;
+        }
+
+        if (type === 'daily') {
+            var d = new Date();
+            d.setSeconds(0, 0);
+            d.setHours(hour, minute);
+            if (d <= new Date()) d = new Date(d.getTime() + 86400000);
+            for (var i = 0; i < 3; i++) {
+                dates.push(new Date(d));
+                d = new Date(d.getTime() + 86400000);
+            }
             return dates;
         }
 

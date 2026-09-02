@@ -82,7 +82,7 @@ class Scheduler
      *
      * @param string $name         Display name.
      * @param int    $campaignId   Campaign post ID.
-     * @param string $scheduleType one of: once, weekly, monthly.
+     * @param string $scheduleType one of: once, daily, weekly, monthly.
      * @param string $sendTime     Time of day in H:i format (site timezone).
      * @param int    $sendDay      Day-of-week (0=Sun…6=Sat) for weekly; day-of-month (1-31) for monthly.
      * @param string $sendDate     YYYY-MM-DD for once-type schedules.
@@ -125,7 +125,7 @@ class Scheduler
      * @param int    $id           Scheduler post ID.
      * @param string $name         Display name.
      * @param int    $campaignId   Campaign post ID.
-     * @param string $scheduleType one of: once, weekly, monthly.
+     * @param string $scheduleType one of: once, daily, weekly, monthly.
      * @param string $sendTime     Time of day in H:i (site timezone).
      * @param int    $sendDay      Day-of-week or day-of-month.
      * @param string $sendDate     YYYY-MM-DD for once-type schedules.
@@ -178,7 +178,7 @@ class Scheduler
      *
      * All times are interpreted in the WordPress site timezone (wp_timezone()).
      *
-     * @param string $scheduleType once | weekly | monthly.
+     * @param string $scheduleType once | daily | weekly | monthly.
      * @param string $sendTime     H:i format.
      * @param int    $sendDay      Day-of-week (0-6) for weekly; day-of-month (1-31) for monthly.
      * @param string $sendDate     YYYY-MM-DD, required for once-type.
@@ -202,6 +202,17 @@ class Scheduler
                 } catch (\Throwable $e) {
                     return $now->getTimestamp() + 86400;
                 }
+                return $dt->getTimestamp();
+
+            case 'daily':
+                // Today at the chosen time if that has not passed, tomorrow if
+                // it has. `send_day` means nothing here.
+                $dt = $now->setTime($hour, $minute, 0);
+
+                if ($dt->getTimestamp() <= $now->getTimestamp()) {
+                    $dt = $dt->modify('+1 day');
+                }
+
                 return $dt->getTimestamp();
 
             case 'weekly':
@@ -246,12 +257,12 @@ class Scheduler
      * deletes the sent_{id} meta from every subscriber across the campaign's audiences.
      * This allows CronSend::processBatch() to treat all subscribers as unsent.
      *
-     * For weekly/monthly (recurring) schedules where the campaign's rerender_on_recurring flag
+     * For daily/weekly/monthly (recurring) schedules where the campaign's rerender_on_recurring flag
      * is enabled, the email_template_copied meta is also deleted so CronSend re-fetches and
      * re-renders the template fresh (picking up updated shortcode output, WP queries, etc.).
      *
      * @param int    $campaignPostId Campaign post ID.
-     * @param string $scheduleType   Scheduler type: 'once', 'weekly', or 'monthly'.
+     * @param string $scheduleType   Scheduler type: 'once', 'daily', 'weekly' or 'monthly'.
      */
     public static function resetCampaignForResend(int $campaignPostId, string $scheduleType = 'once'): void
     {
@@ -264,7 +275,7 @@ class Scheduler
             return;
         }
 
-        if (in_array($scheduleType, ['weekly', 'monthly'], true) && !empty($campaign->rerender_on_recurring)) {
+        if (in_array($scheduleType, ['daily', 'weekly', 'monthly'], true) && !empty($campaign->rerender_on_recurring)) {
             delete_post_meta($campaignPostId, 'email_template_copied');
         }
 

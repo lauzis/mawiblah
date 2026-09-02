@@ -712,6 +712,10 @@ if ( $result['status'] === 'ok' ) {
                         <td><?php esc_html_e('Fires once on a specific date and time, then marks itself completed.', 'mawiblah'); ?></td>
                     </tr>
                     <tr>
+                        <td><strong><?php esc_html_e('Daily', 'mawiblah'); ?></strong></td>
+                        <td><?php esc_html_e('Fires every day at the chosen time. There is no day to pick. Runs forever unless an End Date is set — and remember the do-not-disturb threshold, which will hold subscribers back if it is longer than a day.', 'mawiblah'); ?></td>
+                    </tr>
+                    <tr>
                         <td><strong><?php esc_html_e('Weekly', 'mawiblah'); ?></strong></td>
                         <td><?php esc_html_e('Fires every week on the chosen day at the chosen time. Runs forever unless an End Date is set.', 'mawiblah'); ?></td>
                     </tr>

@@ -70,6 +70,16 @@ The initial version was built by hand. From version 1.0.9 onward, most changes h
 
 ## Change log
 
+### --- 1.0.45 ---
+- **New:** schedules can run **daily**, alongside once, weekly and monthly. It needs
+  no day field — a time is the whole schedule — and behaves like the other recurring
+  types: the campaign is reset before each send, `rerender_on_recurring` re-renders
+  the template, and `next_send` advances by a day. Today at the chosen time if that
+  has not passed yet, tomorrow if it has.
+- **Fix:** the save handler now refuses a schedule type it does not recognise instead
+  of storing it — an unknown type fell through `computeNextSend()` to "tomorrow" and
+  then behaved like nothing the form had said.
+
 ### --- 1.0.44 ---
 - **New:** a schedule can carry its own do-not-disturb threshold. Tick **Don't Disturb
   Threshold → Override the global threshold for this schedule** on a schedule and the number

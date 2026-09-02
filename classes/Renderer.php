@@ -306,6 +306,13 @@ class Renderer
                     $name         = sanitize_text_field($_POST['name'] ?? '');
                     $campaignId   = (int) ($_POST['campaign_id'] ?? 0);
                     $scheduleType = sanitize_key($_POST['schedule_type'] ?? 'once');
+
+                    // An unknown type would fall through computeNextSend() to
+                    // "tomorrow" and then behave like nothing on the form said,
+                    // so it is answered here instead.
+                    if (!in_array($scheduleType, ['once', 'daily', 'weekly', 'monthly'], true)) {
+                        $scheduleType = 'once';
+                    }
                     $sendTime     = sanitize_text_field($_POST['send_time'] ?? '09:00');
                     $sendDate     = sanitize_text_field($_POST['send_date'] ?? '');
                     $endDate      = sanitize_text_field($_POST['end_date'] ?? '');

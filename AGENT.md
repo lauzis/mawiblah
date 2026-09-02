@@ -26,7 +26,7 @@ MAWIBLAH is a WordPress plugin that provides Mailchimp-like functionality for se
   select's default for any value not in its options, so leaving it would have
   read as *disabled*
 - **Scheduler / SchedulerCron** - A scheduler is its own post (`campaign_id`,
-  `status`, `schedule_type` once|weekly|monthly, `send_time`, `send_day`,
+  `status`, `schedule_type` once|daily|weekly|monthly, `send_time`, `send_day`,
   `send_date`, `next_send`, `end_date`, `override_dnd`, `dnd_threshold`). One WP-Cron event,
   `mawiblah_scheduler_check`, runs at the interval in settings and walks every
   active scheduler: past `next_send` and the campaign is reset, background-sent

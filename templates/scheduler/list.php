@@ -67,6 +67,7 @@ defined('ABSPATH') || exit;
 
             $typeLabels = [
                 'once'    => __('Once', 'mawiblah'),
+                'daily'   => __('Daily', 'mawiblah'),
                 'weekly'  => __('Weekly', 'mawiblah'),
                 'monthly' => __('Monthly', 'mawiblah'),
             ];
@@ -84,6 +85,12 @@ defined('ABSPATH') || exit;
 
             if ($scheduler->schedule_type === 'once') {
                 $scheduleDesc = esc_html($scheduler->send_date) . ' ' . esc_html($scheduler->send_time);
+            } elseif ($scheduler->schedule_type === 'daily') {
+                $scheduleDesc = sprintf(
+                    /* translators: %s: time */
+                    __('Every day at %s', 'mawiblah'),
+                    esc_html($scheduler->send_time)
+                );
             } elseif ($scheduler->schedule_type === 'weekly') {
                 $dayName     = $dayNames[$scheduler->send_day] ?? $scheduler->send_day;
                 $scheduleDesc = sprintf(

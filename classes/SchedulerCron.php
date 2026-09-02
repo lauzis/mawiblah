@@ -11,7 +11,7 @@ namespace Mawiblah;
  *
  * After firing:
  *   - once    — status is set to 'completed'.
- *   - weekly / monthly — next_send is advanced to the next occurrence.
+ *   - daily / weekly / monthly — next_send is advanced to the next occurrence.
  *
  * Campaigns are reset before each scheduled send so all subscribers receive
  * the email regardless of prior sends for the same campaign.

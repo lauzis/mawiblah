@@ -65,7 +65,7 @@ flowchart TD
 
 ### Campaign Lifecycle
 
-From creation through test, approval, and final send to all subscribers. For recurring schedules (weekly/monthly), `Scheduler::resetCampaignForResend()` clears the locked template copy before each re-send when `rerender_on_recurring` is enabled (default on), so the template is re-fetched and re-rendered fresh on the next cron batch.
+From creation through test, approval, and final send to all subscribers. For recurring schedules (daily/weekly/monthly), `Scheduler::resetCampaignForResend()` clears the locked template copy before each re-send when `rerender_on_recurring` is enabled (default on), so the template is re-fetched and re-rendered fresh on the next cron batch.
 
 ```mermaid
 flowchart TD
@@ -171,7 +171,7 @@ Each campaign in MAWIBLAH tracks various metrics and metadata stored as WordPres
 - **`template`** - Email template to use
 - **`audiences`** - Array of WordPress taxonomy term IDs representing subscriber audiences (uses `mawiblah_subscriber_category` taxonomy)
 - **`status`** - Current campaign status (draft, sending-in-progress, completed, etc.)
-- **`rerender_on_recurring`** - Boolean (`'1'`/`'0'`). When `'1'` (default), the locked template copy is cleared before each weekly/monthly scheduled send so dynamic content (shortcodes, WP queries) is re-evaluated fresh. Has no effect on `once`-type schedules.
+- **`rerender_on_recurring`** - Boolean (`'1'`/`'0'`). When `'1'` (default), the locked template copy is cleared before each daily/weekly/monthly scheduled send so dynamic content (shortcodes, WP queries) is re-evaluated fresh. Has no effect on `once`-type schedules.
 - **`dnd_threshold_override`** - Do-not-disturb threshold, in seconds, for the send currently running. Written by `SchedulerCron` when the schedule that started the send overrides the global setting, and deleted by `CronSend` when the send finishes. Absent means "use the global setting"; an explicit `0` means "no do-not-disturb check for this run".
 - **`send_condition_shortcode`** - Optional shortcode name (string, no brackets). When set, `SchedulerCron` calls `do_shortcode("[{name} campaign_id='{id}']")` before every scheduled send. Empty/whitespace-only output → send is skipped and logged. Non-empty output → send proceeds normally. Leave blank to always send.
 
@@ -410,7 +410,7 @@ A schedule is its own post (`mawiblah_scheduler`) pointing at one campaign. One 
 |---|---|---|
 | `campaign_id` | int | Campaign post ID to send |
 | `status` | string | `active`, `paused` or `completed` |
-| `schedule_type` | string | `once`, `weekly` or `monthly` |
+| `schedule_type` | string | `once`, `daily`, `weekly` or `monthly` |
 | `send_time` | string | `H:i` in the site timezone |
 | `send_day` | int | Day-of-week (`0`=Sun…`6`=Sat) for weekly; day-of-month (`1`-`31`) for monthly |
 | `send_date` | string | `YYYY-MM-DD`, for `once` schedules |

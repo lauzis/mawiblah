@@ -257,6 +257,23 @@ class Tests
         self::echoTitle('fillTemplate replaces URL-encoded %7BcampaignHash%7D');
         self::echoResult(!str_contains($filled, '%7BcampaignHash%7D') ? 'Replaced' : 'Not replaced', !str_contains($filled, '%7BcampaignHash%7D') ? 'success' : 'error');
 
+        add_shortcode('mawiblah_test_custom', static fn() => 'CUSTOM-OUTPUT');
+        $shortcodeFilled = Campaigns::fillTemplate('[mawiblah_test_custom] [gdlnks_newsletter_title]', $c, $sub);
+        remove_shortcode('mawiblah_test_custom');
+
+        self::echoTitle('fillTemplate expands any registered shortcode');
+        $expanded = str_contains($shortcodeFilled, 'CUSTOM-OUTPUT');
+        self::echoResult($expanded ? 'Expanded' : 'Not expanded', $expanded ? 'success' : 'error');
+
+        self::echoTitle('fillTemplate leaves [gdlnks_newsletter_title] untouched');
+        $untouched = str_contains($shortcodeFilled, '[gdlnks_newsletter_title]');
+        self::echoResult($untouched ? 'Left as-is' : 'Still replaced', $untouched ? 'success' : 'error');
+
+        self::echoTitle('[mawiblah_title] renders the campaign title');
+        $titleFilled = Campaigns::fillTemplate('[mawiblah_title]', $c, $sub);
+        $hasTitle = str_contains($titleFilled, 'Title');
+        self::echoResult($hasTitle ? 'Rendered' : 'Not rendered', $hasTitle ? 'success' : 'error');
+
         self::echoTitle('lockTemplate returns false for non-existent template');
         $result = Campaigns::lockTemplate($c, false);
         self::echoResult($result === false ? 'Correctly false' : 'Should return false', $result === false ? 'success' : 'error');

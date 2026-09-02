@@ -694,9 +694,13 @@ class Campaigns
             return false;
         }
 
-        $templateHTML = do_shortcode($templateHTML);
-        $templateHTML = str_replace('[gdlnks_newsletter_title]', $campaign->contentTitle ?? $campaign->post_title, $templateHTML);
-        $templateHTML = str_replace('[gdlnks_newsletter_content]', $campaign->post_content, $templateHTML);
+        ShortCodes::setCampaign($campaign);
+        try {
+            $templateHTML = do_shortcode($templateHTML);
+        } finally {
+            ShortCodes::setCampaign(null);
+        }
+
         $templateHTML = str_replace('{campaignHash}', $campaign->campaignHash, $templateHTML);
 
         return $templateHTML;
@@ -718,10 +722,12 @@ class Campaigns
     {
         $email = $subscriber->email;
         $campaignPostId = $campaign->id;
-        $templateHTML = do_shortcode($template);
-        $templateHTML = str_replace('[gdlnks_newsletter_title]', $campaign->post_title, $templateHTML);
-
-        $templateHTML = str_replace('[gdlnks_newsletter_content]', get_the_content($campaign->id), $templateHTML);
+        ShortCodes::setCampaign($campaign);
+        try {
+            $templateHTML = do_shortcode($template);
+        } finally {
+            ShortCodes::setCampaign(null);
+        }
 
         $templateHTML = str_replace('{campaignHash}', $campaign->campaignHash, $templateHTML);
         $templateHTML = str_replace('{subscriberHash}', $subscriber->subscriberHash, $templateHTML);

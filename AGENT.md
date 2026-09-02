@@ -182,12 +182,20 @@ add_action('wp_dashboard_setup', [Actions::class, 'registerDashboardWidget']);
 
 ### Email Templates
 - Shortcode-based template system
-- Dynamic content replacement:
+- Static placeholders, replaced by `str_replace`:
   - `{campaignHash}` - Campaign identifier
   - `{subscriberHash}` - Subscriber identifier
   - `{email}` - Subscriber email
-  - `[gdlnks_newsletter_title]` - Campaign title
-  - `[gdlnks_newsletter_content]` - Campaign content
+  - plus the URL-encoded variants `%7BcampaignHash%7D`, `%7BsubscriberHash%7D`, `%7Bemail%7D`
+- Shortcodes: no allow-list. `do_shortcode()` runs over the template in `lockTemplate()` and
+  again per recipient in `fillTemplate()`, so **any** shortcode registered in WordPress — the
+  plugin's, the theme's, a third party's — is evaluated, in the template and in the campaign
+  content alike. The second pass is what expands shortcodes carried in by the campaign content.
+- `[mawiblah_title]` / `[mawiblah_content]` render the active campaign. `ShortCodes::setCampaign()`
+  is called around both `do_shortcode()` passes; without it these fall back to the global post,
+  which is not the campaign when a template is rendered outside the loop.
+- `[gdlnks_newsletter_title]` and `[gdlnks_newsletter_content]` were site-specific hardcoded
+  `str_replace` calls and were removed in 1.0.42 — do not reintroduce per-site tags here.
 
 ### Click Tracking
 - URLs are tracked per campaign

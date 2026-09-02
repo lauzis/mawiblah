@@ -229,6 +229,37 @@ if ( $result['status'] === 'ok' ) {
                 <p><?php esc_html_e('Lookup order: child theme → parent theme → plugin. The first file found is used. You can also add entirely new templates by placing additional HTML files in', 'mawiblah'); ?> <code>your-theme/mawiblah/email_templates/</code> — <?php esc_html_e('they will appear in the template selector when creating a campaign.', 'mawiblah'); ?></p>
             </div>
 
+            <h3 style="margin-top:24px;"><?php esc_html_e('Shortcodes in email templates', 'mawiblah'); ?></h3>
+            <p>
+                <?php esc_html_e('Any shortcode registered on your site works in an email template and in the campaign content — the plugin\'s own, your theme\'s, or one from another plugin. It is replaced by whatever that shortcode outputs, exactly as it would be in a post. There is no list to add to.', 'mawiblah'); ?>
+            </p>
+            <p><?php esc_html_e('The shortcodes the plugin ships are examples, not the whole set:', 'mawiblah'); ?></p>
+            <table class="wp-list-table widefat fixed striped" style="max-width:900px;">
+                <thead>
+                    <tr>
+                        <th style="width:40%"><?php esc_html_e('Shortcode', 'mawiblah'); ?></th>
+                        <th><?php esc_html_e('Renders', 'mawiblah'); ?></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td><code>[mawiblah_title]</code></td><td><?php esc_html_e('The campaign title', 'mawiblah'); ?></td></tr>
+                    <tr><td><code>[mawiblah_content]</code></td><td><?php esc_html_e('The campaign content', 'mawiblah'); ?></td></tr>
+                    <tr><td><code>[mawiblah_unsubscribe]</code></td><td><?php esc_html_e('The unsubscribe link for the recipient', 'mawiblah'); ?></td></tr>
+                    <tr><td><code>[mawiblah_logo_src]</code>, <code>[mawiblah_logo_alt]</code></td><td><?php esc_html_e('Site logo image and alt text', 'mawiblah'); ?></td></tr>
+                    <tr><td><code>[mawiblah_website_url]</code></td><td><?php esc_html_e('Site URL', 'mawiblah'); ?></td></tr>
+                    <tr><td><code>[mawiblah_social_profiles]</code></td><td><?php esc_html_e('Social profile links from Settings', 'mawiblah'); ?></td></tr>
+                    <tr><td><code>[mawiblah_newest_articles count="3"]</code></td><td><?php esc_html_e('A list of the newest posts', 'mawiblah'); ?></td></tr>
+                </tbody>
+            </table>
+            <div class="notice notice-warning inline" style="margin:12px 0 0;">
+                <p>
+                    <?php esc_html_e('Changed in 1.0.42:', 'mawiblah'); ?>
+                    <code>[gdlnks_newsletter_title]</code> <?php esc_html_e('and', 'mawiblah'); ?> <code>[gdlnks_newsletter_content]</code>
+                    <?php esc_html_e('are no longer handled specially and will now appear in the letter as written. If a custom template still uses them, replace them with', 'mawiblah'); ?>
+                    <code>[mawiblah_title]</code> <?php esc_html_e('and', 'mawiblah'); ?> <code>[mawiblah_content]</code>.
+                </p>
+            </div>
+
             <h3 style="margin-top:24px;"><?php esc_html_e('PHP partials', 'mawiblah'); ?></h3>
             <p>
                 <?php esc_html_e('Partials loaded via', 'mawiblah'); ?>

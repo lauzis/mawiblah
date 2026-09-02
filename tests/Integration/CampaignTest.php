@@ -89,6 +89,48 @@ class CampaignTest extends WP_UnitTestCase
         wp_delete_post($sub->id, true);
     }
 
+    public function test_fill_template_expands_any_registered_shortcode(): void
+    {
+        add_shortcode('mawiblah_phpunit_custom', static fn() => 'CUSTOM-OUTPUT');
+
+        $c   = Campaigns::getCampaignById($this->campaignId);
+        $sub = Subscribers::addSubscriber('shortcode@mawiblah.test');
+
+        $filled = Campaigns::fillTemplate('[mawiblah_phpunit_custom]', $c, $sub);
+
+        $this->assertStringContainsString('CUSTOM-OUTPUT', $filled);
+        $this->assertStringNotContainsString('[mawiblah_phpunit_custom]', $filled);
+
+        remove_shortcode('mawiblah_phpunit_custom');
+        wp_delete_post($sub->id, true);
+    }
+
+    public function test_gdlnks_tags_are_no_longer_replaced(): void
+    {
+        $c   = Campaigns::getCampaignById($this->campaignId);
+        $sub = Subscribers::addSubscriber('gdlnks@mawiblah.test');
+
+        $filled = Campaigns::fillTemplate('[gdlnks_newsletter_title] [gdlnks_newsletter_content]', $c, $sub);
+
+        $this->assertStringContainsString('[gdlnks_newsletter_title]', $filled);
+        $this->assertStringContainsString('[gdlnks_newsletter_content]', $filled);
+
+        wp_delete_post($sub->id, true);
+    }
+
+    public function test_title_and_content_shortcodes_read_the_campaign(): void
+    {
+        $c   = Campaigns::getCampaignById($this->campaignId);
+        $sub = Subscribers::addSubscriber('campaigncontext@mawiblah.test');
+
+        $filled = Campaigns::fillTemplate('[mawiblah_title] :: [mawiblah_content]', $c, $sub);
+
+        $this->assertStringContainsString('Title', $filled);
+        $this->assertStringContainsString('Content', $filled);
+
+        wp_delete_post($sub->id, true);
+    }
+
     public function test_campaign_start_guard_against_double_start(): void
     {
         $id = $this->campaignId;

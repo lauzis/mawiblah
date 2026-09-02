@@ -3,7 +3,7 @@ Contributors: lauzis
 Tags: email, newsletter, marketing, mailchimp alternative, subscribers
 Requires at least: 5.0
 Tested up to: 6.9
-Stable tag: 1.0.38
+Stable tag: 1.0.42
 Requires PHP: 8.0
 License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl.html
@@ -68,6 +68,12 @@ Technically yes, but it is not recommended. The plugin sends emails individually
 8. MVP version
 
 == Changelog ==
+
+= 1.0.42 =
+*   Removed: `[gdlnks_newsletter_title]` and `[gdlnks_newsletter_content]`. They were never shortcodes — just two hardcoded `str_replace` calls named after one site's theme. The bundled template does not use them, so a default install is unaffected.
+*   Fixed: `[mawiblah_title]` and `[mawiblah_content]` now render the campaign being sent instead of falling back to the month-name default, since an email template is rendered outside the WordPress loop.
+*   Migration: a custom template still using the old tags will print them literally — replace them with `[mawiblah_title]` and `[mawiblah_content]`.
+*   Docs: any shortcode registered in WordPress works in an email template and in the campaign content; the built-in `mawiblah_` ones are examples, not a fixed list.
 
 = 1.0.38 =
 *   Fixed: subscriber audiences were public. `register_taxonomy()` defaults `public` to true and the arguments never said otherwise, so every audience had a front-end archive at `/subscriber-category/<slug>/` — a page describing how the site segments the people who signed up to it. An SEO plugin was duly listing nine of them in the sitemap. The taxonomy is now `public => false` with no rewrite; it stays exactly as visible in wp-admin as it was.

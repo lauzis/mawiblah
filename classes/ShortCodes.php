@@ -4,6 +4,20 @@ namespace Mawiblah;
 
 class ShortCodes
 {
+    /** Campaign being rendered, set for the duration of a template's shortcode pass. */
+    private static ?object $campaign = null;
+
+    /**
+     * Sets (or clears, with null) the campaign that [mawiblah_title] and [mawiblah_content]
+     * read from. The email template is rendered outside the loop, so without this the
+     * shortcodes would fall back to the global post.
+     *
+     * @param object|null $campaign Campaign object with meta attached, or null to clear.
+     */
+    public static function setCampaign(?object $campaign): void
+    {
+        self::$campaign = $campaign;
+    }
 
     /** Registers all Mawiblah shortcodes with WordPress. */
     public static function register()
@@ -32,9 +46,18 @@ class ShortCodes
         add_shortcode('mawiblah_new_posts_since_last_sent', [ShortCodes::class, 'weHaveNewPostsSinceLastSentOut']);
     }
 
-    /** Returns the current post title, falling back to a month-based default. */
+    /** Returns the campaign title, then the current post title, then a month-based default. */
     public static function title()
     {
+        if (self::$campaign) {
+            $title = self::$campaign->contentTitle ?? '';
+            if (!$title) {
+                $title = self::$campaign->post_title ?? '';
+            }
+            if ($title) {
+                return $title;
+            }
+        }
         $title = get_the_title();
         if ($title) {
             return $title;
@@ -42,9 +65,15 @@ class ShortCodes
         return sprintf(__('Summary for the %s', 'mawiblah'), date("F"));
     }
 
-    /** Returns the current post content, falling back to a default monthly newsletter message. */
+    /** Returns the campaign content, then the current post content, then a default message. */
     public static function content()
     {
+        if (self::$campaign) {
+            $content = self::$campaign->post_content ?? '';
+            if ($content) {
+                return $content;
+            }
+        }
         $content = get_the_content();
         if ($content) {
             return $content;

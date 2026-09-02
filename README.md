@@ -70,6 +70,12 @@ The initial version was built by hand. From version 1.0.9 onward, most changes h
 
 ## Change log
 
+### --- 1.0.46 ---
+- **Fix:** the CSV import's file control looked like it belonged to a different page.
+  A file input is the one control WordPress' admin CSS leaves to the browser, so its
+  button came out shorter and plainer than the "Upload and preview" button beside it.
+  Its button is styled to match `.button`, hover and focus included.
+
 ### --- 1.0.45 ---
 - **New:** schedules can run **daily**, alongside once, weekly and monthly. It needs
   no day field — a time is the whole schedule — and behaves like the other recurring

@@ -51,6 +51,50 @@ elseif (!empty($_FILES['csv_file']['tmp_name'])) {
 }
 
 ?>
+<style>
+    /*
+     * A file input is the one control WordPress' admin CSS leaves to the
+     * browser, so its button arrives half the height of the "Upload and
+     * preview" button beside it and in a different typeface. Only the button
+     * inside it can be styled -- `::file-selector-button`, with the WebKit
+     * name kept for Safari before 14.1 -- so it is made to match `.button`.
+     */
+    .mawiblah-file {
+        max-width: 100%;
+        line-height: 2.15384615;
+        color: #2c3338;
+    }
+
+    .mawiblah-file::file-selector-button,
+    .mawiblah-file::-webkit-file-upload-button {
+        margin-right: 8px;
+        padding: 0 10px;
+        min-height: 30px;
+        border: 1px solid #2271b1;
+        border-radius: 3px;
+        background: #f6f7f7;
+        color: #2271b1;
+        font-size: 13px;
+        line-height: 2.15384615;
+        cursor: pointer;
+        -webkit-appearance: none;
+        appearance: none;
+    }
+
+    .mawiblah-file:hover::file-selector-button,
+    .mawiblah-file:hover::-webkit-file-upload-button {
+        border-color: #0a4b78;
+        background: #f0f0f1;
+        color: #0a4b78;
+    }
+
+    .mawiblah-file:focus::file-selector-button {
+        border-color: #4f94d4;
+        box-shadow: 0 0 0 1px #4f94d4;
+        outline: 2px solid transparent;
+    }
+</style>
+
 <div class="wrap mawiblah">
     <h1 class="wp-heading-inline"><?php esc_html_e('Import Subscribers', 'mawiblah'); ?></h1>
     <hr class="wp-header-end">
@@ -89,7 +133,7 @@ elseif (!empty($_FILES['csv_file']['tmp_name'])) {
                     <tr>
                         <th scope="row"><label for="csv_file"><?php esc_html_e('CSV file', 'mawiblah'); ?></label></th>
                         <td>
-                            <input type="file" name="csv_file" id="csv_file" accept=".csv,.txt" required>
+                            <input type="file" name="csv_file" id="csv_file" class="mawiblah-file" accept=".csv,.txt" required>
                             <p class="description"><?php esc_html_e('Max upload size: ', 'mawiblah'); ?><?php echo esc_html(size_format(wp_max_upload_size())); ?></p>
                         </td>
                     </tr>

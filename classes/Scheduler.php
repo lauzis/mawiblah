@@ -12,6 +12,10 @@ namespace Mawiblah;
  *   monthly — fires every month on a given day of the month.
  *
  * Recurring schedules run forever unless an end_date is set.
+ *
+ * A schedule may also override the global do-not-disturb threshold (override_dnd +
+ * dnd_threshold): SchedulerCron hands the resolved value to the send it starts, so one
+ * schedule can contact subscribers more (or less) often than the site-wide setting allows.
  */
 class Scheduler
 {
@@ -68,6 +72,8 @@ class Scheduler
         $post->next_send     = (int) get_post_meta($post->ID, 'next_send', true);
         $post->end_date      = get_post_meta($post->ID, 'end_date', true) ?: '';
         $post->last_sent     = (int) get_post_meta($post->ID, 'last_sent', true);
+        $post->override_dnd  = (bool) get_post_meta($post->ID, 'override_dnd', true);
+        $post->dnd_threshold = (int) get_post_meta($post->ID, 'dnd_threshold', true);
         return $post;
     }
 
@@ -81,9 +87,11 @@ class Scheduler
      * @param int    $sendDay      Day-of-week (0=Sun…6=Sat) for weekly; day-of-month (1-31) for monthly.
      * @param string $sendDate     YYYY-MM-DD for once-type schedules.
      * @param string $endDate      Optional YYYY-MM-DD cutoff for recurring schedules; empty = forever.
+     * @param bool   $overrideDnd  True to ignore the global do-not-disturb threshold for this schedule.
+     * @param int    $dndThreshold Threshold in seconds used when $overrideDnd is true (0 = no do-not-disturb check).
      * @return int|null New post ID or null on failure.
      */
-    public static function add(string $name, int $campaignId, string $scheduleType, string $sendTime, int $sendDay, string $sendDate = '', string $endDate = ''): ?int
+    public static function add(string $name, int $campaignId, string $scheduleType, string $sendTime, int $sendDay, string $sendDate = '', string $endDate = '', bool $overrideDnd = false, int $dndThreshold = 0): ?int
     {
         $id = wp_insert_post([
             'post_type'   => self::POST_TYPE,
@@ -105,6 +113,8 @@ class Scheduler
         update_post_meta($id, 'send_date',     sanitize_text_field($sendDate));
         update_post_meta($id, 'next_send',     $nextSend);
         update_post_meta($id, 'end_date',      sanitize_text_field($endDate));
+        update_post_meta($id, 'override_dnd',  $overrideDnd ? 1 : 0);
+        update_post_meta($id, 'dnd_threshold', $overrideDnd ? absint($dndThreshold) : 0);
 
         return $id;
     }
@@ -120,8 +130,10 @@ class Scheduler
      * @param int    $sendDay      Day-of-week or day-of-month.
      * @param string $sendDate     YYYY-MM-DD for once-type schedules.
      * @param string $endDate      Optional cutoff date.
+     * @param bool   $overrideDnd  True to ignore the global do-not-disturb threshold for this schedule.
+     * @param int    $dndThreshold Threshold in seconds used when $overrideDnd is true (0 = no do-not-disturb check).
      */
-    public static function update(int $id, string $name, int $campaignId, string $scheduleType, string $sendTime, int $sendDay, string $sendDate = '', string $endDate = ''): void
+    public static function update(int $id, string $name, int $campaignId, string $scheduleType, string $sendTime, int $sendDay, string $sendDate = '', string $endDate = '', bool $overrideDnd = false, int $dndThreshold = 0): void
     {
         wp_update_post(['ID' => $id, 'post_title' => sanitize_text_field($name)]);
 
@@ -134,6 +146,8 @@ class Scheduler
         update_post_meta($id, 'send_date',     sanitize_text_field($sendDate));
         update_post_meta($id, 'next_send',     $nextSend);
         update_post_meta($id, 'end_date',      sanitize_text_field($endDate));
+        update_post_meta($id, 'override_dnd',  $overrideDnd ? 1 : 0);
+        update_post_meta($id, 'dnd_threshold', $overrideDnd ? absint($dndThreshold) : 0);
     }
 
     /**

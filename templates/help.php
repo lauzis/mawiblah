@@ -371,7 +371,11 @@ if ( $result['status'] === 'ok' ) {
                 <tbody>
                     <tr>
                         <td><?php esc_html_e("Don't Disturb Threshold", 'mawiblah'); ?></td>
-                        <td><?php esc_html_e('Minimum time in seconds before the same subscriber can be contacted again. Default: 2592000 (30 days).', 'mawiblah'); ?></td>
+                        <td>
+                            <?php esc_html_e('Minimum time in seconds before the same subscriber can be contacted again. Default: 2592000 (30 days).', 'mawiblah'); ?>
+                            <br>
+                            <?php esc_html_e('A single schedule can override this: on Scheduler → Edit Schedule, tick "Override the global threshold for this schedule" and enter your own number of seconds (0 sends regardless of when the subscriber was last contacted). The override applies only to the sends that schedule starts — sends you run from the browser, and test sends, keep using the value above.', 'mawiblah'); ?>
+                        </td>
                     </tr>
                     <tr>
                         <td><?php esc_html_e('Time Between Emails', 'mawiblah'); ?></td>

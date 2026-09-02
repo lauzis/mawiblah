@@ -12,6 +12,15 @@ class CronSend
 {
     const HOOK = 'mawiblah_background_send';
 
+    /**
+     * Campaign meta holding the do-not-disturb threshold a schedule asked for.
+     *
+     * Written by SchedulerCron just before the send starts and removed when the send
+     * finishes, so it only ever applies to the run it was written for. Absent means
+     * "use the global setting"; an explicit 0 means "no do-not-disturb check this run".
+     */
+    const DND_OVERRIDE_META = 'dnd_threshold_override';
+
     /** Registers the cron action hook. Call from plugin init. */
     public static function init(): void
     {
@@ -114,7 +123,7 @@ class CronSend
         $emailsSkipped  = (int) ($counters->emailsSkipped ?? 0);
         $emailsUnsubed  = (int) ($counters->emailsUnsubed ?? 0);
 
-        $doNotDisturbThreshold = (int) Settings::dontDisturbThreshold();
+        $doNotDisturbThreshold = self::doNotDisturbThreshold($campaignPostId);
         $failingEmailAudience  = Subscribers::failingEmailAudience();
         $sendEmails            = Settings::sendEmails();
 
@@ -251,6 +260,7 @@ class CronSend
         } else {
             Campaigns::campaignFinish($campaignPostId);
             Campaigns::backgroundSendStop($campaignPostId);
+            self::clearDoNotDisturbOverride($campaignPostId);
             Logs::addLog('cron-send', "Campaign finished: {$campaign->post_title}", [
                 'campaignPostId' => $campaignPostId,
                 'campaign'       => $campaign->post_title,
@@ -260,5 +270,34 @@ class CronSend
                 'unsub'          => $emailsUnsubed,
             ]);
         }
+    }
+
+    /**
+     * Resolves the do-not-disturb threshold for this run: the schedule's override when one
+     * was written for the campaign, otherwise the global setting.
+     *
+     * An override of 0 is a value, not an absence — it means this send ignores the
+     * do-not-disturb rule entirely — so the meta's presence decides, not its truthiness.
+     *
+     * @param int $campaignPostId Campaign post ID.
+     * @return int Threshold in seconds; 0 disables the check.
+     */
+    public static function doNotDisturbThreshold(int $campaignPostId): int
+    {
+        if (metadata_exists('post', $campaignPostId, self::DND_OVERRIDE_META)) {
+            return max(0, (int) get_post_meta($campaignPostId, self::DND_OVERRIDE_META, true));
+        }
+
+        return max(0, (int) Settings::dontDisturbThreshold());
+    }
+
+    /**
+     * Removes the per-run do-not-disturb override from a campaign.
+     *
+     * @param int $campaignPostId Campaign post ID.
+     */
+    public static function clearDoNotDisturbOverride(int $campaignPostId): void
+    {
+        delete_post_meta($campaignPostId, self::DND_OVERRIDE_META);
     }
 }

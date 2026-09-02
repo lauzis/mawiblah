@@ -62,6 +62,7 @@ class Tests
             'default-audiences'          => 'Default Audiences (Unsubed + Testers)',
             'programmatic-subscribe'     => 'Programmatic Subscribe (mawiblah_subscribe hook)',
             'logging'                    => 'Logging (write & verify file log)',
+            'scheduler-dnd'              => 'Scheduled Do-Not-Disturb Override',
         ];
     }
 
@@ -91,6 +92,7 @@ class Tests
             'default-audiences'          => self::defaultAudiencesScenario(),
             'programmatic-subscribe'     => self::programmaticSubscribeScenario(),
             'logging'                    => self::loggingScenario(),
+            'scheduler-dnd'              => self::schedulerDontDisturbScenario(),
             default                      => self::echoResult('Unknown scenario: ' . $scenario, 'error'),
         };
     }
@@ -878,6 +880,83 @@ class Tests
 
         Campaigns::deleteCampaign($cId);
         wp_delete_post($sub->id, true);
+        self::echoResult('Cleaned up', 'success');
+    }
+
+    // -------------------------------------------------------------------------
+    // Scheduled Do-Not-Disturb Override
+    // -------------------------------------------------------------------------
+
+    /**
+     * In-browser integration test: a schedule's do-not-disturb override is stored, handed to
+     * the run it belongs to, and dropped again afterwards.
+     *
+     * SchedulerCron is not called here — it would walk the site's real schedules and could
+     * start a real send. What it writes for a due schedule is written directly instead, so
+     * the resolution CronSend performs is the thing under test.
+     */
+    public static function schedulerDontDisturbScenario(): void
+    {
+        self::echoHeading('Scheduled Do-Not-Disturb Override');
+
+        $globalThreshold = max(0, (int) Settings::dontDisturbThreshold());
+        $scheduleThreshold = 90;
+
+        $cId = Campaigns::addCampaign('DND Override Test Campaign', 'Subject', 'Title', 'Content', [], 'test-template');
+
+        self::echoTitle('No override — the global setting decides');
+        $resolved = CronSend::doNotDisturbThreshold($cId);
+        self::echoResult(
+            "Resolved {$resolved}s, global is {$globalThreshold}s",
+            $resolved === $globalThreshold ? 'success' : 'error'
+        );
+
+        self::echoTitle('Schedule stores the override');
+        $sId = Scheduler::add('DND Override Test Schedule', $cId, 'weekly', '09:00', 1, '', '', true, $scheduleThreshold);
+        $scheduler = Scheduler::getById((int) $sId);
+        $ok = $scheduler && $scheduler->override_dnd && $scheduler->dnd_threshold === $scheduleThreshold;
+        self::echoResult(
+            $ok ? "override_dnd=1, dnd_threshold={$scheduler->dnd_threshold}" : 'Override was not stored on the schedule',
+            $ok ? 'success' : 'error',
+            $ok ? null : $scheduler
+        );
+
+        self::echoTitle('The run started by that schedule uses the override');
+        update_post_meta($cId, CronSend::DND_OVERRIDE_META, $scheduler->dnd_threshold);
+        $resolved = CronSend::doNotDisturbThreshold($cId);
+        self::echoResult(
+            "Resolved {$resolved}s, schedule asked for {$scheduleThreshold}s",
+            $resolved === $scheduleThreshold ? 'success' : 'error'
+        );
+
+        self::echoTitle('An override of 0 disables the check rather than falling back');
+        update_post_meta($cId, CronSend::DND_OVERRIDE_META, 0);
+        $resolved = CronSend::doNotDisturbThreshold($cId);
+        self::echoResult(
+            "Resolved {$resolved}s",
+            $resolved === 0 ? 'success' : 'error'
+        );
+
+        self::echoTitle('Finishing the send drops the override');
+        CronSend::clearDoNotDisturbOverride($cId);
+        $resolved = CronSend::doNotDisturbThreshold($cId);
+        self::echoResult(
+            "Resolved {$resolved}s, back to the global {$globalThreshold}s",
+            $resolved === $globalThreshold ? 'success' : 'error'
+        );
+
+        self::echoTitle('Turning the override off clears the stored threshold');
+        Scheduler::update((int) $sId, 'DND Override Test Schedule', $cId, 'weekly', '09:00', 1, '', '', false, $scheduleThreshold);
+        $scheduler = Scheduler::getById((int) $sId);
+        $ok = $scheduler && !$scheduler->override_dnd && $scheduler->dnd_threshold === 0;
+        self::echoResult(
+            $ok ? 'override_dnd=0, dnd_threshold=0' : 'A stale threshold survived the override being switched off',
+            $ok ? 'success' : 'error',
+            $ok ? null : $scheduler
+        );
+
+        Scheduler::delete((int) $sId);
+        Campaigns::deleteCampaign($cId);
         self::echoResult('Cleaned up', 'success');
     }
 }

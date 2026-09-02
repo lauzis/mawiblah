@@ -15,6 +15,9 @@ namespace Mawiblah;
  *
  * Campaigns are reset before each scheduled send so all subscribers receive
  * the email regardless of prior sends for the same campaign.
+ *
+ * A schedule can also carry its own do-not-disturb threshold; the resolved value is
+ * written to the campaign as CronSend::DND_OVERRIDE_META for the duration of that run.
  */
 class SchedulerCron
 {
@@ -161,6 +164,20 @@ class SchedulerCron
                 continue;
             }
 
+            // Hand this run its do-not-disturb threshold. The override belongs to the
+            // schedule, not to the campaign, so it is written per run and dropped again
+            // when the send finishes -- a schedule whose override was switched off falls
+            // straight back to the global setting on its next occurrence.
+            if ($scheduler->override_dnd) {
+                $dndThreshold = (int) $scheduler->dnd_threshold;
+                $dndSource    = 'schedule';
+                update_post_meta($campaignPostId, CronSend::DND_OVERRIDE_META, $dndThreshold);
+            } else {
+                $dndThreshold = (int) Settings::dontDisturbThreshold();
+                $dndSource    = 'global';
+                CronSend::clearDoNotDisturbOverride($campaignPostId);
+            }
+
             // Reset campaign so every subscriber is treated as unsent
             Scheduler::resetCampaignForResend($campaignPostId, $scheduler->schedule_type);
 
@@ -175,6 +192,8 @@ class SchedulerCron
                 'campaignPostId' => $campaignPostId,
                 'campaign'       => $campaign->post_title,
                 'scheduleType'   => $scheduler->schedule_type,
+                'dndThreshold'   => $dndThreshold,
+                'dndSource'      => $dndSource,
             ]);
 
             if ($scheduler->schedule_type === 'once') {

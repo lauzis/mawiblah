@@ -10,6 +10,7 @@
 - [Click Tracking](#click-tracking)
 - [Email Templates](#email-templates)
 - [Subscriber Management](#subscriber-management)
+- [Scheduler](#scheduler)
 - [Settings](#settings)
 
 ## Features Overview
@@ -171,6 +172,7 @@ Each campaign in MAWIBLAH tracks various metrics and metadata stored as WordPres
 - **`audiences`** - Array of WordPress taxonomy term IDs representing subscriber audiences (uses `mawiblah_subscriber_category` taxonomy)
 - **`status`** - Current campaign status (draft, sending-in-progress, completed, etc.)
 - **`rerender_on_recurring`** - Boolean (`'1'`/`'0'`). When `'1'` (default), the locked template copy is cleared before each weekly/monthly scheduled send so dynamic content (shortcodes, WP queries) is re-evaluated fresh. Has no effect on `once`-type schedules.
+- **`dnd_threshold_override`** - Do-not-disturb threshold, in seconds, for the send currently running. Written by `SchedulerCron` when the schedule that started the send overrides the global setting, and deleted by `CronSend` when the send finishes. Absent means "use the global setting"; an explicit `0` means "no do-not-disturb check for this run".
 - **`send_condition_shortcode`** - Optional shortcode name (string, no brackets). When set, `SchedulerCron` calls `do_shortcode("[{name} campaign_id='{id}']")` before every scheduled send. Empty/whitespace-only output → send is skipped and logged. Non-empty output → send proceeds normally. Leave blank to always send.
 
 ### Email Delivery Counters
@@ -396,10 +398,85 @@ The threshold is configurable under **Settings → Failing Email**. Subscribers 
 - Taxonomy-based audience assignment
 - Automatic "Failing Email" flagging after repeated delivery failures
 
+## Scheduler
+
+A schedule is its own post (`mawiblah_scheduler`) pointing at one campaign. One WP-Cron event,
+`mawiblah_scheduler_check`, walks every active schedule at the interval configured under
+**Settings → Scheduler** and starts a background send for any that is due.
+
+### Scheduler fields
+
+| Field | Type | Purpose |
+|---|---|---|
+| `campaign_id` | int | Campaign post ID to send |
+| `status` | string | `active`, `paused` or `completed` |
+| `schedule_type` | string | `once`, `weekly` or `monthly` |
+| `send_time` | string | `H:i` in the site timezone |
+| `send_day` | int | Day-of-week (`0`=Sun…`6`=Sat) for weekly; day-of-month (`1`-`31`) for monthly |
+| `send_date` | string | `YYYY-MM-DD`, for `once` schedules |
+| `next_send` | int | Unix timestamp of the next occurrence |
+| `end_date` | string | Optional `YYYY-MM-DD` cutoff for recurring schedules; empty = forever |
+| `last_sent` | int | Unix timestamp of the last occurrence that fired |
+| `override_dnd` | bool | `1` when this schedule replaces the global do-not-disturb threshold |
+| `dnd_threshold` | int | Threshold in seconds used when `override_dnd` is on; `0` means no do-not-disturb check |
+
+### Do-not-disturb override
+
+By default a scheduled send obeys the global **Don't Disturb Threshold** — the minimum time
+before the same subscriber may be contacted again. A schedule that needs its own cadence (a
+daily alert next to a monthly newsletter, say) can override it: tick **Override the global
+threshold for this schedule** on the schedule form and enter the number of seconds. The field
+is prefilled with the current global value.
+
+The override belongs to the *run*, not to the campaign:
+
+```mermaid
+flowchart TD
+    A[SchedulerCron::check\nschedule is due] --> B{override_dnd?}
+    B -- Yes --> C[Write dnd_threshold_override\nto the campaign]
+    B -- No --> D[Delete dnd_threshold_override\nfrom the campaign]
+    C & D --> E[Reset campaign\nbackgroundSendStart\nCronSend::schedule]
+    E --> F[CronSend::processBatch]
+    F --> G{campaign has\ndnd_threshold_override?}
+    G -- Yes --> H[Use it — 0 disables\nthe check for this run]
+    G -- No --> I[Use Settings::dontDisturbThreshold]
+    H & I --> J[Send / skip each subscriber]
+    J --> K{More subscribers?}
+    K -- Yes --> F
+    K -- No --> L[campaignFinish\nclearDoNotDisturbOverride]
+
+    style C fill:#15803d,color:#fff
+    style D fill:#dc2626,color:#fff
+    style H fill:#f59e0b,color:#000
+    style L fill:#15803d,color:#fff
+```
+
+Resolution order in `CronSend::doNotDisturbThreshold()`:
+
+1. The campaign's `dnd_threshold_override` meta, if it exists — including a value of `0`, which
+   turns the check off for that run.
+2. Otherwise the global `Settings::dontDisturbThreshold()`.
+
+Because the meta is written immediately before the send and deleted when the send finishes, no
+other path is affected: `/send-email` (browser-driven sends), test sends and the campaign list
+all keep reading the global setting. A schedule whose override is later switched off deletes the
+meta on its next occurrence, so a stale number cannot survive.
+
+The resolved threshold and where it came from (`schedule` or `global`) are recorded in the
+`scheduler` log entry written when the send starts:
+
+```
+[2026-09-02 09:00:01] [scheduler] Scheduled campaign started: Weekly digest | {"schedulerId":12,"campaignPostId":42,"scheduleType":"weekly","dndThreshold":86400,"dndSource":"schedule"}
+```
+
 ## Settings
 
 ### Email Intervals
 Control the minimum time between emails sent to the same subscriber to avoid overwhelming them.
+
+The **Don't Disturb Threshold** set here is the site-wide default. An individual schedule can
+override it — see [Scheduler](#scheduler) — in which case the override applies only to the sends
+that schedule starts.
 
 ### Failing Email
 - **Failure threshold** — number of failed sends before a subscriber is moved to the Failing Email audience (default: 3, minimum: 1)

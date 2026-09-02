@@ -2,10 +2,12 @@
 
 use Mawiblah\Campaigns;
 use Mawiblah\Helpers;
+use Mawiblah\Settings;
 
 defined('ABSPATH') || exit;
 
 $isEdit = isset($scheduler) && $scheduler->id;
+$globalDndThreshold = max(0, (int) Settings::dontDisturbThreshold());
 ?>
 <div class="wrap mawiblah">
 
@@ -163,6 +165,40 @@ $isEdit = isset($scheduler) && $scheduler->id;
                     </td>
                 </tr>
 
+                <tr>
+                    <th scope="row">
+                        <label for="scheduler-override-dnd"><?php esc_html_e("Don't Disturb Threshold", 'mawiblah'); ?></label>
+                    </th>
+                    <td>
+                        <label>
+                            <input type="checkbox" id="scheduler-override-dnd" name="override_dnd" value="1"
+                                   <?php checked($isEdit && $scheduler->override_dnd); ?>>
+                            <?php esc_html_e('Override the global threshold for this schedule', 'mawiblah'); ?>
+                        </label>
+                        <p class="description">
+                            <?php
+                            printf(
+                                /* translators: %s: global do-not-disturb threshold in seconds */
+                                esc_html__('Leave unticked to use the global setting (%s seconds).', 'mawiblah'),
+                                esc_html((string) $globalDndThreshold)
+                            );
+                            ?>
+                        </p>
+                    </td>
+                </tr>
+
+                <tr id="row-dnd-threshold">
+                    <th scope="row">
+                        <label for="scheduler-dnd-threshold"><?php esc_html_e('Threshold for this schedule', 'mawiblah'); ?></label>
+                    </th>
+                    <td>
+                        <input type="number" id="scheduler-dnd-threshold" name="dnd_threshold" min="0" step="1"
+                               class="regular-text"
+                               value="<?php echo esc_attr((string) (($isEdit && $scheduler->override_dnd) ? $scheduler->dnd_threshold : $globalDndThreshold)); ?>">
+                        <p class="description"><?php esc_html_e('Minimum time in seconds before the same subscriber is contacted again by this schedule. 0 sends regardless of when they were last contacted.', 'mawiblah'); ?></p>
+                    </td>
+                </tr>
+
                 <tr id="row-end-date">
                     <th scope="row">
                         <label for="scheduler-end-date"><?php esc_html_e('End Date', 'mawiblah'); ?></label>
@@ -201,6 +237,8 @@ $isEdit = isset($scheduler) && $scheduler->id;
     var sendTimeInput = document.getElementById('scheduler-send-time');
     var dayWeekSelect = document.getElementById('scheduler-day-week');
     var dayMonthSelect= document.getElementById('scheduler-day-month');
+    var overrideDnd   = document.getElementById('scheduler-override-dnd');
+    var rowDnd        = document.getElementById('row-dnd-threshold');
     var preview       = document.getElementById('scheduler-preview');
     var previewList   = document.getElementById('scheduler-preview-list');
 
@@ -297,12 +335,18 @@ $isEdit = isset($scheduler) && $scheduler->id;
         preview.style.display = '';
     }
 
+    function toggleDndRow() {
+        rowDnd.style.display = overrideDnd.checked ? '' : 'none';
+    }
+
     typeSelect.addEventListener('change', toggleRows);
+    overrideDnd.addEventListener('change', toggleDndRow);
     sendDateInput.addEventListener('change', updatePreview);
     sendTimeInput.addEventListener('change', updatePreview);
     dayWeekSelect.addEventListener('change', updatePreview);
     dayMonthSelect.addEventListener('change', updatePreview);
 
     toggleRows();
+    toggleDndRow();
 }());
 </script>

@@ -10,17 +10,17 @@ Templates::loadTemplate('stats/styles.php', []);
 <div style="margin-bottom:20px;display:flex;gap:8px;flex-wrap:wrap;">
     <a href="<?php echo esc_url(admin_url('edit-tags.php?taxonomy=mawiblah_subscriber_category&post_type=mawiblah_subscriber')); ?>"
        class="button" style="display:inline-flex;align-items:center;gap:4px;">
-        <span class="dashicons dashicons-category" style="font-size:16px;"></span>
+        <span class="dashicons dashicons-category" aria-hidden="true"></span>
         <?php esc_html_e('Add Audience', 'mawiblah'); ?>
     </a>
     <a href="<?php echo esc_url(admin_url('post-new.php?post_type=mawiblah_subscriber')); ?>"
        class="button" style="display:inline-flex;align-items:center;gap:4px;">
-        <span class="dashicons dashicons-groups" style="font-size:16px;"></span>
+        <span class="dashicons dashicons-groups" aria-hidden="true"></span>
         <?php esc_html_e('Add Subscriber', 'mawiblah'); ?>
     </a>
     <a href="<?php echo esc_url(admin_url('admin.php?page=mawiblah-campaigns&action=create-campaign')); ?>"
        class="button button-primary" style="display:inline-flex;align-items:center;gap:4px;">
-        <span class="dashicons dashicons-megaphone" style="font-size:16px;"></span>
+        <span class="dashicons dashicons-megaphone" aria-hidden="true"></span>
         <?php esc_html_e('New Campaign', 'mawiblah'); ?>
     </a>
 </div>

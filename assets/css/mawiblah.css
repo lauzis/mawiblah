@@ -406,3 +406,22 @@ form.google-analytics-events {
     white-space: pre;
 }
 
+
+/*
+ * Buttons with a dashicon in them.
+ *
+ * A dashicon is a 20x20 box with `line-height: 1`, and the glyph fills it.
+ * Shrinking only the font leaves the box at 20px, so the 16px glyph is drawn
+ * at the top of it and lands about 2px above a centred label -- which is what
+ * "New Campaign" and the buttons beside it were doing.
+ *
+ * Sizing the box to the glyph puts it back on the line. Scoped to `.button`,
+ * so the admin menu's own 20px icons are untouched.
+ */
+.button .dashicons {
+    width: 16px;
+    height: 16px;
+    font-size: 16px;
+    line-height: 16px;
+    vertical-align: middle;
+}

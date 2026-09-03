@@ -70,6 +70,13 @@ The initial version was built by hand. From version 1.0.9 onward, most changes h
 
 ## Change log
 
+### --- 1.0.47 ---
+- **Fix:** the dashicons in the Mawiblah start page's buttons sat about 2px above their
+  labels. A dashicon is a 20×20 box whose glyph fills it, so shrinking only the font left
+  the glyph drawn at the top of an unchanged box. The box is sized to the glyph in
+  `mawiblah.css` and the inline `font-size` is gone from the markup; the admin menu's own
+  20px icons are untouched.
+
 ### --- 1.0.46 ---
 - **Fix:** the CSV import's file control looked like it belonged to a different page.
   A file input is the one control WordPress' admin CSS leaves to the browser, so its

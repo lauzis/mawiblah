@@ -799,9 +799,29 @@ class Subscribers
      */
     public static function sentEmail(int $subscriberId, int $campaignPostId, bool $testMode = false): void
     {
+        self::markCampaignProcessed($subscriberId, $campaignPostId, $testMode);
+        self::updateLastInteraction($subscriberId);
+    }
+
+    /**
+     * Records that a campaign is finished with this subscriber, without claiming
+     * an email reached them.
+     *
+     * Every skip path used to call sentEmail(), which stamps lastInteraction --
+     * the very field the do-not-disturb rule reads. A subscriber skipped for
+     * being inside the quiet window therefore had that window restarted from the
+     * moment of the skip, so any further campaign kept pushing it forward and
+     * they could never come out of it.
+     *
+     * @param int  $subscriberId   Subscriber post ID.
+     * @param int  $campaignPostId Campaign post ID.
+     * @param bool $testMode       Whether this is the test phase of the campaign.
+     * @return void
+     */
+    public static function markCampaignProcessed(int $subscriberId, int $campaignPostId, bool $testMode = false): void
+    {
         $key = $testMode ? 'sent_test_' . $campaignPostId : 'sent_' . $campaignPostId;
         update_post_meta($subscriberId, $key, 'sent');
-        self::updateLastInteraction($subscriberId);
     }
 
     /** Clears the test-send flag for all subscribers for a given campaign. Called by testReset(). */

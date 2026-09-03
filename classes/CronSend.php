@@ -158,7 +158,8 @@ class CronSend
                 // Unsubscribed
                 if ($subscriber->unsubed) {
                     $emailsUnsubed++;
-                    Subscribers::sentEmail($subscriber->id, $campaignPostId, false);
+                    self::logSkip($campaignPostId, $subscriber, 'unsubscribed');
+                    Subscribers::markCampaignProcessed($subscriber->id, $campaignPostId, false);
                     Campaigns::updateCounters($campaign, $emailsSent, $emailsFailed, $emailsSkipped, $emailsUnsubed);
                     $batchCount++;
                     continue;
@@ -168,7 +169,8 @@ class CronSend
                 if ($failingEmailAudience
                     && has_term($failingEmailAudience->term_id, Subscribers::postType() . '_category', $subscriber->id)) {
                     $emailsSkipped++;
-                    Subscribers::sentEmail($subscriber->id, $campaignPostId, false);
+                    self::logSkip($campaignPostId, $subscriber, 'in the failing-email audience');
+                    Subscribers::markCampaignProcessed($subscriber->id, $campaignPostId, false);
                     Campaigns::updateCounters($campaign, $emailsSent, $emailsFailed, $emailsSkipped, $emailsUnsubed);
                     $batchCount++;
                     continue;
@@ -179,7 +181,12 @@ class CronSend
                     $timeDiff = time() - (int) $subscriber->lastInteraction;
                     if ($timeDiff < $doNotDisturbThreshold) {
                         $emailsSkipped++;
-                        Subscribers::sentEmail($subscriber->id, $campaignPostId, false);
+                        self::logSkip($campaignPostId, $subscriber, sprintf(
+                            'do not disturb — last interaction %s ago, threshold %s',
+                            human_time_diff((int) $subscriber->lastInteraction),
+                            human_time_diff(0, $doNotDisturbThreshold)
+                        ));
+                        Subscribers::markCampaignProcessed($subscriber->id, $campaignPostId, false);
                         Campaigns::updateCounters($campaign, $emailsSent, $emailsFailed, $emailsSkipped, $emailsUnsubed);
                         $batchCount++;
                         continue;
@@ -189,7 +196,8 @@ class CronSend
                 // Email sending disabled in settings — mark as processed so counters advance
                 if (!$sendEmails) {
                     $emailsSkipped++;
-                    Subscribers::sentEmail($subscriber->id, $campaignPostId, false);
+                    self::logSkip($campaignPostId, $subscriber, 'e-mail sending is switched off in settings');
+                    Subscribers::markCampaignProcessed($subscriber->id, $campaignPostId, false);
                     Campaigns::updateCounters($campaign, $emailsSent, $emailsFailed, $emailsSkipped, $emailsUnsubed);
                     $batchCount++;
                     continue;
@@ -282,6 +290,26 @@ class CronSend
      * @param int $campaignPostId Campaign post ID.
      * @return int Threshold in seconds; 0 disables the check.
      */
+    /**
+     * Records why a subscriber was passed over.
+     *
+     * The batch summary counts skips but has never said what caused them, which
+     * makes "it sent nothing" a guessing game between four different rules.
+     *
+     * @param int    $campaignPostId Campaign post ID.
+     * @param object $subscriber     The subscriber being skipped.
+     * @param string $reason         Why, in words.
+     * @return void
+     */
+    private static function logSkip(int $campaignPostId, object $subscriber, string $reason): void
+    {
+        Logs::addLog('cron-send', "Skipped {$subscriber->email}: {$reason}", [
+            'campaignPostId' => $campaignPostId,
+            'subscriberId'   => $subscriber->id,
+            'reason'         => $reason,
+        ]);
+    }
+
     public static function doNotDisturbThreshold(int $campaignPostId): int
     {
         if (metadata_exists('post', $campaignPostId, self::DND_OVERRIDE_META)) {

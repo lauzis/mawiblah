@@ -70,6 +70,18 @@ The initial version was built by hand. From version 1.0.9 onward, most changes h
 
 ## Change log
 
+### --- 1.0.48 ---
+- **Fix:** a subscriber skipped for the do-not-disturb window had that window restarted
+  from the moment of the skip. Every skip path called `Subscribers::sentEmail()`, which
+  stamps `lastInteraction` — the very field the rule reads — so with campaigns running
+  regularly a quiet subscriber could never come out of it. Skips now call
+  `Subscribers::markCampaignProcessed()`, which records that the campaign is finished with
+  them and nothing more. Only a successful `wp_mail()` stamps an interaction.
+- **New:** the batch log says *why* each subscriber was passed over — unsubscribed, in the
+  failing-email audience, inside the do-not-disturb window (with the time since their last
+  interaction and the threshold), or sending switched off. The summary counted skips but
+  never explained them, which made "it sent nothing" a guess between four rules.
+
 ### --- 1.0.47 ---
 - **Fix:** the dashicons in the Mawiblah start page's buttons sat about 2px above their
   labels. A dashicon is a 20×20 box whose glyph fills it, so shrinking only the font left

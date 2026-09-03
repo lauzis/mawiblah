@@ -25,6 +25,12 @@ MAWIBLAH is a WordPress plugin that provides Mailchimp-like functionality for se
   only option, is migrated to `'v3'` in 1.0.40 -- Carbon Fields returns a
   select's default for any value not in its options, so leaving it would have
   read as *disabled*
+- **Skips vs sends** - `Subscribers::sentEmail()` records the campaign *and* stamps
+  `lastInteraction`; `markCampaignProcessed()` only records the campaign. Every
+  skip path uses the latter -- stamping an interaction for an e-mail nobody
+  received restarted the do-not-disturb window on each attempt, so a quiet
+  subscriber could never come out of it (fixed in 1.0.48). Each skip is logged
+  with its reason.
 - **Scheduler / SchedulerCron** - A scheduler is its own post (`campaign_id`,
   `status`, `schedule_type` once|daily|weekly|monthly, `send_time`, `send_day`,
   `send_date`, `next_send`, `end_date`, `override_dnd`, `dnd_threshold`). One WP-Cron event,

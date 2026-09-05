@@ -70,6 +70,13 @@ The initial version was built by hand. From version 1.0.9 onward, most changes h
 
 ## Change log
 
+### --- 1.0.50 ---
+- **Fix:** a finished campaign kept its **Duplicate** button. The row replaced all five
+  action cells with one "Campaign is completed" cell, which took Duplicate with it — the one
+  action a finished campaign still allows, and the one most wanted, since "same letter, next
+  month" is how the next campaign starts. "Campaign is completed" is also translatable now;
+  it was the one bare string in that table.
+
 ### --- 1.0.49 ---
 - **New:** a schedule's edit screen shows its **history** — every occurrence, when it
   started and finished, how long it took, and what it sent (sent / failed / skipped /

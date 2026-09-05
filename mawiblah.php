@@ -3,14 +3,14 @@
  * Plugin Name: Mawiblah
  * Plugin URI: https://github.com/lauzis/
  * Description: Fff-ine, will build my own mailchimp... with blackjack and hookers.
- * Version: 1.0.49
+ * Version: 1.0.50
  * Author: Aivars Lauzis
  * Author URI: https://github.com/lauzis/
  * License: GPL3 - http://www.gnu.org/licenses/gpl.html
  * Requires PHP: 8.0
  */
 
-define('MAWIBLAH_VERSION_BASE', '1.0.49');
+define('MAWIBLAH_VERSION_BASE', '1.0.50');
 if (!defined('MAWIBLAH_VERSION')) {
     define('MAWIBLAH_VERSION', MAWIBLAH_VERSION_BASE);
 }

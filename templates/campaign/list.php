@@ -94,10 +94,17 @@ use Mawiblah\Helpers;
 
             $backgroundRunning = !empty($campaign->backgroundStarted) && empty($campaign->campaignFinished);
 
+            // Duplicating is the one action a finished campaign still allows --
+            // and the one most wanted, since "same letter, next month" is how the
+            // next campaign starts. It is defined once and printed by both
+            // branches.
+            $duplicateCell = "<td>
+                <a class='btn campaign-actions' data-type='duplicate' data-href='" . esc_url(Helpers::generatePluginUrl(['action' => 'campaign-duplicate', 'campaignPostId' => $campaign->id], 'campaignPostId')) . "'>" . esc_html__('Duplicate', 'mawiblah') . "</a>
+            </td>";
+
             if ($campaignFinished) {
-                echo "<td colspan='5'>
-                    Campaign is completed
-                    </td>";
+                echo "<td colspan='4'>" . esc_html__('Campaign is completed', 'mawiblah') . "</td>";
+                echo $duplicateCell;
             } else {
                 echo "<td>
                     <a class='btn link-send campaign-actions' data-type='send' data-href='" . esc_url(Helpers::generatePluginUrl(['action' => 'test', 'campaignPostId' => $campaign->id])) . "'>" . esc_html($testButtonText) . "</a>
@@ -130,9 +137,7 @@ use Mawiblah\Helpers;
                         <a class='btn link-edit campaign-actions' data-type='edit' data-href='" . esc_url(Helpers::generatePluginUrl(['action' => 'campaign-edit', 'campaignPostId' => $campaign->id], 'campaignPostId')) . "'>" . esc_html__('Edit', 'mawiblah') . "</a>
                     </td>";
                 }
-                echo "<td>
-                    <a class='btn campaign-actions' data-type='duplicate' data-href='" . esc_url(Helpers::generatePluginUrl(['action' => 'campaign-duplicate', 'campaignPostId' => $campaign->id], 'campaignPostId')) . "'>" . esc_html__('Duplicate', 'mawiblah') . "</a>
-                </td>";
+                echo $duplicateCell;
             }
 
 

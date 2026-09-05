@@ -227,6 +227,113 @@ $globalDndThreshold = max(0, (int) Settings::dontDisturbThreshold());
         <ul id="scheduler-preview-list" style="list-style:disc;padding-left:1.5em;margin:0;"></ul>
     </div>
 
+    <?php
+    /*
+     * What this schedule has actually done. The campaign's own counters are
+     * overwritten by every send, so a schedule that has run twenty times can
+     * only show the last one unless each run is kept -- which is what this is.
+     */
+    $schedulerRuns = $isEdit ? \Mawiblah\Scheduler::getRuns((int) $scheduler->id) : [];
+    ?>
+
+    <?php if ($isEdit): ?>
+        <div class="postbox" style="max-width:900px;margin-top:24px;">
+            <div class="postbox-header">
+                <h2 class="hndle"><span><?php esc_html_e('History', 'mawiblah'); ?></span></h2>
+            </div>
+            <div class="inside">
+                <?php if (!$schedulerRuns): ?>
+                    <p class="description">
+                        <?php esc_html_e('This schedule has not run yet. Each occurrence will be recorded here — when it started, when it finished, and what it sent.', 'mawiblah'); ?>
+                    </p>
+                <?php else: ?>
+                    <table class="wp-list-table widefat fixed striped">
+                        <thead>
+                            <tr>
+                                <?php // `widefat fixed` honours these, and the campaign column needs the room: it carries the name and, when a run sent nothing, the reason. ?>
+                                <th style="width:14%"><?php esc_html_e('Started', 'mawiblah'); ?></th>
+                                <th style="width:14%"><?php esc_html_e('Finished', 'mawiblah'); ?></th>
+                                <th style="width:9%"><?php esc_html_e('Took', 'mawiblah'); ?></th>
+                                <th style="width:31%"><?php esc_html_e('Campaign', 'mawiblah'); ?></th>
+                                <th style="width:7%"><?php esc_html_e('Sent', 'mawiblah'); ?></th>
+                                <th style="width:7%"><?php esc_html_e('Failed', 'mawiblah'); ?></th>
+                                <th style="width:8%"><?php esc_html_e('Skipped', 'mawiblah'); ?></th>
+                                <th style="width:10%"><?php esc_html_e('Unsub.', 'mawiblah'); ?></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        <?php
+                        $schedulerTz = wp_timezone();
+                        foreach ($schedulerRuns as $run):
+                            $runStarted  = (int) ($run['started'] ?? 0);
+                            $runFinished = (int) ($run['finished'] ?? 0);
+                            $runReason   = $run['skipped_reason'] ?? '';
+                            ?>
+                            <tr>
+                                <td><?php echo $runStarted ? esc_html(wp_date('Y-m-d H:i', $runStarted, $schedulerTz)) : '—'; ?></td>
+                                <td>
+                                    <?php
+                                    if ($runReason) {
+                                        echo '—';
+                                    } elseif ($runFinished) {
+                                        echo esc_html(wp_date('Y-m-d H:i', $runFinished, $schedulerTz));
+                                    } else {
+                                        echo '<em>' . esc_html__('still sending', 'mawiblah') . '</em>';
+                                    }
+                                    ?>
+                                </td>
+                                <td>
+                                    <?php
+                                    echo ($runFinished && $runStarted && !$runReason)
+                                        ? esc_html(human_time_diff($runStarted, $runFinished))
+                                        : '—';
+                                    ?>
+                                </td>
+                                <td>
+                                    <?php
+                                    $runCampaign = (int) ($run['campaign_id'] ?? 0);
+                                    $runTitle    = $run['campaign'] ?? '';
+                                    if ($runCampaign && get_post_status($runCampaign)) {
+                                        printf(
+                                            '<a href="%s">%s</a>',
+                                            esc_url(get_edit_post_link($runCampaign)),
+                                            esc_html($runTitle ?: get_the_title($runCampaign))
+                                        );
+                                    } else {
+                                        echo esc_html($runTitle ?: '—');
+                                    }
+
+                                    if ($runReason) {
+                                        printf(
+                                            '<br><span class="description">%s %s</span>',
+                                            esc_html__('Did not send:', 'mawiblah'),
+                                            esc_html($runReason)
+                                        );
+                                    }
+                                    ?>
+                                </td>
+                                <td><?php echo $runReason ? '—' : (int) ($run['sent'] ?? 0); ?></td>
+                                <td><?php echo $runReason ? '—' : (int) ($run['failed'] ?? 0); ?></td>
+                                <td><?php echo $runReason ? '—' : (int) ($run['skipped'] ?? 0); ?></td>
+                                <td><?php echo $runReason ? '—' : (int) ($run['unsubed'] ?? 0); ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                    <p class="description" style="margin-top:8px;">
+                        <?php
+                        printf(
+                            /* translators: %d: number of runs kept */
+                            esc_html__('The last %d runs are kept. Counts come from the campaign as it finished; a run that sent nothing says why.', 'mawiblah'),
+                            (int) \Mawiblah\Scheduler::HISTORY_LIMIT
+                        );
+                        ?>
+                    </p>
+                <?php endif; ?>
+            </div>
+        </div>
+    <?php endif; ?>
+
 </div>
 
 <script>

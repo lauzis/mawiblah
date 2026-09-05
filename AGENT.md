@@ -31,6 +31,14 @@ MAWIBLAH is a WordPress plugin that provides Mailchimp-like functionality for se
   received restarted the do-not-disturb window on each attempt, so a quiet
   subscriber could never come out of it (fixed in 1.0.48). Each skip is logged
   with its reason.
+- **Run history** - each schedule keeps its last `Scheduler::HISTORY_LIMIT` (25)
+  runs in `run_history` post meta and shows them on its edit screen: started,
+  finished, how long it took, the campaign, and sent/failed/skipped/unsubscribed.
+  A campaign's own counters are overwritten by every later send, so a run has to
+  be recorded when it happens or it is lost. `startRun()` opens an entry,
+  `finishRun()` closes it from the `mawiblah_campaign_finished` action -- which
+  fires however the send was started -- and `recordSkippedRun()` records an
+  occurrence that came due and refused, with the reason.
 - **Scheduler / SchedulerCron** - A scheduler is its own post (`campaign_id`,
   `status`, `schedule_type` once|daily|weekly|monthly, `send_time`, `send_day`,
   `send_date`, `next_send`, `end_date`, `override_dnd`, `dnd_threshold`). One WP-Cron event,

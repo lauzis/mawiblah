@@ -47,6 +47,10 @@ class SchedulerCron
 
         add_action(self::HOOK, [self::class, 'check']);
 
+        // A run is closed by whoever finishes the campaign, which is the cron
+        // batch rather than this class.
+        add_action('mawiblah_campaign_finished', [Scheduler::class, 'finishRun']);
+
         $wantedInterval  = Settings::schedulerInterval();
         $wantedName      = self::intervalName($wantedInterval);
         $existingEvent   = wp_get_scheduled_event(self::HOOK);
@@ -117,6 +121,9 @@ class SchedulerCron
             $campaign = Campaigns::getCampaignById($campaignPostId);
             if (!$campaign || !$campaign->testApproved) {
                 Logs::addLog('scheduler', "Scheduler #{$scheduler->id}: campaign #{$campaignPostId} not approved, skipping");
+                if ($campaign) {
+                    Scheduler::recordSkippedRun((int) $scheduler->id, $campaignPostId, __('the campaign has not been test-approved', 'mawiblah'));
+                }
                 continue;
             }
 
@@ -129,6 +136,15 @@ class SchedulerCron
                         'campaignPostId'       => $campaignPostId,
                         'send_condition_shortcode' => $conditionShortcode,
                     ]);
+                    Scheduler::recordSkippedRun(
+                        (int) $scheduler->id,
+                        $campaignPostId,
+                        sprintf(
+                            /* translators: %s: shortcode name */
+                            __('the send condition [%s] returned nothing', 'mawiblah'),
+                            $conditionShortcode
+                        )
+                    );
                     if ($scheduler->schedule_type !== 'once') {
                         Scheduler::updateMeta($scheduler->id, [
                             'next_send' => Scheduler::computeNextSend(
@@ -152,6 +168,7 @@ class SchedulerCron
             // schedule: every occurrence after it was skipped, for ever.
             if (!empty($campaign->backgroundStarted) && empty($campaign->campaignFinished)) {
                 Logs::addLog('scheduler', "Scheduler #{$scheduler->id}: previous send still in progress, skipping this occurrence", ['campaignPostId' => $campaignPostId]);
+                Scheduler::recordSkippedRun((int) $scheduler->id, $campaignPostId, __('the previous send was still running', 'mawiblah'));
                 if ($scheduler->schedule_type !== 'once') {
                     Scheduler::updateMeta($scheduler->id, [
                         'next_send' => Scheduler::computeNextSend(
@@ -177,6 +194,8 @@ class SchedulerCron
                 $dndSource    = 'global';
                 CronSend::clearDoNotDisturbOverride($campaignPostId);
             }
+
+            Scheduler::startRun((int) $scheduler->id, $campaignPostId);
 
             // Reset campaign so every subscriber is treated as unsent
             Scheduler::resetCampaignForResend($campaignPostId, $scheduler->schedule_type);

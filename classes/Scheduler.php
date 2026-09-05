@@ -173,6 +173,120 @@ class Scheduler
         wp_delete_post($id, true);
     }
 
+    /** How many past runs a schedule remembers. */
+    const HISTORY_LIMIT = 25;
+
+    /**
+     * The schedule's past runs, newest first.
+     *
+     * Each entry: started, finished, campaign_id, campaign, sent, failed,
+     * skipped, unsubed, and for an occurrence that never sent, skipped_reason.
+     *
+     * @param int $schedulerId Scheduler post ID.
+     * @return array<int, array<string, mixed>>
+     */
+    public static function getRuns(int $schedulerId): array
+    {
+        $runs = get_post_meta($schedulerId, 'run_history', true);
+
+        return is_array($runs) ? $runs : [];
+    }
+
+    /**
+     * Records that a schedule has just started a send.
+     *
+     * The campaign's own counters are overwritten by every later send, so what
+     * a run did has to be kept here or it is lost the next time the schedule
+     * fires.
+     *
+     * @param int $schedulerId    Scheduler post ID.
+     * @param int $campaignPostId Campaign being sent.
+     * @return void
+     */
+    public static function startRun(int $schedulerId, int $campaignPostId): void
+    {
+        $runs = self::getRuns($schedulerId);
+
+        array_unshift($runs, [
+            'started'     => time(),
+            'finished'    => 0,
+            'campaign_id' => $campaignPostId,
+            'campaign'    => get_the_title($campaignPostId),
+            'sent'        => 0,
+            'failed'      => 0,
+            'skipped'     => 0,
+            'unsubed'     => 0,
+        ]);
+
+        update_post_meta($schedulerId, 'run_history', array_slice($runs, 0, self::HISTORY_LIMIT));
+    }
+
+    /**
+     * Records an occurrence that came due and did not send, and why.
+     *
+     * "Nothing arrived on the 21st" is a question the history should answer as
+     * readily as "what did the 22nd send".
+     *
+     * @param int    $schedulerId    Scheduler post ID.
+     * @param int    $campaignPostId Campaign it would have sent.
+     * @param string $reason         Why it did not.
+     * @return void
+     */
+    public static function recordSkippedRun(int $schedulerId, int $campaignPostId, string $reason): void
+    {
+        $runs = self::getRuns($schedulerId);
+
+        array_unshift($runs, [
+            'started'        => time(),
+            'finished'       => time(),
+            'campaign_id'    => $campaignPostId,
+            'campaign'       => get_the_title($campaignPostId),
+            'sent'           => 0,
+            'failed'         => 0,
+            'skipped'        => 0,
+            'unsubed'        => 0,
+            'skipped_reason' => $reason,
+        ]);
+
+        update_post_meta($schedulerId, 'run_history', array_slice($runs, 0, self::HISTORY_LIMIT));
+    }
+
+    /**
+     * Closes the open run for whichever schedule sent this campaign.
+     *
+     * Called when the campaign finishes, from any path -- a schedule, a manual
+     * background send, the browser. Only a run this schedule opened and has not
+     * closed is touched, so a hand-started send does not rewrite the history of
+     * a scheduled one.
+     *
+     * @param int $campaignPostId Campaign that finished.
+     * @return void
+     */
+    public static function finishRun(int $campaignPostId): void
+    {
+        $campaign = Campaigns::getCampaignById($campaignPostId);
+
+        foreach (self::getAll() as $scheduler) {
+            if ((int) $scheduler->campaign_id !== $campaignPostId) {
+                continue;
+            }
+
+            $runs = self::getRuns($scheduler->id);
+
+            if (!$runs || !empty($runs[0]['finished'])) {
+                continue;
+            }
+
+            $runs[0]['finished'] = time();
+            $runs[0]['sent']     = (int) ($campaign->emailsSend ?? 0);
+            $runs[0]['failed']   = (int) ($campaign->emailsFailed ?? 0);
+            $runs[0]['skipped']  = (int) ($campaign->emailsSkipped ?? 0);
+            $runs[0]['unsubed']  = (int) ($campaign->emailsUnsubed ?? 0);
+
+            update_post_meta($scheduler->id, 'run_history', $runs);
+        }
+    }
+
     /**
      * Computes the Unix timestamp for the next scheduled send based on schedule settings.
      *

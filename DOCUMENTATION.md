@@ -411,6 +411,7 @@ A schedule is its own post (`mawiblah_scheduler`) pointing at one campaign. One 
 | `campaign_id` | int | Campaign post ID to send |
 | `status` | string | `active`, `paused` or `completed` |
 | `schedule_type` | string | `once`, `daily`, `weekly` or `monthly` |
+| `run_history` | array | The last 25 runs: started, finished, campaign_id, campaign, sent, failed, skipped, unsubed, and `skipped_reason` for an occurrence that did not send |
 | `send_time` | string | `H:i` in the site timezone |
 | `send_day` | int | Day-of-week (`0`=Sun…`6`=Sat) for weekly; day-of-month (`1`-`31`) for monthly |
 | `send_date` | string | `YYYY-MM-DD`, for `once` schedules |

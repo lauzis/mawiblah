@@ -1218,6 +1218,13 @@ class Campaigns
     public static function campaignFinish(int $campaignPostId): void
     {
         update_post_meta($campaignPostId, 'campaignFinished', time());
+
+        /**
+         * Fires when a campaign's send is over, however it was started.
+         *
+         * @param int $campaignPostId The campaign that finished.
+         */
+        do_action('mawiblah_campaign_finished', $campaignPostId);
     }
 
     /**

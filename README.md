@@ -70,6 +70,19 @@ The initial version was built by hand. From version 1.0.9 onward, most changes h
 
 ## Change log
 
+### --- 1.0.49 ---
+- **New:** a schedule's edit screen shows its **history** — every occurrence, when it
+  started and finished, how long it took, and what it sent (sent / failed / skipped /
+  unsubscribed). A campaign's counters are overwritten by each new send, so a schedule that
+  has run twenty times could only ever show the last one; each run is now recorded as it
+  happens, the last 25 kept.
+- **New:** an occurrence that came due and did *not* send is recorded too, with the reason
+  — the previous send was still running, the campaign is not test-approved, or the send
+  condition returned nothing. "Why was there no letter on the 21st" is now answered in the
+  same table as "what did the 22nd send".
+- **New:** `mawiblah_campaign_finished` action, fired by `Campaigns::campaignFinish()`
+  whatever started the send.
+
 ### --- 1.0.48 ---
 - **Fix:** a subscriber skipped for the do-not-disturb window had that window restarted
   from the moment of the skip. Every skip path called `Subscribers::sentEmail()`, which

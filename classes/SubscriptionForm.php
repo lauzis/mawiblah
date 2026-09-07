@@ -250,6 +250,24 @@ class SubscriptionForm
      */
     private static function verifyRecaptcha(string $token): bool
     {
+        /**
+         * Answer the captcha without asking Google.
+         *
+         * Return true or false to decide the verification outright; return null
+         * (the default) to let it proceed. This exists so an integration test
+         * can exercise the subscribe route on a site that has the captcha
+         * switched on -- the alternative was a test that switches the site's
+         * captcha off and hopes it gets to switch it back.
+         *
+         * @param bool|null $verified Decision, or null to carry on.
+         * @param string    $token    The token the browser sent, if any.
+         */
+        $verified = apply_filters('mawiblah_recaptcha_pre_verify', null, $token);
+
+        if (is_bool($verified)) {
+            return $verified;
+        }
+
         if (empty($token)) {
             return false;
         }

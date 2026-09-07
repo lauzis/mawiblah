@@ -131,6 +131,18 @@ class SchedulerCron
             $conditionShortcode = $campaign->send_condition_shortcode ?? '';
             if (!empty($conditionShortcode)) {
                 $output = trim(do_shortcode("[{$conditionShortcode} campaign_id='{$campaignPostId}']"));
+
+                // What the rule answered, whichever way it went. Only its
+                // refusals were logged, so a schedule with a condition that
+                // said yes looked exactly like one with no condition at all --
+                // and a condition that never runs looks the same again.
+                Logs::addLog('scheduler', "Scheduler #{$scheduler->id}: send condition [{$conditionShortcode}] returned " . ($output === '' ? 'nothing' : '"' . mb_substr($output, 0, 80) . '"'), [
+                    'campaignPostId'           => $campaignPostId,
+                    'send_condition_shortcode' => $conditionShortcode,
+                    'output'                   => mb_substr($output, 0, 200),
+                    'decision'                 => $output === '' ? 'skip' : 'send',
+                ]);
+
                 if ($output === '') {
                     Logs::addLog('scheduler', "Scheduler #{$scheduler->id}: send skipped — custom rule returned empty", [
                         'campaignPostId'       => $campaignPostId,

@@ -69,6 +69,23 @@ class Templates
         }
 
         if ($statusCode !== 200 || !is_object($data) || empty($data->template)) {
+            // The loopback is a preference, not a requirement: it exists so WPML
+            // is fully initialised before shortcodes run. Anywhere the request
+            // cannot authenticate itself -- WP-CLI, a self-test, a cron run
+            // outside DOING_CRON -- it answers 401 or 403, and giving up there
+            // meant a template that is sitting readable on disk could not be
+            // sent. Load it directly and say so.
+            $content = self::getEmailTemplateByName($templateName);
+
+            if ($content !== false) {
+                Logs::addLog('template', "REST loopback unavailable, loaded the template directly", [
+                    'template' => $templateName,
+                    'status'   => $statusCode,
+                ]);
+
+                return do_shortcode($content);
+            }
+
             Logs::addError('template', "REST loopback returned unexpected response", ['template' => $templateName, 'status' => $statusCode, 'body' => substr($body, 0, 300)]);
             return false;
         }

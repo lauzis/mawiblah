@@ -63,6 +63,7 @@ class Tests
             'programmatic-subscribe'     => 'Programmatic Subscribe (mawiblah_subscribe hook)',
             'logging'                    => 'Logging (write & verify file log)',
             'scheduler-dnd'              => 'Scheduled Do-Not-Disturb Override',
+            'scheduler-condition'        => 'Scheduled Send Condition (shortcode gate)',
         ];
     }
 
@@ -93,6 +94,7 @@ class Tests
             'programmatic-subscribe'     => self::programmaticSubscribeScenario(),
             'logging'                    => self::loggingScenario(),
             'scheduler-dnd'              => self::schedulerDontDisturbScenario(),
+            'scheduler-condition'        => self::schedulerSendConditionScenario(),
             default                      => self::echoResult('Unknown scenario: ' . $scenario, 'error'),
         };
     }
@@ -488,11 +490,35 @@ class Tests
             return SubscriptionForm::subscribe($makeRequest($body))->get_data();
         };
 
+        // The route is the real one, captcha and all, and a site with reCAPTCHA
+        // switched on would fail every step below for want of a token. The
+        // verification is answered here rather than switched off in settings,
+        // so a test that dies halfway cannot leave the form unguarded.
+        $passRecaptcha = fn() => true;
+        add_filter('mawiblah_recaptcha_pre_verify', $passRecaptcha);
+
+        if (Settings::recaptchaReady()) {
+            self::echoTitle('reCAPTCHA is active on this site');
+            self::echoResult('Verification is answered by the test for the steps below', 'success');
+        }
+
         self::echoTitle('New email → subscriber created, added to both audiences');
         $res = $call(['email' => $email, 'audienceHashes' => $hashes, 'honeypot' => '']);
         $sub = Subscribers::getSubscriber($email);
         $ok  = $res['status'] === 'ok' && $sub;
-        self::echoResult($ok ? 'OK' : 'Failed', $ok ? 'success' : 'error');
+        self::echoResult($ok ? 'OK' : 'Failed', $ok ? 'success' : 'error', $ok ? null : $res);
+
+        if (!$sub) {
+            // Everything below reads that subscriber. Without this the run ends
+            // in a fatal and the page says only "critical error", which hides
+            // the one result that mattered.
+            self::echoResult('Nothing was subscribed, so the rest of this scenario cannot run.', 'error');
+            remove_filter('mawiblah_recaptcha_pre_verify', $passRecaptcha);
+            self::deleteSubscribersByEmail($email);
+            if ($aud1Id) { wp_delete_term($aud1Id, Subscribers::postType() . '_category'); }
+            if ($aud2Id) { wp_delete_term($aud2Id, Subscribers::postType() . '_category'); }
+            return;
+        }
 
         self::echoTitle('Same active email → silent ok, no duplicate');
         $res  = $call(['email' => $email, 'audienceHashes' => $hashes, 'honeypot' => '']);
@@ -535,6 +561,7 @@ class Tests
         self::echoResult($rejected ? 'Correctly rejected' : 'Should be rejected', $rejected ? 'success' : 'error');
 
         // Cleanup
+        remove_filter('mawiblah_recaptcha_pre_verify', $passRecaptcha);
         self::deleteSubscribersByEmail($email);
         self::deleteSubscribersByEmail('honeypot@mawiblah.test');
         if ($aud1Id) wp_delete_term($aud1Id, Subscribers::postType() . '_category');
@@ -957,6 +984,126 @@ class Tests
 
         Scheduler::delete((int) $sId);
         Campaigns::deleteCampaign($cId);
+        self::echoResult('Cleaned up', 'success');
+    }
+
+    // -------------------------------------------------------------------------
+    // Scheduled Send Condition
+    // -------------------------------------------------------------------------
+
+    /**
+     * In-browser integration test: the send-condition shortcode gate.
+     *
+     * Registers two throwaway shortcodes -- one that answers, one that returns
+     * nothing -- and runs the scheduler against each, checking what it did
+     * rather than what it said: a schedule that sends leaves a run open on the
+     * campaign, one that refuses records why and moves to its next occurrence.
+     */
+    public static function schedulerSendConditionScenario(): void
+    {
+        self::echoHeading('Scheduled Send Condition (shortcode gate)');
+
+        add_shortcode('mawiblah_test_condition_yes', fn($atts) => 'yes, ' . ($atts['campaign_id'] ?? 'no id'));
+        add_shortcode('mawiblah_test_condition_no', fn() => '   ');
+
+        $cId = Campaigns::addCampaign('Send Condition Test Campaign', 'Subject', 'Title', 'Content', [], 'test-template');
+        update_post_meta($cId, 'testApproved', time());
+
+        // Due a minute ago, so the next check picks it up.
+        $sId = Scheduler::add('Send Condition Test Schedule', $cId, 'daily', '09:00', 1, '', '', false, 0);
+        Scheduler::updateMeta((int) $sId, ['next_send' => time() - 60]);
+
+        self::echoTitle('The shortcode is called with the campaign id');
+        $answer = trim(do_shortcode("[mawiblah_test_condition_yes campaign_id='{$cId}']"));
+        self::echoResult(
+            $answer === "yes, {$cId}" ? "Returned \"{$answer}\"" : "Returned \"{$answer}\", expected \"yes, {$cId}\"",
+            $answer === "yes, {$cId}" ? 'success' : 'error'
+        );
+
+        // ---- A condition that answers lets the occurrence through ------------
+        self::echoTitle('A condition that answers -> the send starts');
+        update_post_meta($cId, 'send_condition_shortcode', 'mawiblah_test_condition_yes');
+        SchedulerCron::check();
+
+        $campaign = Campaigns::getCampaignById($cId);
+        $started  = !empty($campaign->backgroundStarted);
+        self::echoResult(
+            $started ? 'The campaign was reset and a background send started' : 'The send did not start',
+            $started ? 'success' : 'error',
+            $started ? null : ['backgroundStarted' => $campaign->backgroundStarted ?? null]
+        );
+
+        $runs = Scheduler::getRuns((int) $sId);
+        $recorded = $runs && empty($runs[0]['skipped_reason']);
+        self::echoResult(
+            $recorded ? 'History recorded it as a run, not a refusal' : 'History did not record a run',
+            $recorded ? 'success' : 'error',
+            $recorded ? null : $runs
+        );
+
+        // Put the campaign back to rest before the second half.
+        CronSend::unschedule($cId);
+        Campaigns::backgroundSendStop($cId);
+        delete_post_meta($cId, 'campaignStarted');
+        delete_post_meta($cId, 'campaignFinished');
+        delete_post_meta($sId, 'run_history');
+        Scheduler::updateMeta((int) $sId, ['next_send' => time() - 60]);
+
+        // ---- A condition that says nothing blocks it ------------------------
+        self::echoTitle('A condition that returns nothing -> the occurrence is skipped');
+        update_post_meta($cId, 'send_condition_shortcode', 'mawiblah_test_condition_no');
+        SchedulerCron::check();
+
+        $campaign = Campaigns::getCampaignById($cId);
+        $blocked  = empty($campaign->backgroundStarted);
+        self::echoResult(
+            $blocked ? 'No send was started' : 'The send started even though the condition returned nothing',
+            $blocked ? 'success' : 'error'
+        );
+
+        self::echoTitle('The refusal is recorded, with its reason');
+        $runs   = Scheduler::getRuns((int) $sId);
+        $reason = $runs[0]['skipped_reason'] ?? '';
+        $ok     = $reason !== '' && str_contains($reason, 'mawiblah_test_condition_no');
+        self::echoResult(
+            $ok ? "History says: {$reason}" : 'The refusal was not recorded with a reason',
+            $ok ? 'success' : 'error',
+            $ok ? null : $runs
+        );
+
+        self::echoTitle('The schedule moved on to its next occurrence');
+        $scheduler = Scheduler::getById((int) $sId);
+        $moved     = $scheduler && $scheduler->next_send > time();
+        self::echoResult(
+            $moved ? 'next_send is ' . wp_date('Y-m-d H:i', $scheduler->next_send) : 'next_send was left in the past',
+            $moved ? 'success' : 'error'
+        );
+
+        self::echoTitle('Both answers were written to the log');
+        // Today's file only: the condition was evaluated a moment ago, and
+        // reading five years of logs to find it would be silly.
+        $logged = '';
+        foreach (Logs::getLogFiles() as $logFile) {
+            if (($logFile['date'] ?? '') !== wp_date('Y-m-d')) {
+                continue;
+            }
+            if (!empty($logFile['file']) && is_readable($logFile['file'])) {
+                $logged = (string) file_get_contents($logFile['file']);
+            }
+        }
+        $sawSend = str_contains($logged, 'mawiblah_test_condition_yes');
+        $sawSkip = str_contains($logged, 'mawiblah_test_condition_no');
+        self::echoResult(
+            $sawSend && $sawSkip
+                ? 'The log names the condition and what it returned, both times'
+                : sprintf('Log missing: %s%s', $sawSend ? '' : 'the sending answer ', $sawSkip ? '' : 'the refusal'),
+            $sawSend && $sawSkip ? 'success' : 'error'
+        );
+
+        Scheduler::delete((int) $sId);
+        Campaigns::deleteCampaign($cId);
+        remove_shortcode('mawiblah_test_condition_yes');
+        remove_shortcode('mawiblah_test_condition_no');
         self::echoResult('Cleaned up', 'success');
     }
 }

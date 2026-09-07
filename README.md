@@ -70,6 +70,28 @@ The initial version was built by hand. From version 1.0.9 onward, most changes h
 
 ## Change log
 
+### --- 1.0.51 ---
+- **New:** self-test **Scheduled Send Condition (shortcode gate)** — one run where the
+  condition answers and the send starts, one where it returns nothing and the occurrence is
+  skipped, checking what the scheduler *did*: the campaign reset and started, the refusal
+  recorded in the schedule's history with its reason, `next_send` moved on, and both answers
+  in the log.
+- **New:** the send condition's answer is logged either way. Only its refusals were written
+  down, so a condition that said yes looked exactly like a schedule with no condition at
+  all — and like one whose shortcode never ran.
+- **Fix:** the **Subscription Form** self-test failed on any site with reCAPTCHA switched
+  on: it exercises the real REST route, which rejected it for having no token. A new
+  `mawiblah_recaptcha_pre_verify` filter lets the test answer the verification for its own
+  duration, rather than switching the site's captcha off and hoping to switch it back.
+- **Fix:** that scenario also ended in a WordPress "critical error" page when the first step
+  failed — everything after it read a subscriber that was never created. It now stops and
+  says so, leaving the failure visible instead of a blank error page.
+- **Fix:** a template lookup that cannot use the REST loopback now reads the file directly
+  instead of giving up. The loopback exists so WPML is initialised before shortcodes run;
+  anywhere the request cannot authenticate itself — WP-CLI, a self-test, cron outside
+  `DOING_CRON` — it answered 401 or 403 and a template sitting readable on disk could not be
+  sent.
+
 ### --- 1.0.50 ---
 - **Fix:** a finished campaign kept its **Duplicate** button. The row replaced all five
   action cells with one "Campaign is completed" cell, which took Duplicate with it — the one

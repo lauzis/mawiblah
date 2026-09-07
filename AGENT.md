@@ -31,6 +31,10 @@ MAWIBLAH is a WordPress plugin that provides Mailchimp-like functionality for se
   received restarted the do-not-disturb window on each attempt, so a quiet
   subscriber could never come out of it (fixed in 1.0.48). Each skip is logged
   with its reason.
+- **`mawiblah_recaptcha_pre_verify`** - return true/false to decide the
+  subscription form's captcha outright, null to let it proceed. The self-tests
+  use it so the suite passes on a site with reCAPTCHA on, without touching the
+  site's settings.
 - **Run history** - each schedule keeps its last `Scheduler::HISTORY_LIMIT` (25)
   runs in `run_history` post meta and shows them on its edit screen: started,
   finished, how long it took, the campaign, and sent/failed/skipped/unsubscribed.

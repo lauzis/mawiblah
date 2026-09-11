@@ -173,7 +173,7 @@ Each campaign in MAWIBLAH tracks various metrics and metadata stored as WordPres
 - **`status`** - Current campaign status (draft, sending-in-progress, completed, etc.)
 - **`rerender_on_recurring`** - Boolean (`'1'`/`'0'`). When `'1'` (default), the locked template copy is cleared before each daily/weekly/monthly scheduled send so dynamic content (shortcodes, WP queries) is re-evaluated fresh. Has no effect on `once`-type schedules.
 - **`dnd_threshold_override`** - Do-not-disturb threshold, in seconds, for the send currently running. Written by `SchedulerCron` when the schedule that started the send overrides the global setting, and deleted by `CronSend` when the send finishes. Absent means "use the global setting"; an explicit `0` means "no do-not-disturb check for this run".
-- **`send_condition_shortcode`** - Optional shortcode name (string, no brackets). When set, `SchedulerCron` calls `do_shortcode("[{name} campaign_id='{id}']")` before every scheduled send. Empty/whitespace-only output → send is skipped and logged. Non-empty output → send proceeds normally. Leave blank to always send.
+- **`send_condition_shortcode`** - Optional shortcode name (string, no brackets, no attributes). When set, `SchedulerCron` calls `do_shortcode("[{name} campaign_id='{id}']")` before every scheduled send. Empty/whitespace-only output → send is skipped and logged. Non-empty output → send proceeds normally. A name that is not a registered shortcode → send is skipped and logged. Leave blank to always send. Both the save and the scheduler reduce the value with `Campaigns::sendConditionShortcodeName()`, so a whole `[name campaign_id="5"]` counts as `name`.
 
 ### Email Delivery Counters
 - **`emailsSend`** - Total number of emails successfully sent
@@ -694,10 +694,18 @@ A campaign can define an optional **Send Condition Shortcode** (Campaign Details
 |---|---|
 | Non-empty string | Send proceeds normally |
 | Empty / whitespace only | Send is skipped; reason logged as `scheduler` with action detail |
+| Not a registered shortcode | Send is skipped; reason logged and recorded in the schedule's run history |
+
+The field holds the shortcode **name only** — e.g. `mawiblah_new_posts_since_last_sent`. The brackets and `campaign_id` are added by the scheduler, so a value entered as a whole shortcode used to be wrapped twice, and the text left around the answer made it non-empty: the condition could never block a send.
+
+`Campaigns::sendConditionShortcodeName(string $value): ?string` reads the name out of a value (`[name campaign_id="5"]` → `name`, blank → `''`, no readable name → `null`). It is applied:
+
+- **On save** (`Campaigns::saveMetaBoxData()`): the name is stored. A value that had to be reduced, or a name no shortcode is registered under, leaves a warning notice; a value with no readable name leaves the stored condition unchanged with an error notice. Notices are kept per user in the `mawiblah_send_condition_notice_{user_id}` transient and shown by `Campaigns::showSendConditionNotices()` on the next admin page.
+- **Before each scheduled send** (`SchedulerCron::check()`): so a campaign stored before validation existed still behaves. A name `shortcode_exists()` does not know is skipped rather than evaluated — WordPress would print it back as text, which reads as "send".
 
 ### Shortcode contract
 
-The shortcode is called as `[shortcode_name campaign_id="N"]`, where `N` is the campaign post ID. The handler must:
+The shortcode is called as `[shortcode_name campaign_id="N"]`, where `N` is the campaign post ID. This is what the scheduler builds from the field, not what goes into it. The handler must:
 - Accept `campaign_id` as an attribute.
 - Return a **non-empty string** to allow the send.
 - Return an **empty string** (or nothing) to block the send.

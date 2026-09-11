@@ -1100,6 +1100,42 @@ class Tests
             $sawSend && $sawSkip ? 'success' : 'error'
         );
 
+        // ---- A whole shortcode in the field --------------------------------
+        // The field takes a name. A value copied as `[name campaign_id="N"]`
+        // was wrapped a second time, and what was left around the answer made
+        // it non-empty, so the condition could never say no.
+        self::echoTitle('A whole shortcode in the field -> its empty answer still skips the occurrence');
+        delete_post_meta($sId, 'run_history');
+        Scheduler::updateMeta((int) $sId, ['next_send' => time() - 60]);
+        update_post_meta($cId, 'send_condition_shortcode', '[mawiblah_test_condition_no campaign_id="' . $cId . '"]');
+        SchedulerCron::check();
+
+        $campaign = Campaigns::getCampaignById($cId);
+        $blocked  = empty($campaign->backgroundStarted);
+        self::echoResult(
+            $blocked ? 'No send was started' : 'The send started: the brackets and attributes in the field were wrapped a second time',
+            $blocked ? 'success' : 'error',
+            $blocked ? null : Scheduler::getRuns((int) $sId)
+        );
+
+        // ---- A condition nobody registered ----------------------------------
+        // WordPress prints an unknown shortcode back as text, which is not empty.
+        self::echoTitle('A condition that is not a registered shortcode -> the occurrence is skipped');
+        delete_post_meta($sId, 'run_history');
+        Scheduler::updateMeta((int) $sId, ['next_send' => time() - 60]);
+        update_post_meta($cId, 'send_condition_shortcode', 'mawiblah_test_condition_missing');
+        SchedulerCron::check();
+
+        $campaign = Campaigns::getCampaignById($cId);
+        $runs     = Scheduler::getRuns((int) $sId);
+        $reason   = $runs[0]['skipped_reason'] ?? '';
+        $ok       = empty($campaign->backgroundStarted) && str_contains($reason, 'mawiblah_test_condition_missing');
+        self::echoResult(
+            $ok ? "History says: {$reason}" : 'An unknown shortcode did not stop the send',
+            $ok ? 'success' : 'error',
+            $ok ? null : $runs
+        );
+
         Scheduler::delete((int) $sId);
         Campaigns::deleteCampaign($cId);
         remove_shortcode('mawiblah_test_condition_yes');

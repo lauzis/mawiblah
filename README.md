@@ -70,6 +70,28 @@ The initial version was built by hand. From version 1.0.9 onward, most changes h
 
 ## Change log
 
+### --- 1.0.52 ---
+- **Fix:** a Send Condition Shortcode entered as a whole shortcode —
+  `[mawiblah_new_posts_since_last_sent campaign_id="N"]`, the way the Help page showed it —
+  could never stop a send. The scheduler adds the brackets and `campaign_id` itself, so the
+  value was wrapped twice: the shortcode ran and answered nothing, but the stray `[` and
+  attribute text left around that answer made it non-empty, and a digest meant to wait for
+  new articles went out every day. The scheduler now reads the name out of such a value, so a
+  campaign saved that way works again without being re-saved.
+- **Fix:** a send condition that is not a registered shortcode never skipped either —
+  WordPress prints an unknown shortcode back as text. The occurrence is now skipped, logged,
+  and recorded in the schedule's history with the reason.
+- **New:** the field is validated on save. A whole shortcode is stored as its name, with a
+  notice saying so; a value no name can be read from leaves the stored condition unchanged
+  (blanking it would make the campaign send unconditionally); a name no shortcode is
+  registered under is saved with a warning. The field also trims a pasted shortcode to its
+  name as soon as you leave it.
+- **Docs:** the Help page shows the field value — the name — first, and marks
+  `[name campaign_id="N"]` as what the plugin calls, for anyone writing their own condition.
+- **Tests:** `SendConditionTest` covers the name rule, the scheduler with a whole shortcode
+  stored, an unregistered condition, and the save validation; the in-browser **Scheduled Send
+  Condition** self-test gains the whole-shortcode and unregistered cases.
+
 ### --- 1.0.51 ---
 - **New:** self-test **Scheduled Send Condition (shortcode gate)** — one run where the
   condition answers and the send starts, one where it returns nothing and the occurrence is

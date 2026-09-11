@@ -13,6 +13,9 @@ class Campaigns
     const STAT_LINKS_CLICKED = 'linksClicked';
     const STAT_EMAILS_OPENED = 'emailsOpened';
 
+    /** Transient prefix, per user, for notices about the Send Condition Shortcode just saved. */
+    const SEND_CONDITION_NOTICE = 'mawiblah_send_condition_notice_';
+
     // exampel http://gudlenieks.test/?utm_source=email&utm_medium=email&utm_campaign=monthly-email&mawiblahId=%7BmawiblahId%7D&unsubscribe=%7Bemail%7D
     /** Registers the campaign post type and hooks campaign meta boxes and save handlers. */
     public static function init()
@@ -20,6 +23,7 @@ class Campaigns
         self::registerPostType();
         add_action('add_meta_boxes', [self::class, 'addMetaBoxes']);
         add_action('save_post', [self::class, 'saveMetaBoxData']);
+        add_action('admin_notices', [self::class, 'showSendConditionNotices']);
     }
 
     /** Registers the Campaign Details and Campaign Statistics meta boxes on the campaign edit screen. */
@@ -102,7 +106,111 @@ class Campaigns
         }
 
         update_post_meta($post_id, 'rerender_on_recurring', isset($_POST['rerender_on_recurring']) ? '1' : '0');
-        update_post_meta($post_id, 'send_condition_shortcode', sanitize_text_field($_POST['send_condition_shortcode'] ?? ''));
+        self::saveSendCondition((int) $post_id, sanitize_text_field(wp_unslash($_POST['send_condition_shortcode'] ?? '')));
+    }
+
+    /**
+     * Reduces a Send Condition Shortcode value to the bare shortcode name the field has to hold.
+     *
+     * The scheduler adds the brackets and the campaign_id itself, so a value entered as a
+     * whole shortcode -- `[name campaign_id="5"]`, as the Help page used to show it -- was
+     * wrapped a second time, and the condition could never stop a send. The name is read
+     * from such a value and everything around it dropped.
+     *
+     * @param string $value The field value.
+     * @return string|null The shortcode name, '' for a blank value, null when no name can be read.
+     */
+    public static function sendConditionShortcodeName(string $value): ?string
+    {
+        $value = trim($value);
+        if ($value === '') {
+            return '';
+        }
+
+        if (!preg_match('/^\[*\s*([^\s\[\]\/<>&=\'"]+)(?:[\s\/\]]|$)/u', $value, $matches)) {
+            return null;
+        }
+
+        return $matches[1];
+    }
+
+    /**
+     * Stores the Send Condition Shortcode as a name only, and says what was done to it.
+     *
+     * A value no name can be read from leaves the stored condition as it was: blanking it
+     * would quietly turn a conditional campaign into one that always sends.
+     *
+     * @param int    $postId The campaign post ID.
+     * @param string $value  The sanitized, unslashed field value.
+     */
+    private static function saveSendCondition(int $postId, string $value): void
+    {
+        $name = self::sendConditionShortcodeName($value);
+
+        if ($name === null) {
+            self::flashSendConditionNotice('error', sprintf(
+                /* translators: %s: the value entered in the field */
+                __('Send Condition Shortcode: "%s" is not a shortcode name, so the field was left unchanged. Enter the name only, e.g. mawiblah_new_posts_since_last_sent.', 'mawiblah'),
+                $value
+            ));
+            return;
+        }
+
+        update_post_meta($postId, 'send_condition_shortcode', $name);
+
+        if ($name === '') {
+            return;
+        }
+
+        if ($name !== $value) {
+            self::flashSendConditionNotice('warning', sprintf(
+                /* translators: 1: the shortcode name that was saved, 2: the value entered in the field */
+                __('Send Condition Shortcode: "%2$s" was saved as "%1$s". The field takes the shortcode name only -- the brackets and the campaign ID are added automatically.', 'mawiblah'),
+                $name,
+                $value
+            ));
+        }
+
+        if (!shortcode_exists($name)) {
+            self::flashSendConditionNotice('warning', sprintf(
+                /* translators: %s: shortcode name */
+                __('Send Condition Shortcode: no shortcode named "%s" is registered. Scheduled sends of this campaign are skipped until it is.', 'mawiblah'),
+                $name
+            ));
+        }
+    }
+
+    /** Keeps a Send Condition notice for the current user until the next admin page after the save redirect. */
+    private static function flashSendConditionNotice(string $type, string $message): void
+    {
+        $key     = self::SEND_CONDITION_NOTICE . get_current_user_id();
+        $notices = get_transient($key) ?: [];
+
+        // save_post can run more than once for a single save.
+        $notices[md5($message)] = ['type' => $type, 'message' => $message];
+
+        set_transient($key, $notices, 5 * MINUTE_IN_SECONDS);
+    }
+
+    /** Prints, once, the Send Condition notices left by the current user's last campaign save. */
+    public static function showSendConditionNotices(): void
+    {
+        $key     = self::SEND_CONDITION_NOTICE . get_current_user_id();
+        $notices = get_transient($key);
+
+        if (!$notices) {
+            return;
+        }
+
+        delete_transient($key);
+
+        foreach ((array) $notices as $notice) {
+            printf(
+                '<div class="notice notice-%s is-dismissible"><p>%s</p></div>',
+                esc_attr($notice['type']),
+                esc_html($notice['message'])
+            );
+        }
     }
 
     /**

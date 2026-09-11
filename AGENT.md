@@ -50,7 +50,7 @@ MAWIBLAH is a WordPress plugin that provides Mailchimp-like functionality for se
   active scheduler: past `next_send` and the campaign is reset, background-sent
   and `next_send` advanced (or the scheduler marked `completed` for a one-off).
   A send is skipped when the campaign is not test-approved, when the campaign's
-  `send_condition_shortcode` returns nothing, and when a previous send is still
+  `send_condition_shortcode` returns nothing or is not a registered shortcode, and when a previous send is still
   running -- **started and not finished**, both halves. Reading
   `backgroundStarted` alone retired a schedule for ever the first time that flag
   outlived its send (fixed in 1.0.41)
@@ -296,6 +296,7 @@ pinned in `require-dev`; do not raise PHPUnit past `^9.6` without checking wp-ph
 | `tests/Integration/EmailTemplateTest.php` | Shipped templates: discovery, full render with no variable left behind, faked send via `pre_wp_mail` |
 | `tests/Integration/SchedulerRerenderTest.php` | Recurring schedules release the locked template copy; one-off and `rerender_on_recurring=0` keep it |
 | `tests/Integration/SchedulerDontDisturbTest.php` | Per-schedule do-not-disturb override: written for the run, honoured by `CronSend`, removed when the send finishes |
+| `tests/Integration/SendConditionTest.php` | Send condition field holds a name only: the name rule, the scheduler with a whole shortcode stored, an unregistered condition, save validation and its notices |
 | `tests/Integration/SubscriberTest.php` | Subscriber CRUD, hashes, audience shape |
 | `tests/Integration/SubscriptionFormTest.php` | Subscription form REST endpoint |
 | `tests/Integration/ClickTrackingTest.php` | Click tracking counters |

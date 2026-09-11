@@ -791,6 +791,17 @@ if ( $result['status'] === 'ok' ) {
                 <?php esc_html_e('A campaign can define an optional Send Condition Shortcode in the Campaign Details meta box. Before every scheduled send the shortcode is evaluated: non-empty output lets the send proceed; empty output skips the send and writes a log entry.', 'mawiblah'); ?>
             </p>
 
+            <div class="notice notice-info inline" style="margin:12px 0 0;">
+                <p>
+                    <strong><?php esc_html_e('Enter the shortcode name only.', 'mawiblah'); ?></strong>
+                    <?php esc_html_e('No brackets and no attributes — the plugin adds the brackets and the campaign ID itself. For example, the field value is:', 'mawiblah'); ?>
+                    <code>mawiblah_new_posts_since_last_sent</code>
+                </p>
+                <p>
+                    <?php esc_html_e('A whole shortcode pasted into the field is reduced to its name when the campaign is saved.', 'mawiblah'); ?>
+                </p>
+            </div>
+
             <h3><?php esc_html_e('How it works', 'mawiblah'); ?></h3>
             <table class="wp-list-table widefat fixed striped" style="max-width:700px;">
                 <thead>
@@ -809,29 +820,29 @@ if ( $result['status'] === 'ok' ) {
                         <td><?php esc_html_e('Send is skipped; reason logged', 'mawiblah'); ?></td>
                     </tr>
                     <tr>
+                        <td><?php esc_html_e('Not a registered shortcode', 'mawiblah'); ?></td>
+                        <td><?php esc_html_e('Send is skipped; reason logged', 'mawiblah'); ?></td>
+                    </tr>
+                    <tr>
                         <td><?php esc_html_e('(field left blank)', 'mawiblah'); ?></td>
                         <td><?php esc_html_e('Always send — no condition checked', 'mawiblah'); ?></td>
                     </tr>
                 </tbody>
             </table>
 
-            <h3 style="margin-top:24px;"><?php esc_html_e('Shortcode contract', 'mawiblah'); ?></h3>
-            <p><?php esc_html_e('The shortcode is called as:', 'mawiblah'); ?></p>
-            <pre style="background:#f6f7f7;padding:8px 12px;border-radius:4px;overflow:auto;">[your_shortcode_name campaign_id="N"]</pre>
-            <p><?php esc_html_e('Where N is the campaign post ID. Your handler must accept a campaign_id attribute and return a non-empty string to allow the send, or an empty string to block it.', 'mawiblah'); ?></p>
-
             <h3 style="margin-top:24px;"><?php esc_html_e('Built-in example shortcode', 'mawiblah'); ?></h3>
             <p>
-                <code>[mawiblah_new_posts_since_last_sent campaign_id="N"]</code>
+                <?php esc_html_e('Send Condition Shortcode field value:', 'mawiblah'); ?>
+                <code>mawiblah_new_posts_since_last_sent</code>
             </p>
             <p>
                 <?php esc_html_e('Returns "yes" when at least one post has been published since the campaign\'s last campaignFinished timestamp. Returns empty string if no new posts exist. Useful for digest newsletters that should only go out when there is fresh content.', 'mawiblah'); ?>
             </p>
-            <p>
-                <?php esc_html_e('To use it: enter', 'mawiblah'); ?>
-                <code>mawiblah_new_posts_since_last_sent</code>
-                <?php esc_html_e('(without brackets) in the Send Condition Shortcode field of the campaign.', 'mawiblah'); ?>
-            </p>
+
+            <h3 style="margin-top:24px;"><?php esc_html_e('Writing your own condition shortcode', 'mawiblah'); ?></h3>
+            <p><?php esc_html_e('For developers. Register a shortcode and enter its name in the field; before each scheduled send the plugin calls it as shown below — this is not what goes into the field.', 'mawiblah'); ?></p>
+            <pre style="background:#f6f7f7;padding:8px 12px;border-radius:4px;overflow:auto;">[your_shortcode_name campaign_id="N"]</pre>
+            <p><?php esc_html_e('Where N is the campaign post ID, filled in by the plugin. Your handler must accept a campaign_id attribute and return a non-empty string to allow the send, or an empty string to block it.', 'mawiblah'); ?></p>
 
         </div>
     </div>

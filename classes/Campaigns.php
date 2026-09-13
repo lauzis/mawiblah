@@ -1440,7 +1440,8 @@ class Campaigns
             $failed[] = round($failedCount/$total*100,2);
             $uniqueUsers[] = round($uniqueUsersCount/$total*100,2);
             $linksClicked[] = round($linksClickedCount/($totalLinksCount*$total)*100,2);
-            $emailsOpened[] = round($emailsOpenedCount / ($sentCount === 0 ? 1 : $sentCount) * 100, 2);
+            // The counters come out of post meta as strings, and "0" === 0 is false.
+            $emailsOpened[] = round($emailsOpenedCount / max(1, (int) $sentCount) * 100, 2);
         }
 
         return [

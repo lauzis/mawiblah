@@ -70,6 +70,14 @@ The initial version was built by hand. From version 1.0.9 onward, most changes h
 
 ## Change log
 
+### --- 1.0.53 ---
+- **Fix:** the edit screen of any campaign that finished with no e-mail sent — everyone
+  skipped or unsubscribed — ended in a fatal `DivisionByZeroError` in
+  `Campaigns::getConversionStatsForCampaign()`. The opened-rate guarded its division with
+  `$sentCount === 0`, but the counter comes out of post meta as the string `"0"`, which is not
+  identical to `0`, so the guard never fired. It has done so since 1.0.27; on gudlenieks.lv
+  it took down five campaigns' edit screens, two of them real monthly newsletters.
+
 ### --- 1.0.52 ---
 - **Fix:** a Send Condition Shortcode entered as a whole shortcode —
   `[mawiblah_new_posts_since_last_sent campaign_id="N"]`, the way the Help page showed it —

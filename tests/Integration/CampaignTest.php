@@ -73,6 +73,27 @@ class CampaignTest extends WP_UnitTestCase
         $this->assertSame(3, (int) $counters->emailsSkipped);
     }
 
+    /**
+     * A campaign that finished with every subscriber skipped. Its counters are read back
+     * from post meta as strings, and the "0" sent took the edit screen down with a
+     * DivisionByZeroError.
+     */
+    public function test_conversion_stats_survive_a_campaign_that_sent_nothing(): void
+    {
+        update_post_meta($this->campaignId, 'emailsSend', 0);
+        update_post_meta($this->campaignId, 'emailsFailed', 0);
+        update_post_meta($this->campaignId, 'emailsSkipped', 4);
+        update_post_meta($this->campaignId, 'emailsUnsubed', 4);
+
+        $campaign = Campaigns::getCampaignById($this->campaignId);
+        $this->assertSame('0', $campaign->emailsSend, 'The counter is expected to come back as a string, as it does on a live site.');
+
+        $stats = Campaigns::getConversionStatsForCampaign($campaign);
+
+        $this->assertSame([0.0], $stats[Campaigns::STAT_EMAILS_OPENED]);
+        $this->assertSame([100.0], $stats[Campaigns::STAT_SKIPPED]);
+    }
+
     public function test_fill_template_replaces_all_placeholders(): void
     {
         $c   = Campaigns::getCampaignById($this->campaignId);

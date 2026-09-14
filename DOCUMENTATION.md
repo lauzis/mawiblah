@@ -78,7 +78,7 @@ flowchart TD
     D2 --> E{testMode?\ntestStarted AND NOT testApproved}
     E -- Yes --> F{Subscriber is a tester?}
     F -- No --> G[Skip: not a tester\n(random sample only)]
-    F -- Yes --> H[Send test email via wp_mail]
+    F -- Yes --> H[Send test email via wp_mail\ndo-not-disturb threshold ignored\nlogged + noted in the send screen]
     G & H --> I{Last subscriber?}
     I -- No --> D2
     I -- Yes --> J[testFinish\nsets testFinished timestamp]

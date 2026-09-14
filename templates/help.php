@@ -375,6 +375,8 @@ if ( $result['status'] === 'ok' ) {
                             <?php esc_html_e('Minimum time in seconds before the same subscriber can be contacted again. Default: 2592000 (30 days).', 'mawiblah'); ?>
                             <br>
                             <?php esc_html_e('A single schedule can override this: on Scheduler → Edit Schedule, tick "Override the global threshold for this schedule" and enter your own number of seconds (0 sends regardless of when the subscriber was last contacted). The override applies only to the sends that schedule starts — sends you run from the browser, and test sends, keep using the value above.', 'mawiblah'); ?>
+                            <br>
+                            <?php esc_html_e('Testers are the exception during a test send: they always receive the test email, even inside the threshold. The send screen and the log note when that happened.', 'mawiblah'); ?>
                         </td>
                     </tr>
                     <tr>

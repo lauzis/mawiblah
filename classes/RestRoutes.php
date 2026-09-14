@@ -61,7 +61,8 @@ class RestRoutes
      * Core send-email logic: validates inputs, applies all skip rules, sends via wp_mail(),
      * and updates campaign counters.
      *
-     * Skip rules (in order): unsubscribed, already sent, do-not-disturb threshold,
+     * Skip rules (in order): unsubscribed, already sent, do-not-disturb threshold (ignored,
+     * with a log entry, for a tester in test mode),
      * email sending disabled in settings, not a tester in test mode, template unavailable.
      *
      * @param \WP_REST_Request $request
@@ -214,7 +215,22 @@ class RestRoutes
         $timeLeftInSeconds = $timeLeftInSeconds - ($days * 60 * 60 * 24);
         $daysHoursSecondsLeft = $days."d ".gmdate("H:i:s", $timeLeftInSeconds);
 
-        if ($subscriberDontDisturb){
+        // A tester in test mode gets the test e-mail whatever the threshold says. The
+        // test is how a campaign gets approved, and a tester who received any letter
+        // recently would otherwise never see the one they are meant to check.
+        $testerIgnoresDontDisturb = $subscriberDontDisturb && $testMode && $isTester;
+
+        if ($testerIgnoresDontDisturb) {
+            Logs::addLog('send-email', "Tester {$email}: do-not-disturb threshold not reached (left {$daysHoursSecondsLeft}), sending the test e-mail anyway", [
+                'campaignPostId'        => $campaignPostId,
+                'subscriberId'          => $subscriberId,
+                'email'                 => $email,
+                'timeDiff'              => $timeDiff,
+                'doNotDisturbThreshold' => $doNotDisturbThreshold,
+            ]);
+        }
+
+        if ($subscriberDontDisturb && !$testerIgnoresDontDisturb){
             $emailsSkipped++;
             Campaigns::updateCounters($campaign, $emailsSent, $emailsFailed, $emailsSkipped, $emailsUnsubed);
             
@@ -243,7 +259,8 @@ class RestRoutes
             $message = false;
 
             if ($testMode && $isTester) {
-                $message = "Email sending is off: Would send, Tester in test mode, but email sending is off in settings";
+                $message = "Email sending is off: Would send, Tester in test mode, but email sending is off in settings"
+                    . ($testerIgnoresDontDisturb ? " (do-not-disturb threshold not reached, ignored for a tester)" : '');
             }
 
             if (!$message && !$isTester && $testMode) {
@@ -398,10 +415,14 @@ class RestRoutes
                     'timeDiff' => $timeDiff,
                     'doNotDisturbThreshold' => $doNotDisturbThreshold,
                     'alreadySent' => $alreadySent,
-                    'lastItem' => $lastItem
+                    'lastItem' => $lastItem,
+                    'testerIgnoresDontDisturb' => $testerIgnoresDontDisturb,
                 ],
                 'status' => 'ok',
                 'message' => "Email sent to {$email} successfully!"
+                    . ($testerIgnoresDontDisturb
+                        ? " Do-not-disturb threshold not reached (left {$daysHoursSecondsLeft}), but sent anyway: this is a tester e-mail in test mode."
+                        : '')
             ];
         }
 

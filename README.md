@@ -70,6 +70,15 @@ The initial version was built by hand. From version 1.0.9 onward, most changes h
 
 ## Change log
 
+### --- 1.0.54 ---
+- **Change:** a tester in test mode now gets the test e-mail even when the do-not-disturb
+  threshold has not been reached. The test is how a campaign gets approved, and a tester who
+  had received any letter recently was skipped with "subscriber is in do not disturb mode" —
+  so the one person meant to check the letter never saw it. The send goes ahead, a
+  `send-email` log entry records the threshold and the time left, and the send screen says
+  so: "Do-not-disturb threshold not reached (left …), but sent anyway: this is a tester
+  e-mail in test mode." Non-testers, and testers in a real send, are skipped as before.
+
 ### --- 1.0.53 ---
 - **Fix:** the edit screen of any campaign that finished with no e-mail sent — everyone
   skipped or unsubscribed — ended in a fatal `DivisionByZeroError` in

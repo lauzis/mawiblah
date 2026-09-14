@@ -296,6 +296,7 @@ pinned in `require-dev`; do not raise PHPUnit past `^9.6` without checking wp-ph
 | `tests/Integration/EmailTemplateTest.php` | Shipped templates: discovery, full render with no variable left behind, faked send via `pre_wp_mail` |
 | `tests/Integration/SchedulerRerenderTest.php` | Recurring schedules release the locked template copy; one-off and `rerender_on_recurring=0` keep it |
 | `tests/Integration/SchedulerDontDisturbTest.php` | Per-schedule do-not-disturb override: written for the run, honoured by `CronSend`, removed when the send finishes |
+| `tests/Integration/TestModeDontDisturbTest.php` | A tester in test mode is sent the test e-mail inside the do-not-disturb threshold, and told so; a non-tester in test mode and a tester in the real send are still skipped |
 | `tests/Integration/SendConditionTest.php` | Send condition field holds a name only: the name rule, the scheduler with a whole shortcode stored, an unregistered condition, save validation and its notices |
 | `tests/Integration/SubscriberTest.php` | Subscriber CRUD, hashes, audience shape |
 | `tests/Integration/SubscriptionFormTest.php` | Subscription form REST endpoint |

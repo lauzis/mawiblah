@@ -34,6 +34,11 @@ $kinds = [
         'color' => '#8c8f94',
         'title' => __('Refused by a spam or policy filter (5.7.x): the address works, this e-mail was not accepted.', 'mawiblah'),
     ],
+    BounceParser::KIND_QUOTA => [
+        'label' => __('Over quota', 'mawiblah'),
+        'color' => '#2271b1',
+        'title' => __('Mailbox full (x.2.2): the address works but has run out of space; mail gets through again once space is freed.', 'mawiblah'),
+    ],
 ];
 
 $kind = isset($_GET['kind']) ? sanitize_key(wp_unslash($_GET['kind'])) : '';
@@ -98,7 +103,7 @@ $when = static function ($gmt) use ($dateFormat): string {
                     <?php esc_html_e('leaves the subscriber alone.', 'mawiblah'); ?>
                 </li>
             </ul>
-            <p style="max-width:860px;"><?php esc_html_e('Whichever you choose, the bounce report is deleted from the mailbox. Hard (red, 5.x.x) means the address does not exist; soft (yellow, 4.x.x) means something temporary, like a full mailbox; spam (gray, 5.7.x) means a spam or policy filter refused the e-mail while the address itself works — usually one to dismiss.', 'mawiblah'); ?></p>
+            <p style="max-width:860px;"><?php esc_html_e('Whichever you choose, the bounce report is deleted from the mailbox. Hard (red, 5.x.x) means the address does not exist; soft (yellow, 4.x.x) means something temporary, like a server that is down; spam (gray, 5.7.x) means a spam or policy filter refused the e-mail while the address itself works — usually one to dismiss; over quota (blue, x.2.2) means the mailbox is full — usually one to count.', 'mawiblah'); ?></p>
 
             <table class="widefat striped" style="max-width:860px;margin-top:12px;">
                 <tbody>

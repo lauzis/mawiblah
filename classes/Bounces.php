@@ -536,14 +536,16 @@ class Bounces
     }
 
     /**
-     * Relabels spam rejections recorded as hard before they had a kind of their own.
+     * Relabels bounces recorded before their kind existed.
      *
-     * Runs the stored status and diagnostic back through the parser's rule, so
-     * an upgraded site and a fresh check agree. Called by the 1.1.2 migration.
+     * Runs every stored status and diagnostic back through the parser's current
+     * rule and updates the rows it now labels differently -- spam and over quota
+     * were both recorded as hard or soft before they had kinds of their own. An
+     * upgraded site and a fresh check then agree. Called by the migrations.
      *
      * @return int Rows relabelled.
      */
-    public static function reclassifySpam(): int
+    public static function reclassify(): int
     {
         global $wpdb;
 
@@ -552,14 +554,13 @@ class Bounces
         }
 
         $relabelled = 0;
-        $hard       = $wpdb->get_results($wpdb->prepare(
-            'SELECT id, action, status_code, reason FROM ' . self::table() . ' WHERE kind = %s',
-            BounceParser::KIND_HARD
-        ));
+        $rows       = $wpdb->get_results('SELECT id, kind, action, status_code, reason FROM ' . self::table());
 
-        foreach ((array) $hard as $row) {
-            if (BounceParser::classify((string) $row->action, (string) $row->status_code, (string) $row->reason) === BounceParser::KIND_SPAM) {
-                $relabelled += (int) $wpdb->update(self::table(), ['kind' => BounceParser::KIND_SPAM], ['id' => (int) $row->id]);
+        foreach ((array) $rows as $row) {
+            $kind = BounceParser::classify((string) $row->action, (string) $row->status_code, (string) $row->reason);
+
+            if ($kind !== null && $kind !== $row->kind) {
+                $relabelled += (int) $wpdb->update(self::table(), ['kind' => $kind], ['id' => (int) $row->id]);
             }
         }
 

@@ -493,7 +493,7 @@ if ( $result['status'] === 'ok' ) {
             <p><?php esc_html_e('Each failed recipient becomes a row on the Bounced Emails page, matched to its subscriber and campaign by the X-Mawiblah-Subscriber and X-Mawiblah-Campaign headers campaign e-mails carry since 1.1.0, or by the address for older mail.', 'mawiblah'); ?></p>
 
             <h3 style="margin-top:24px;"><?php esc_html_e('Deciding on a bounce', 'mawiblah'); ?></h3>
-            <p><?php esc_html_e('Each bounce has three buttons, and the same three are bulk actions. Whichever you choose, the report is deleted from the mailbox, and a counted or moved bounce is recorded on the subscriber (bounce_hard_count, bounce_soft_count or bounce_spam_count, bounce_last_status, bounce_last_reason).', 'mawiblah'); ?></p>
+            <p><?php esc_html_e('Each bounce has three buttons, and the same three are bulk actions. Whichever you choose, the report is deleted from the mailbox, and a counted or moved bounce is recorded on the subscriber (bounce_hard_count, bounce_soft_count, bounce_spam_count or bounce_quota_count, bounce_last_status, bounce_last_reason).', 'mawiblah'); ?></p>
             <table class="wp-list-table widefat fixed striped" style="max-width:800px;">
                 <thead>
                     <tr>
@@ -504,7 +504,7 @@ if ( $result['status'] === 'ok' ) {
                 <tbody>
                     <tr>
                         <td><?php esc_html_e('Count as failure', 'mawiblah'); ?></td>
-                        <td><?php esc_html_e('Adds one to the subscriber\'s email_fail_count — the counter a send that fails on the spot also adds to. When it reaches the Failure threshold (Settings → Failing Email, default 3) the subscriber is moved into the "Failing Email" audience and skipped by every future campaign. Suits a soft bounce (4.x.x), which is usually temporary.', 'mawiblah'); ?></td>
+                        <td><?php esc_html_e('Adds one to the subscriber\'s email_fail_count — the counter a send that fails on the spot also adds to. When it reaches the Failure threshold (Settings → Failing Email, default 3) the subscriber is moved into the "Failing Email" audience and skipped by every future campaign. Suits a soft or over-quota bounce, which is usually temporary.', 'mawiblah'); ?></td>
                     </tr>
                     <tr>
                         <td><?php esc_html_e('Move to Failing Email', 'mawiblah'); ?></td>
@@ -521,8 +521,9 @@ if ( $result['status'] === 'ok' ) {
             <p><?php esc_html_e('Each bounce carries a coloured type, and the Type filter above the list shows one type at a time.', 'mawiblah'); ?></p>
             <ul style="list-style:disc;padding-left:1.5em;">
                 <li><?php esc_html_e('Hard (red): a permanent failure (5.x.x) — the address does not exist or refuses mail. Usually one to move to Failing Email.', 'mawiblah'); ?></li>
-                <li><?php esc_html_e('Soft (yellow): a temporary failure (4.x.x) — a full mailbox, a server that is down. Usually one to count.', 'mawiblah'); ?></li>
+                <li><?php esc_html_e('Soft (yellow): a temporary failure (4.x.x) — a server that is down, greylisting. Usually one to count.', 'mawiblah'); ?></li>
                 <li><?php esc_html_e('Spam (gray): a spam or policy filter refused this e-mail — a 5.7.x status, or a diagnostic naming spam, a block list or reputation, such as "554 5.7.0 Reject, id=09876-39 - spam". The address works, so moving it to Failing Email would be wrong; dismiss it, or count it if the same subscriber keeps refusing. Many spam rejections across different subscribers point at the sending setup — DKIM signing, the domain\'s reputation, the content — rather than at the subscribers.', 'mawiblah'); ?></li>
+                <li><?php esc_html_e('Over quota (blue): the mailbox is full — an x.2.2 status, or a diagnostic saying over quota, mailbox full or storage allocation, such as "552 5.2.2 user is over quota". Some providers (iCloud among them) send it as a permanent failure, but the address works and mail gets through again once space is freed. Usually one to count: a mailbox that stays full over several campaigns reaches the failure threshold on its own.', 'mawiblah'); ?></li>
             </ul>
             <p style="margin-top:8px;"><?php esc_html_e('Only that one report is deleted: it is flagged \Deleted and removed with UID EXPUNGE, which leaves any other message you have marked for deletion in your mail client alone. A server without the UIDPLUS extension only gets the \Deleted flag. A report is never deleted if the mailbox settings or the mailbox\'s UIDVALIDITY have changed since it was read, because its UID could then belong to a different e-mail. To send to a subscriber again, remove them from the "Failing Email" audience.', 'mawiblah'); ?></p>
 

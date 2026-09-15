@@ -1,0 +1,35 @@
+Return-Path: <>
+From: MAILER-DAEMON@mail.inbox.eu (Mail Delivery System)
+To: info@gudlenieks.lv
+Subject: Delayed Mail (still being retried)
+Date: Mon, 14 Sep 2026 14:10:12 +0000 (UTC)
+MIME-Version: 1.0
+Content-Type: multipart/report; report-type=delivery-status;
+	boundary="E5F4A3B2C1.1789395012/mail.inbox.eu"
+
+--E5F4A3B2C1.1789395012/mail.inbox.eu
+Content-Type: text/plain; charset=us-ascii
+
+This is the mail system at host mail.inbox.eu.
+Your message could not be delivered for 4.0 hours. It will be retried.
+
+--E5F4A3B2C1.1789395012/mail.inbox.eu
+Content-Type: message/delivery-status
+
+Reporting-MTA: dns; mail.inbox.eu
+
+Final-Recipient: rfc822; lauzis@inbox.lv
+Action: delayed
+Status: 4.4.1
+Diagnostic-Code: X-Postfix; connect to mx.inbox.lv[194.152.32.74]:25: Connection
+    timed out
+Will-Retry-Until: Mon, 19 Sep 2026 10:10:10 +0000 (UTC)
+
+--E5F4A3B2C1.1789395012/mail.inbox.eu
+Content-Type: text/rfc822-headers
+
+From: Gudlenieks <info@gudlenieks.lv>
+To: lauzis@inbox.lv
+Subject: Test sheaduler 1111
+
+--E5F4A3B2C1.1789395012/mail.inbox.eu--

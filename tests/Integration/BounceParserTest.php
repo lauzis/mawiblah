@@ -45,12 +45,25 @@ class BounceParserTest extends WP_UnitTestCase
 
     public function test_a_delayed_delivery_is_a_soft_bounce(): void
     {
-        $bounce = self::parse('mailbox-full-delayed.eml');
+        $bounce = self::parse('server-unavailable-delayed.eml');
 
         $this->assertNotNull($bounce);
         $this->assertSame(BounceParser::KIND_SOFT, $bounce['recipients'][0]['kind']);
-        $this->assertSame('4.2.2', $bounce['recipients'][0]['status']);
+        $this->assertSame('4.4.1', $bounce['recipients'][0]['status']);
+        $this->assertStringContainsString('Connection timed out', $bounce['recipients'][0]['reason'], 'A folded diagnostic is joined up.');
         $this->assertSame('', $bounce['campaignHash'], 'A report without the header names no campaign.');
+    }
+
+    /** iCloud sends a full mailbox as a permanent failure; the address still works. */
+    public function test_a_full_mailbox_is_over_quota_whether_permanent_or_temporary(): void
+    {
+        $permanent = self::parse('over-quota.eml');
+        $temporary = self::parse('mailbox-full-delayed.eml');
+
+        $this->assertSame(BounceParser::KIND_QUOTA, $permanent['recipients'][0]['kind']);
+        $this->assertSame('5.2.2', $permanent['recipients'][0]['status']);
+        $this->assertSame(BounceParser::KIND_QUOTA, $temporary['recipients'][0]['kind']);
+        $this->assertSame('4.2.2', $temporary['recipients'][0]['status']);
     }
 
     public function test_a_recipient_the_report_says_was_delivered_is_left_out(): void
@@ -91,6 +104,11 @@ class BounceParserTest extends WP_UnitTestCase
         $this->assertSame(BounceParser::KIND_HARD, BounceParser::classify('failed', '', ''));
         $this->assertSame(BounceParser::KIND_SOFT, BounceParser::classify('delayed', '4.7.1', 'Greylisted, try again later'), 'A temporary policy refusal is still soft.');
         $this->assertNull(BounceParser::classify('delivered', '2.0.0'));
+
+        $this->assertSame(BounceParser::KIND_QUOTA, BounceParser::classify('failed', '5.2.2', '552 5.2.2 <x@example.com>: user is over quota'));
+        $this->assertSame(BounceParser::KIND_QUOTA, BounceParser::classify('delayed', '4.2.2', '452 4.2.2 Mailbox full'));
+        $this->assertSame(BounceParser::KIND_QUOTA, BounceParser::classify('failed', '5.0.0', '552 Requested mail action aborted: exceeded storage allocation'), 'The wording counts without an x.2.2 status.');
+        $this->assertSame(BounceParser::KIND_HARD, BounceParser::classify('failed', '5.2.1', '554 5.2.1 Recipient address rejected: Inactive user'), 'A disabled mailbox is not a full one.');
     }
 
     public function test_tracking_headers_carry_only_well_formed_hashes(): void

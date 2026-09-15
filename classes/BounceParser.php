@@ -30,11 +30,21 @@ class BounceParser
      */
     public const KIND_SPAM = 'spam';
 
+    /**
+     * Mailbox full (x.2.2): the address exists and works but has run out of
+     * space. iCloud and others answer it with a permanent 552 5.2.2, though mail
+     * gets through again once the owner frees some.
+     */
+    public const KIND_QUOTA = 'quota';
+
     /** Every kind a recorded bounce can have. */
-    public const KINDS = [self::KIND_HARD, self::KIND_SOFT, self::KIND_SPAM];
+    public const KINDS = [self::KIND_HARD, self::KIND_SOFT, self::KIND_SPAM, self::KIND_QUOTA];
 
     /** Diagnostic wording that marks a permanent failure as a spam or policy refusal. */
     private const SPAM_PATTERN = '/\b(spam|junk|unsolicited|spamhaus|dnsbl|rbl|block ?list(ed)?|black ?list(ed)?|reputation)\b/i';
+
+    /** Diagnostic wording that marks a failure as a full mailbox, whatever its status code. */
+    private const QUOTA_PATTERN = '/\b(over ?quota|quota exceeded|exceeded (its |the )?(storage|quota)|storage allocation|mailbox (is )?full|mailbox size limit|insufficient (system )?storage|out of storage)\b/i';
 
     /** Headers every campaign e-mail carries, quoted back by most bounces. */
     public const HEADER_CAMPAIGN   = 'X-Mawiblah-Campaign';
@@ -232,11 +242,16 @@ class BounceParser
     }
 
     /**
-     * Hard, soft, spam, or null for a recipient that was not a failure at all.
+     * Hard, soft, spam, over quota, or null for a recipient that was not a failure at all.
      *
      * The status code decides when there is one: an action of "failed" with a
      * 4.x.x status is a message that expired in a queue, which says nothing
      * about the address itself.
+     *
+     * A full mailbox is decided first, permanent or temporary alike: an x.2.2
+     * status, or a diagnostic saying over quota, mailbox full or storage
+     * allocation, as in iCloud's "552 5.2.2 user is over quota". The address
+     * works; it has no room.
      *
      * A permanent failure is spam rather than hard when the receiving side
      * refused the message and not the address -- a 5.7.x security or policy
@@ -252,13 +267,21 @@ class BounceParser
         $permanent = $status !== '' ? $status[0] === '5' : $action === 'failed';
         $temporary = $status !== '' ? $status[0] === '4' : $action === 'delayed';
 
-        if ($permanent) {
-            return str_starts_with($status, '5.7.') || preg_match(self::SPAM_PATTERN, $reason)
-                ? self::KIND_SPAM
-                : self::KIND_HARD;
+        if (!$permanent && !$temporary) {
+            return null;
         }
 
-        return $temporary ? self::KIND_SOFT : null;
+        if (substr($status, 1) === '.2.2' || preg_match(self::QUOTA_PATTERN, $reason)) {
+            return self::KIND_QUOTA;
+        }
+
+        if ($temporary) {
+            return self::KIND_SOFT;
+        }
+
+        return str_starts_with($status, '5.7.') || preg_match(self::SPAM_PATTERN, $reason)
+            ? self::KIND_SPAM
+            : self::KIND_HARD;
     }
 
     /** The diagnostic as a person needs to read it: type label gone, one line, bounded. */

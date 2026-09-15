@@ -1,0 +1,44 @@
+Return-Path: <>
+From: MAILER-DAEMON@mail.inbox.eu (Mail Delivery System)
+To: info@gudlenieks.lv
+Subject: Undelivered Mail Returned to Sender
+Date: Tue, 15 Sep 2026 08:02:11 +0000 (UTC)
+Auto-Submitted: auto-replied
+MIME-Version: 1.0
+Content-Type: multipart/report; report-type=delivery-status;
+	boundary="7A6B5C4D3E.1789459331/mail.inbox.eu"
+
+This is a MIME-encapsulated message.
+
+--7A6B5C4D3E.1789459331/mail.inbox.eu
+Content-Description: Notification
+Content-Type: text/plain; charset=us-ascii
+
+This is the mail system at host mail.inbox.eu.
+
+<over-quota@example.com>: host mx01.mail.icloud.com said: 552 5.2.2
+    <over-quota@example.com>: user is over quota (in reply to RCPT TO command)
+
+--7A6B5C4D3E.1789459331/mail.inbox.eu
+Content-Description: Delivery report
+Content-Type: message/delivery-status
+
+Reporting-MTA: dns; mail.inbox.eu
+Arrival-Date: Tue, 15 Sep 2026 08:02:09 +0000 (UTC)
+
+Final-Recipient: rfc822; over-quota@example.com
+Original-Recipient: rfc822;over-quota@example.com
+Action: failed
+Status: 5.2.2
+Remote-MTA: dns; mx01.mail.icloud.com
+Diagnostic-Code: smtp; 552 5.2.2 <over-quota@example.com>: user is over quota
+
+--7A6B5C4D3E.1789459331/mail.inbox.eu
+Content-Description: Undelivered Message Headers
+Content-Type: text/rfc822-headers
+
+From: Gudlenieks <info@gudlenieks.lv>
+To: over-quota@example.com
+Subject: Test sheaduler 1111
+
+--7A6B5C4D3E.1789459331/mail.inbox.eu--

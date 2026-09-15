@@ -33,7 +33,7 @@ class BouncesTest extends WP_UnitTestCase
         $this->inbox = new FakeFolder('INBOX', messages: [
             new FakeMessage(1, contents: "From: reader@example.org\r\nSubject: Thanks!\r\n\r\nLoved the newsletter."),
             new FakeMessage(2, contents: self::fixture('microsoft-recipient-not-found.eml')),
-            new FakeMessage(3, contents: self::fixture('mailbox-full-delayed.eml')),
+            new FakeMessage(3, contents: self::fixture('server-unavailable-delayed.eml')),
         ]);
 
         new FakeMailbox([], [$this->inbox], ['UIDPLUS']);
@@ -237,7 +237,7 @@ class BouncesTest extends WP_UnitTestCase
         Bounces::check(10);
 
         $this->assertSame(
-            [BounceParser::KIND_HARD => 1, BounceParser::KIND_SOFT => 1, BounceParser::KIND_SPAM => 1],
+            [BounceParser::KIND_HARD => 1, BounceParser::KIND_SOFT => 1, BounceParser::KIND_SPAM => 1, BounceParser::KIND_QUOTA => 0],
             Bounces::kindCounts(Bounces::STATE_PENDING)
         );
 
@@ -260,8 +260,8 @@ class BouncesTest extends WP_UnitTestCase
         $this->assertSame('', get_post_meta($reader->id, 'bounce_hard_count', true));
     }
 
-    /** Bounces read before 1.1.2 recorded a spam rejection as hard. */
-    public function test_the_upgrade_relabels_spam_rejections_recorded_as_hard(): void
+    /** Bounces read before their kind existed were recorded as hard. */
+    public function test_the_upgrade_relabels_spam_and_over_quota_bounces_recorded_before(): void
     {
         global $wpdb;
 
@@ -280,9 +280,40 @@ class BouncesTest extends WP_UnitTestCase
             'created_at'  => gmdate('Y-m-d H:i:s'),
         ]);
 
-        $this->assertSame(1, Bounces::reclassifySpam());
+        $wpdb->insert(Bounces::table(), [
+            'mailbox'     => 'info@mawiblah.test@imap.mawiblah.test/INBOX',
+            'uid'         => 100,
+            'bounced_at'  => gmdate('Y-m-d H:i:s'),
+            'recipient'   => 'full@example.com',
+            'kind'        => BounceParser::KIND_HARD,
+            'status_code' => '5.2.2',
+            'action'      => 'failed',
+            'reason'      => '552 5.2.2 <full@example.com>: user is over quota',
+            'state'       => Bounces::STATE_PENDING,
+            'created_at'  => gmdate('Y-m-d H:i:s'),
+        ]);
+
+        $this->assertSame(2, Bounces::reclassify());
         $this->assertSame(BounceParser::KIND_SPAM, $this->pendingFor('old@example.org')->kind);
+        $this->assertSame(BounceParser::KIND_QUOTA, $this->pendingFor('full@example.com')->kind);
+        $this->assertSame(BounceParser::KIND_SOFT, $this->pendingFor('lauzis@inbox.lv')->kind, 'A server that is down stays soft.');
         $this->assertSame(BounceParser::KIND_HARD, $this->pendingFor('aivars.lauzis@awave.com')->kind, 'A real "not found" stays hard.');
+    }
+
+    public function test_an_over_quota_bounce_is_its_own_kind_and_counted_as_quota(): void
+    {
+        $full = Subscribers::addSubscriber('over-quota@example.com');
+        $this->inbox->addMessage(new FakeMessage(4, contents: self::fixture('over-quota.eml')));
+
+        Bounces::check(10);
+
+        $this->assertSame(1, Bounces::kindCounts(Bounces::STATE_PENDING)[BounceParser::KIND_QUOTA]);
+        $this->assertCount(1, Bounces::rows(Bounces::STATE_PENDING, 1, 50, BounceParser::KIND_QUOTA));
+
+        Bounces::countAsFailure((int) $this->pendingFor('over-quota@example.com')->id);
+
+        $this->assertSame('1', get_post_meta($full->id, 'bounce_quota_count', true));
+        $this->assertSame(1, $this->failures($full->id));
     }
 
     private static function fixture(string $name): string

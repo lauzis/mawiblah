@@ -419,11 +419,18 @@ flowchart TD
   the same path a failed `wp_mail()` takes via `sentEmailFailed()`, so both reach Failing Email at the
   one threshold. *Move to Failing Email* calls `Subscribers::moveToFailingEmail()` directly. The row's
   `resolution` records which happened: `counted`, `counted_moved`, `moved` or `no_subscriber`.
-- **Kinds.** `BounceParser::classify()` labels each failed recipient `hard` (5.x.x), `soft` (4.x.x) or
-  `spam`: a permanent failure with a 5.7.x security/policy status, or a diagnostic naming spam, a
-  block list, Spamhaus, a DNSBL/RBL or reputation (e.g. amavisd's `554 5.7.0 Reject, id=… - spam`).
-  A spam rejection means the mailbox works and only the message was refused. The page filters by
-  kind, and the 1.1.2 migration (`Bounces::reclassifySpam()`) relabels rows recorded as hard before.
+- **Kinds.** `BounceParser::classify()` labels each failed recipient, in this order:
+  - `quota` — permanent or temporary, an `x.2.2` status or a diagnostic saying over quota, mailbox
+    full or storage allocation (e.g. iCloud's `552 5.2.2 … user is over quota`). The mailbox exists
+    and has no room.
+  - `soft` — any other 4.x.x.
+  - `spam` — a permanent failure with a 5.7.x security/policy status, or a diagnostic naming spam, a
+    block list, Spamhaus, a DNSBL/RBL or reputation (e.g. amavisd's `554 5.7.0 Reject, id=… - spam`).
+    The mailbox works and only the message was refused.
+  - `hard` — any other 5.x.x.
+
+  The page filters by kind. The 1.1.3 migration runs `Bounces::reclassify()`, which puts every stored
+  row back through the current rule, so rows recorded before a kind existed are relabelled.
 
 - **Read-only until approved.** A check never flags, moves or deletes; messages stay unread.
 - **Matching.** Campaign e-mails carry `X-Mawiblah-Campaign` and `X-Mawiblah-Subscriber` (hashes). A
@@ -432,7 +439,7 @@ flowchart TD
 - **Storage.** `{prefix}mawiblah_bounces`, one row per recipient, unique on
   `(mailbox, uidvalidity, uid, recipient)` so re-reading a report inserts nothing. The cursor lives
   in the `mawiblah_bounce_cursor` option and resets when the mailbox or its `UIDVALIDITY` changes.
-- **Subscriber meta** written on approval: `bounce_hard_count`, `bounce_soft_count`, `bounce_spam_count`,
+- **Subscriber meta** written on approval: `bounce_hard_count`, `bounce_soft_count`, `bounce_spam_count`, `bounce_quota_count`,
   `bounce_last_at`, `bounce_last_status`, `bounce_last_reason`, `bounce_last_campaign`.
 - **Deleting a report** stores `\Deleted` on its UID and runs `UID EXPUNGE` for that UID only
   (UIDPLUS); a plain `EXPUNGE` would also remove anything else flagged in the folder. Refused when the

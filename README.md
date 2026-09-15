@@ -70,6 +70,17 @@ The initial version was built by hand. From version 1.0.9 onward, most changes h
 
 ## Change log
 
+### --- 1.1.3 ---
+- **New:** over-quota bounces are their own type, shown in blue. `552 5.2.2 <…@icloud.com>: user is
+  over quota` came in as Hard because iCloud sends it as a permanent failure, though the mailbox
+  exists and takes mail again once its owner frees space. A failure with an `x.2.2` status, or a
+  diagnostic saying over quota, mailbox full or storage allocation, is now **Over quota** — permanent
+  or temporary alike — with its own Type filter and a `bounce_quota_count` on the subscriber. Soft now
+  means the other temporary failures, such as a server that is down.
+- **Changed:** `Bounces::reclassifySpam()` became `Bounces::reclassify()`, which runs every stored
+  bounce back through the current rule; the 1.1.3 migration relabels both spam and over-quota bounces
+  recorded before.
+
 ### --- 1.1.2 ---
 - **New:** spam rejections are their own bounce type. A report like `554 5.7.0 Reject, id=09876-39 -
   spam` — a content filter on the receiving side refusing the e-mail — was labelled Hard, the same as

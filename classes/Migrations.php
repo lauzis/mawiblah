@@ -64,10 +64,11 @@ class Migrations
             update_option('mawiblah_db_version', '1.1.1');
         }
 
-        // Spam rejections (5.7.x) were recorded as hard bounces until they got a kind of their own.
-        if (version_compare($currentVersion, '1.1.2', '<')) {
-            Bounces::reclassifySpam();
-            update_option('mawiblah_db_version', '1.1.2');
+        // Spam rejections (5.7.x, 1.1.2) and full mailboxes (x.2.2, 1.1.3) were
+        // recorded as hard or soft bounces until each got a kind of its own.
+        if (version_compare($currentVersion, '1.1.3', '<')) {
+            Bounces::reclassify();
+            update_option('mawiblah_db_version', '1.1.3');
         }
     }
 

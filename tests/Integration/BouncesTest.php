@@ -5,6 +5,7 @@ namespace Mawiblah\Tests\Integration;
 use DirectoryTree\ImapEngine\Testing\FakeFolder;
 use DirectoryTree\ImapEngine\Testing\FakeMailbox;
 use DirectoryTree\ImapEngine\Testing\FakeMessage;
+use Mawiblah\BounceParser;
 use Mawiblah\Bounces;
 use Mawiblah\Secrets;
 use Mawiblah\Settings;
@@ -227,6 +228,61 @@ class BouncesTest extends WP_UnitTestCase
         // Saving the settings page untouched posts the ciphertext back.
         update_option('_mawiblah-bounce-password', $stored);
         $this->assertSame($stored, get_option('_mawiblah-bounce-password'));
+    }
+
+    public function test_spam_rejections_are_their_own_kind_and_can_be_filtered(): void
+    {
+        $this->inbox->addMessage(new FakeMessage(4, contents: self::fixture('spam-rejected.eml')));
+
+        Bounces::check(10);
+
+        $this->assertSame(
+            [BounceParser::KIND_HARD => 1, BounceParser::KIND_SOFT => 1, BounceParser::KIND_SPAM => 1],
+            Bounces::kindCounts(Bounces::STATE_PENDING)
+        );
+
+        $spam = Bounces::rows(Bounces::STATE_PENDING, 1, 50, BounceParser::KIND_SPAM);
+
+        $this->assertCount(1, $spam);
+        $this->assertSame('reader@example.lv', $spam[0]->recipient);
+        $this->assertCount(3, Bounces::rows(Bounces::STATE_PENDING), 'No kind means every kind.');
+    }
+
+    public function test_a_counted_spam_rejection_is_recorded_as_spam(): void
+    {
+        $reader = Subscribers::addSubscriber('reader@example.lv');
+        $this->inbox->addMessage(new FakeMessage(4, contents: self::fixture('spam-rejected.eml')));
+
+        Bounces::check(10);
+        Bounces::countAsFailure((int) $this->pendingFor('reader@example.lv')->id);
+
+        $this->assertSame('1', get_post_meta($reader->id, 'bounce_spam_count', true));
+        $this->assertSame('', get_post_meta($reader->id, 'bounce_hard_count', true));
+    }
+
+    /** Bounces read before 1.1.2 recorded a spam rejection as hard. */
+    public function test_the_upgrade_relabels_spam_rejections_recorded_as_hard(): void
+    {
+        global $wpdb;
+
+        Bounces::check(10);
+
+        $wpdb->insert(Bounces::table(), [
+            'mailbox'     => 'info@mawiblah.test@imap.mawiblah.test/INBOX',
+            'uid'         => 99,
+            'bounced_at'  => gmdate('Y-m-d H:i:s'),
+            'recipient'   => 'old@example.org',
+            'kind'        => BounceParser::KIND_HARD,
+            'status_code' => '5.7.0',
+            'action'      => 'failed',
+            'reason'      => '554 5.7.0 Reject, id=09876-39 - spam',
+            'state'       => Bounces::STATE_PENDING,
+            'created_at'  => gmdate('Y-m-d H:i:s'),
+        ]);
+
+        $this->assertSame(1, Bounces::reclassifySpam());
+        $this->assertSame(BounceParser::KIND_SPAM, $this->pendingFor('old@example.org')->kind);
+        $this->assertSame(BounceParser::KIND_HARD, $this->pendingFor('aivars.lauzis@awave.com')->kind, 'A real "not found" stays hard.');
     }
 
     private static function fixture(string $name): string

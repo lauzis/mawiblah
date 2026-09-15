@@ -378,7 +378,8 @@ class Bounces
             return self::RESOLUTION_NO_SUBSCRIBER;
         }
 
-        $countKey = $row->kind === BounceParser::KIND_HARD ? 'bounce_hard_count' : 'bounce_soft_count';
+        // bounce_hard_count, bounce_soft_count or bounce_spam_count.
+        $countKey = 'bounce_' . (in_array($row->kind, BounceParser::KINDS, true) ? $row->kind : BounceParser::KIND_HARD) . '_count';
 
         update_post_meta($subscriberId, $countKey, (int) get_post_meta($subscriberId, $countKey, true) + 1);
         update_post_meta($subscriberId, 'bounce_last_at', $row->bounced_at);
@@ -460,11 +461,12 @@ class Bounces
     }
 
     /**
-     * Rows in one state, newest bounce first.
+     * Rows in one state, newest bounce first, optionally of one kind only.
      *
+     * @param string $kind One of BounceParser::KINDS, or '' for every kind.
      * @return object[]
      */
-    public static function rows(string $state, int $page = 1, int $perPage = 50): array
+    public static function rows(string $state, int $page = 1, int $perPage = 50, string $kind = ''): array
     {
         global $wpdb;
 
@@ -472,8 +474,10 @@ class Bounces
             return [];
         }
 
+        $kindSql = in_array($kind, BounceParser::KINDS, true) ? $wpdb->prepare(' AND kind = %s', $kind) : '';
+
         return $wpdb->get_results($wpdb->prepare(
-            'SELECT * FROM ' . self::table() . ' WHERE state = %s ORDER BY bounced_at DESC, id DESC LIMIT %d OFFSET %d',
+            'SELECT * FROM ' . self::table() . ' WHERE state = %s' . $kindSql . ' ORDER BY bounced_at DESC, id DESC LIMIT %d OFFSET %d',
             $state,
             $perPage,
             max(0, ($page - 1) * $perPage)
@@ -500,6 +504,66 @@ class Bounces
         }
 
         return $counts;
+    }
+
+    /**
+     * Rows per kind within one state, for the type filter.
+     *
+     * @return array<string, int> Every kind in BounceParser::KINDS, zero when there are none.
+     */
+    public static function kindCounts(string $state): array
+    {
+        global $wpdb;
+
+        $counts = array_fill_keys(BounceParser::KINDS, 0);
+
+        if (!self::installed()) {
+            return $counts;
+        }
+
+        $rows = $wpdb->get_results($wpdb->prepare(
+            'SELECT kind, COUNT(*) AS n FROM ' . self::table() . ' WHERE state = %s GROUP BY kind',
+            $state
+        ));
+
+        foreach ((array) $rows as $row) {
+            if (isset($counts[$row->kind])) {
+                $counts[$row->kind] = (int) $row->n;
+            }
+        }
+
+        return $counts;
+    }
+
+    /**
+     * Relabels spam rejections recorded as hard before they had a kind of their own.
+     *
+     * Runs the stored status and diagnostic back through the parser's rule, so
+     * an upgraded site and a fresh check agree. Called by the 1.1.2 migration.
+     *
+     * @return int Rows relabelled.
+     */
+    public static function reclassifySpam(): int
+    {
+        global $wpdb;
+
+        if (!self::installed()) {
+            return 0;
+        }
+
+        $relabelled = 0;
+        $hard       = $wpdb->get_results($wpdb->prepare(
+            'SELECT id, action, status_code, reason FROM ' . self::table() . ' WHERE kind = %s',
+            BounceParser::KIND_HARD
+        ));
+
+        foreach ((array) $hard as $row) {
+            if (BounceParser::classify((string) $row->action, (string) $row->status_code, (string) $row->reason) === BounceParser::KIND_SPAM) {
+                $relabelled += (int) $wpdb->update(self::table(), ['kind' => BounceParser::KIND_SPAM], ['id' => (int) $row->id]);
+            }
+        }
+
+        return $relabelled;
     }
 
     /** What the most recent check found, or null before the first. */
@@ -633,8 +697,14 @@ class Bounces
         set_transient(self::NOTICE_TRANSIENT . $userId, $notices, 5 * MINUTE_IN_SECONDS);
 
         $state = sanitize_key(wp_unslash($_POST['state'] ?? self::STATE_PENDING));
+        $kind  = sanitize_key(wp_unslash($_POST['kind'] ?? ''));
 
-        wp_safe_redirect(add_query_arg(['page' => Init::MAWIBLAH_BOUNCES, 'state' => $state], admin_url('admin.php')));
+        // Back to the list as it was filtered.
+        wp_safe_redirect(add_query_arg([
+            'page'  => Init::MAWIBLAH_BOUNCES,
+            'state' => $state,
+            'kind'  => in_array($kind, BounceParser::KINDS, true) ? $kind : false,
+        ], admin_url('admin.php')));
         exit;
     }
 

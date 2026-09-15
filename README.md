@@ -70,6 +70,15 @@ The initial version was built by hand. From version 1.0.9 onward, most changes h
 
 ## Change log
 
+### --- 1.1.2 ---
+- **New:** spam rejections are their own bounce type. A report like `554 5.7.0 Reject, id=09876-39 -
+  spam` — a content filter on the receiving side refusing the e-mail — was labelled Hard, the same as
+  "user unknown", though the address works. A permanent failure with a 5.7.x security/policy status,
+  or a diagnostic naming spam, a block list, Spamhaus, a DNSBL/RBL or reputation, is now **Spam** and
+  shown in gray. The 1.1.2 migration relabels bounces already recorded that way.
+- **New:** a Type filter above the Bounced Emails list — All, Hard, Soft, Spam, each with its count —
+  that stays in place across the state tabs, paging and the actions.
+
 ### --- 1.1.1 ---
 - **Changed:** a bounce is decided with one of three buttons, per row or as a bulk action, instead of
   an Approve whose effect depended on whether the bounce was hard or soft.

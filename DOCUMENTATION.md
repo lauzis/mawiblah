@@ -419,6 +419,11 @@ flowchart TD
   the same path a failed `wp_mail()` takes via `sentEmailFailed()`, so both reach Failing Email at the
   one threshold. *Move to Failing Email* calls `Subscribers::moveToFailingEmail()` directly. The row's
   `resolution` records which happened: `counted`, `counted_moved`, `moved` or `no_subscriber`.
+- **Kinds.** `BounceParser::classify()` labels each failed recipient `hard` (5.x.x), `soft` (4.x.x) or
+  `spam`: a permanent failure with a 5.7.x security/policy status, or a diagnostic naming spam, a
+  block list, Spamhaus, a DNSBL/RBL or reputation (e.g. amavisd's `554 5.7.0 Reject, id=… - spam`).
+  A spam rejection means the mailbox works and only the message was refused. The page filters by
+  kind, and the 1.1.2 migration (`Bounces::reclassifySpam()`) relabels rows recorded as hard before.
 
 - **Read-only until approved.** A check never flags, moves or deletes; messages stay unread.
 - **Matching.** Campaign e-mails carry `X-Mawiblah-Campaign` and `X-Mawiblah-Subscriber` (hashes). A
@@ -427,7 +432,7 @@ flowchart TD
 - **Storage.** `{prefix}mawiblah_bounces`, one row per recipient, unique on
   `(mailbox, uidvalidity, uid, recipient)` so re-reading a report inserts nothing. The cursor lives
   in the `mawiblah_bounce_cursor` option and resets when the mailbox or its `UIDVALIDITY` changes.
-- **Subscriber meta** written on approval: `bounce_hard_count`, `bounce_soft_count`,
+- **Subscriber meta** written on approval: `bounce_hard_count`, `bounce_soft_count`, `bounce_spam_count`,
   `bounce_last_at`, `bounce_last_status`, `bounce_last_reason`, `bounce_last_campaign`.
 - **Deleting a report** stores `\Deleted` on its UID and runs `UID EXPUNGE` for that UID only
   (UIDPLUS); a plain `EXPUNGE` would also remove anything else flagged in the folder. Refused when the

@@ -23,6 +23,19 @@ class BounceParser
     /** Temporary failure (4.x.x): mailbox full, server down, greylisted. */
     public const KIND_SOFT = 'soft';
 
+    /**
+     * Refused by a spam or policy filter (5.7.x): the mailbox works, this
+     * e-mail was not accepted. Nothing like "user unknown", and not to be
+     * treated as one.
+     */
+    public const KIND_SPAM = 'spam';
+
+    /** Every kind a recorded bounce can have. */
+    public const KINDS = [self::KIND_HARD, self::KIND_SOFT, self::KIND_SPAM];
+
+    /** Diagnostic wording that marks a permanent failure as a spam or policy refusal. */
+    private const SPAM_PATTERN = '/\b(spam|junk|unsolicited|spamhaus|dnsbl|rbl|block ?list(ed)?|black ?list(ed)?|reputation)\b/i';
+
     /** Headers every campaign e-mail carries, quoted back by most bounces. */
     public const HEADER_CAMPAIGN   = 'X-Mawiblah-Campaign';
     public const HEADER_SUBSCRIBER = 'X-Mawiblah-Subscriber';
@@ -118,7 +131,8 @@ class BounceParser
 
             $action = strtolower(trim($fields['action'] ?? ''));
             $status = self::statusCode($fields['status'] ?? '');
-            $kind   = self::kind($action, $status);
+            $reason = self::reason($fields['diagnostic-code'] ?? '');
+            $kind   = self::classify($action, $status, $reason);
 
             if ($kind === null) {
                 continue;
@@ -129,7 +143,7 @@ class BounceParser
                 'status' => $status,
                 'action' => $action,
                 'kind'   => $kind,
-                'reason' => self::reason($fields['diagnostic-code'] ?? ''),
+                'reason' => $reason,
             ];
         }
 
@@ -218,27 +232,33 @@ class BounceParser
     }
 
     /**
-     * Hard, soft, or null for a recipient that was not a failure at all.
+     * Hard, soft, spam, or null for a recipient that was not a failure at all.
      *
      * The status code decides when there is one: an action of "failed" with a
      * 4.x.x status is a message that expired in a queue, which says nothing
      * about the address itself.
+     *
+     * A permanent failure is spam rather than hard when the receiving side
+     * refused the message and not the address -- a 5.7.x security or policy
+     * status, or a diagnostic naming spam, a block list or reputation, as in
+     * "554 5.7.0 Reject, id=09876-39 - spam" from an amavisd content filter.
+     *
+     * @param string $action The DSN Action field, lower-cased.
+     * @param string $status The x.y.z status code, or ''.
+     * @param string $reason The diagnostic, or ''.
      */
-    private static function kind(string $action, string $status): ?string
+    public static function classify(string $action, string $status, string $reason = ''): ?string
     {
-        if ($status !== '') {
-            return match ($status[0]) {
-                '5'     => self::KIND_HARD,
-                '4'     => self::KIND_SOFT,
-                default => null,
-            };
+        $permanent = $status !== '' ? $status[0] === '5' : $action === 'failed';
+        $temporary = $status !== '' ? $status[0] === '4' : $action === 'delayed';
+
+        if ($permanent) {
+            return str_starts_with($status, '5.7.') || preg_match(self::SPAM_PATTERN, $reason)
+                ? self::KIND_SPAM
+                : self::KIND_HARD;
         }
 
-        return match ($action) {
-            'failed'  => self::KIND_HARD,
-            'delayed' => self::KIND_SOFT,
-            default   => null,
-        };
+        return $temporary ? self::KIND_SOFT : null;
     }
 
     /** The diagnostic as a person needs to read it: type label gone, one line, bounded. */

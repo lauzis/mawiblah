@@ -71,6 +71,28 @@ class BounceParserTest extends WP_UnitTestCase
         $this->assertNull(self::parse('read-receipt.eml'));
     }
 
+    /** The address works; only this e-mail was refused. */
+    public function test_a_spam_filter_rejection_is_spam_not_hard(): void
+    {
+        $bounce = self::parse('spam-rejected.eml');
+
+        $this->assertNotNull($bounce);
+        $this->assertSame('reader@example.lv', $bounce['recipients'][0]['email']);
+        $this->assertSame('5.7.0', $bounce['recipients'][0]['status']);
+        $this->assertSame(BounceParser::KIND_SPAM, $bounce['recipients'][0]['kind']);
+        $this->assertSame('554 5.7.0 Reject, id=09876-39 - spam', $bounce['recipients'][0]['reason']);
+    }
+
+    public function test_classify_tells_hard_soft_and_spam_apart(): void
+    {
+        $this->assertSame(BounceParser::KIND_HARD, BounceParser::classify('failed', '5.1.1', '550 5.1.1 <gone@example.org>: User unknown'));
+        $this->assertSame(BounceParser::KIND_SPAM, BounceParser::classify('failed', '5.7.1', '550 5.7.1 Access denied'));
+        $this->assertSame(BounceParser::KIND_SPAM, BounceParser::classify('failed', '5.0.0', '550 Message rejected: sender listed on Spamhaus'), 'A diagnostic can say spam without a 5.7 status.');
+        $this->assertSame(BounceParser::KIND_HARD, BounceParser::classify('failed', '', ''));
+        $this->assertSame(BounceParser::KIND_SOFT, BounceParser::classify('delayed', '4.7.1', 'Greylisted, try again later'), 'A temporary policy refusal is still soft.');
+        $this->assertNull(BounceParser::classify('delivered', '2.0.0'));
+    }
+
     public function test_tracking_headers_carry_only_well_formed_hashes(): void
     {
         $this->assertSame(

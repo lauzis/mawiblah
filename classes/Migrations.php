@@ -63,6 +63,12 @@ class Migrations
             Bounces::install();
             update_option('mawiblah_db_version', '1.1.1');
         }
+
+        // Spam rejections (5.7.x) were recorded as hard bounces until they got a kind of their own.
+        if (version_compare($currentVersion, '1.1.2', '<')) {
+            Bounces::reclassifySpam();
+            update_option('mawiblah_db_version', '1.1.2');
+        }
     }
 
     /**

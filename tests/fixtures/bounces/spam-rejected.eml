@@ -1,0 +1,44 @@
+Return-Path: <>
+From: MAILER-DAEMON@mail.inbox.eu (Mail Delivery System)
+To: info@gudlenieks.lv
+Subject: Undelivered Mail Returned to Sender
+Date: Tue, 15 Sep 2026 07:12:40 +0000 (UTC)
+Auto-Submitted: auto-replied
+MIME-Version: 1.0
+Content-Type: multipart/report; report-type=delivery-status;
+	boundary="3F2E1D0C9B.1789456360/mail.inbox.eu"
+
+This is a MIME-encapsulated message.
+
+--3F2E1D0C9B.1789456360/mail.inbox.eu
+Content-Description: Notification
+Content-Type: text/plain; charset=us-ascii
+
+This is the mail system at host mail.inbox.eu.
+
+<reader@example.lv>: host mx.example.lv said: 554 5.7.0 Reject,
+    id=09876-39 - spam (in reply to end of DATA command)
+
+--3F2E1D0C9B.1789456360/mail.inbox.eu
+Content-Description: Delivery report
+Content-Type: message/delivery-status
+
+Reporting-MTA: dns; mail.inbox.eu
+Arrival-Date: Tue, 15 Sep 2026 07:12:37 +0000 (UTC)
+
+Final-Recipient: rfc822; reader@example.lv
+Original-Recipient: rfc822;reader@example.lv
+Action: failed
+Status: 5.7.0
+Remote-MTA: dns; mx.example.lv
+Diagnostic-Code: smtp; 554 5.7.0 Reject, id=09876-39 - spam
+
+--3F2E1D0C9B.1789456360/mail.inbox.eu
+Content-Description: Undelivered Message Headers
+Content-Type: text/rfc822-headers
+
+From: Gudlenieks <info@gudlenieks.lv>
+To: reader@example.lv
+Subject: Test sheaduler 1111
+
+--3F2E1D0C9B.1789456360/mail.inbox.eu--

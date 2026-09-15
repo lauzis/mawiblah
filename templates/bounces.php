@@ -17,11 +17,35 @@ $states = [
 $state = isset($_GET['state']) ? sanitize_key(wp_unslash($_GET['state'])) : Bounces::STATE_PENDING;
 $state = isset($states[$state]) ? $state : Bounces::STATE_PENDING;
 
+// Each kind's badge colour and meaning, shared by the rows and the type filter.
+$kinds = [
+    BounceParser::KIND_HARD => [
+        'label' => __('Hard', 'mawiblah'),
+        'color' => '#d63638',
+        'title' => __('Permanent failure (5.x.x): the address does not exist or refuses mail.', 'mawiblah'),
+    ],
+    BounceParser::KIND_SOFT => [
+        'label' => __('Soft', 'mawiblah'),
+        'color' => '#dba617',
+        'title' => __('Temporary failure (4.x.x): mailbox full or server unavailable.', 'mawiblah'),
+    ],
+    BounceParser::KIND_SPAM => [
+        'label' => __('Spam', 'mawiblah'),
+        'color' => '#8c8f94',
+        'title' => __('Refused by a spam or policy filter (5.7.x): the address works, this e-mail was not accepted.', 'mawiblah'),
+    ],
+];
+
+$kind = isset($_GET['kind']) ? sanitize_key(wp_unslash($_GET['kind'])) : '';
+$kind = isset($kinds[$kind]) ? $kind : '';
+
 $perPage    = 50;
 $paged      = max(1, (int) ($_GET['paged'] ?? 1));
 $counts     = Bounces::counts();
-$pages      = max(1, (int) ceil(($counts[$state] ?? 0) / $perPage));
-$rows       = Bounces::rows($state, min($paged, $pages), $perPage);
+$kindCounts = Bounces::kindCounts($state);
+$total      = $kind !== '' ? $kindCounts[$kind] : ($counts[$state] ?? 0);
+$pages      = max(1, (int) ceil($total / $perPage));
+$rows       = Bounces::rows($state, min($paged, $pages), $perPage, $kind);
 $notices    = Bounces::takeNotices();
 $lastCheck  = Bounces::lastCheck();
 $configured = BounceMailbox::configured();
@@ -74,7 +98,7 @@ $when = static function ($gmt) use ($dateFormat): string {
                     <?php esc_html_e('leaves the subscriber alone.', 'mawiblah'); ?>
                 </li>
             </ul>
-            <p style="max-width:860px;"><?php esc_html_e('Whichever you choose, the bounce report is deleted from the mailbox. Hard (5.x.x) means the address does not exist or refuses mail; soft (4.x.x) means something temporary, like a full mailbox.', 'mawiblah'); ?></p>
+            <p style="max-width:860px;"><?php esc_html_e('Whichever you choose, the bounce report is deleted from the mailbox. Hard (red, 5.x.x) means the address does not exist; soft (yellow, 4.x.x) means something temporary, like a full mailbox; spam (gray, 5.7.x) means a spam or policy filter refused the e-mail while the address itself works — usually one to dismiss.', 'mawiblah'); ?></p>
 
             <table class="widefat striped" style="max-width:860px;margin-top:12px;">
                 <tbody>
@@ -137,6 +161,7 @@ $when = static function ($gmt) use ($dateFormat): string {
                 <input type="hidden" name="action" value="<?php echo esc_attr(Bounces::ADMIN_ACTION); ?>">
                 <input type="hidden" name="do" value="check">
                 <input type="hidden" name="state" value="<?php echo esc_attr($state); ?>">
+                <input type="hidden" name="kind" value="<?php echo esc_attr($kind); ?>">
                 <button type="submit" class="button button-secondary" <?php disabled(!$configured); ?>>
                     <span class="dashicons dashicons-update" style="vertical-align:middle;margin-top:-3px;"></span>
                     <?php esc_html_e('Check mailbox now', 'mawiblah'); ?>
@@ -152,7 +177,7 @@ $when = static function ($gmt) use ($dateFormat): string {
             <?php
             $links[] = sprintf(
                 '<li><a href="%s"%s>%s <span class="count">(%d)</span></a>',
-                esc_url(add_query_arg('state', $key, $pageUrl)),
+                esc_url(add_query_arg(['state' => $key, 'kind' => $kind !== '' ? $kind : false], $pageUrl)),
                 $key === $state ? ' class="current" aria-current="page"' : '',
                 esc_html($label),
                 (int) $counts[$key]
@@ -161,12 +186,41 @@ $when = static function ($gmt) use ($dateFormat): string {
         <?php endforeach; ?>
         <?php echo implode(' | </li>', $links) . '</li>'; ?>
     </ul>
+    <br class="clear">
+
+    <ul class="subsubsub" style="margin-top:0;">
+        <li><?php esc_html_e('Type:', 'mawiblah'); ?>&nbsp;</li>
+        <?php
+        $kindLinks = [sprintf(
+            '<li><a href="%s"%s>%s <span class="count">(%d)</span></a>',
+            esc_url(add_query_arg(['state' => $state], $pageUrl)),
+            $kind === '' ? ' class="current" aria-current="page"' : '',
+            esc_html__('All', 'mawiblah'),
+            (int) ($counts[$state] ?? 0)
+        )];
+
+        foreach ($kinds as $key => $meta) {
+            $kindLinks[] = sprintf(
+                '<li><a href="%s"%s title="%s"><span style="display:inline-block;width:8px;height:8px;border-radius:50%%;background:%s;margin-right:4px;"></span>%s <span class="count">(%d)</span></a>',
+                esc_url(add_query_arg(['state' => $state, 'kind' => $key], $pageUrl)),
+                $key === $kind ? ' class="current" aria-current="page"' : '',
+                esc_attr($meta['title']),
+                esc_attr($meta['color']),
+                esc_html($meta['label']),
+                (int) $kindCounts[$key]
+            );
+        }
+
+        echo implode(' | </li>', $kindLinks) . '</li>';
+        ?>
+    </ul>
 
     <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
         <?php wp_nonce_field(Bounces::ADMIN_ACTION); ?>
         <input type="hidden" name="action" value="<?php echo esc_attr(Bounces::ADMIN_ACTION); ?>">
         <input type="hidden" name="do" value="bulk">
         <input type="hidden" name="state" value="<?php echo esc_attr($state); ?>">
+        <input type="hidden" name="kind" value="<?php echo esc_attr($kind); ?>">
 
         <div class="tablenav top">
             <?php if ($state === Bounces::STATE_PENDING && $rows) : ?>
@@ -189,13 +243,13 @@ $when = static function ($gmt) use ($dateFormat): string {
                 <div class="tablenav-pages">
                     <span class="pagination-links">
                         <?php if ($paged > 1) : ?>
-                            <a class="button" href="<?php echo esc_url(add_query_arg(['state' => $state, 'paged' => $paged - 1], $pageUrl)); ?>">‹</a>
+                            <a class="button" href="<?php echo esc_url(add_query_arg(['state' => $state, 'kind' => $kind !== '' ? $kind : false, 'paged' => $paged - 1], $pageUrl)); ?>">‹</a>
                         <?php endif; ?>
                         <span class="paging-input">
                             <?php printf(esc_html__('%1$d of %2$d', 'mawiblah'), (int) min($paged, $pages), (int) $pages); ?>
                         </span>
                         <?php if ($paged < $pages) : ?>
-                            <a class="button" href="<?php echo esc_url(add_query_arg(['state' => $state, 'paged' => $paged + 1], $pageUrl)); ?>">›</a>
+                            <a class="button" href="<?php echo esc_url(add_query_arg(['state' => $state, 'kind' => $kind !== '' ? $kind : false, 'paged' => $paged + 1], $pageUrl)); ?>">›</a>
                         <?php endif; ?>
                     </span>
                 </div>
@@ -235,7 +289,7 @@ $when = static function ($gmt) use ($dateFormat): string {
 
                 <?php foreach ($rows as $row) : ?>
                     <?php
-                    $isHard       = $row->kind === BounceParser::KIND_HARD;
+                    $badge        = $kinds[$row->kind] ?? $kinds[BounceParser::KIND_HARD];
                     $subscriberId = (int) $row->subscriber_id;
                     $isSubscriber = $subscriberId && get_post_type($subscriberId) === Subscribers::postType();
                     $campaignId   = (int) $row->campaign_id;
@@ -255,8 +309,8 @@ $when = static function ($gmt) use ($dateFormat): string {
                             <?php endif; ?>
                         </td>
                         <td>
-                            <span style="display:inline-block;padding:1px 8px;border-radius:10px;color:#fff;background:<?php echo $isHard ? '#d63638' : '#dba617'; ?>;">
-                                <?php $isHard ? esc_html_e('Hard', 'mawiblah') : esc_html_e('Soft', 'mawiblah'); ?>
+                            <span title="<?php echo esc_attr($badge['title']); ?>" style="display:inline-block;padding:1px 8px;border-radius:10px;color:#fff;background:<?php echo esc_attr($badge['color']); ?>;">
+                                <?php echo esc_html($badge['label']); ?>
                             </span>
                             <?php if ($row->status_code !== '') : ?>
                                 <br><code><?php echo esc_html($row->status_code); ?></code>

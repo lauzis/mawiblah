@@ -35,7 +35,7 @@
     {
       "id": "debug",
       "title": "Logging",
-      "description": "Enable file-based logging to record plugin actions to daily log files. Logs are stored in {uploads}/gae-logs/mawiblah-YYYY-MM-DD.log and can be viewed under Mawiblah → Logs.",
+      "description": "Enable file-based logging to record plugin actions to daily log files. Logs are stored in {uploads}/mawiblah/logs-{random}/mawiblah-YYYY-MM-DD.log and can be viewed under Mawiblah → Logs.",
       "fields": [
         {
           "id": "debug",

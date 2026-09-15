@@ -3,14 +3,14 @@
  * Plugin Name: Mawiblah
  * Plugin URI: https://github.com/lauzis/
  * Description: Fff-ine, will build my own mailchimp... with blackjack and hookers.
- * Version: 1.0.54
+ * Version: 1.0.55
  * Author: Aivars Lauzis
  * Author URI: https://github.com/lauzis/
  * License: GPL3 - http://www.gnu.org/licenses/gpl.html
  * Requires PHP: 8.0
  */
 
-define('MAWIBLAH_VERSION_BASE', '1.0.54');
+define('MAWIBLAH_VERSION_BASE', '1.0.55');
 if (!defined('MAWIBLAH_VERSION')) {
     define('MAWIBLAH_VERSION', MAWIBLAH_VERSION_BASE);
 }
@@ -69,7 +69,19 @@ $uloads_dir = wp_upload_dir();
 // uninstall can still clear it on upgraded installs.
 define('MAWIBLAH_GENERATE_PATH', str_replace('\\', '/', $uloads_dir["basedir"] . '/gae/'));
 
-define('MAWIBLAH_LOG_PATH', str_replace('\\', '/', $uloads_dir["basedir"] . '/gae-logs/'));
+// Until 1.0.55 this was uploads/gae-logs/, a path carried over from Google Analytics
+// Events and still that plugin's log directory. Migrations::migrateTo1055() moves
+// the old files across.
+//
+// The directory name carries a random token. The .htaccess the logger writes does
+// nothing under nginx, so a log file there is reachable by URL -- and without the
+// token its name would be nothing but the date.
+$logToken = get_option('mawiblah_log_token');
+if (!is_string($logToken) || !preg_match('/^[a-f0-9]{32}$/', $logToken)) {
+    $logToken = bin2hex(random_bytes(16));
+    update_option('mawiblah_log_token', $logToken);
+}
+define('MAWIBLAH_LOG_PATH', str_replace('\\', '/', MAWIBLAH_UPLOAD_DIR . '/logs-' . $logToken . '/'));
 define('MAWIBLAH_TEMPLATES_PATH', MAWIBLAH_PLUGIN_DIR . "/templates");
 define('MAWIBLAH_SETTINGS_PAGE', 'mawiblah-settings');
 

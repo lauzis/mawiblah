@@ -158,6 +158,8 @@ class Settings
             array_map('unlink', glob($dir . "*.*"));
             rmdir($dir);
         }
+
+        delete_option('mawiblah_log_token');
     }
 
     /** Plugin activation hook handler (currently a stub). */

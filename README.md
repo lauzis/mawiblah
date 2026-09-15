@@ -70,6 +70,17 @@ The initial version was built by hand. From version 1.0.9 onward, most changes h
 
 ## Change log
 
+### --- 1.0.55 ---
+- **Fix:** logs are written to `{uploads}/mawiblah/logs-{random}/` instead of `{uploads}/gae-logs/`.
+  The log path had been carried over from Google Analytics Events in 1.0.9 and was still
+  that plugin's own log directory, so Mawiblah's daily files sat among its `gae-*.log` files —
+  and uninstalling Mawiblah would have deleted them too. On upgrade, existing
+  `mawiblah-*.log` files are moved across; anything else in `gae-logs/` is left alone.
+- **Security:** log files could be downloaded by anyone who guessed the date — the logger's
+  `.htaccess` does nothing under nginx, and they hold subscriber e-mail addresses. The log
+  directory's name now carries a random 32-character token, generated once and kept in the
+  `mawiblah_log_token` option.
+
 ### --- 1.0.54 ---
 - **Change:** a tester in test mode now gets the test e-mail even when the do-not-disturb
   threshold has not been reached. The test is how a campaign gets approved, and a tester who

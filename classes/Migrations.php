@@ -47,6 +47,11 @@ class Migrations
             self::migrateTo1040();
             update_option('mawiblah_db_version', '1.0.40');
         }
+
+        if (version_compare($currentVersion, '1.0.55', '<')) {
+            self::migrateTo1055();
+            update_option('mawiblah_db_version', '1.0.55');
+        }
     }
 
     /**
@@ -61,6 +66,54 @@ class Migrations
         if ($done) {
             update_option('mawiblah_db_version', '1.0.21');
         }
+    }
+
+    /**
+     * Moves the daily log files out of uploads/gae-logs/ into MAWIBLAH_LOG_PATH.
+     *
+     * From 1.0.9 the log path was one carried over from Google Analytics Events, and
+     * it is still that plugin's own log directory -- Mawiblah's files sat next to its
+     * gae-*.log files. Only mawiblah-*.log files move; the directory and everything
+     * else in it are left alone.
+     *
+     * A file that cannot be moved stays where it is and is reported through
+     * addError(), which reaches PHP's error_log even with logging switched off.
+     *
+     * @return void
+     */
+    private static function migrateTo1055(): void
+    {
+        $legacyDir = str_replace('\\', '/', wp_upload_dir()['basedir']) . '/gae-logs/';
+        $files     = glob($legacyDir . 'mawiblah-*.log') ?: [];
+
+        if (!$files) {
+            return;
+        }
+
+        wp_mkdir_p(MAWIBLAH_LOG_PATH);
+
+        $moved = 0;
+
+        foreach ($files as $file) {
+            $target = MAWIBLAH_LOG_PATH . basename($file);
+
+            // Whatever was logged to the new directory before this ran is newer
+            // than the old file, so the old lines go first.
+            if (file_exists($target)) {
+                $ok = false !== file_put_contents($target, file_get_contents($file) . file_get_contents($target), LOCK_EX)
+                    && unlink($file);
+            } else {
+                $ok = rename($file, $target);
+            }
+
+            if ($ok) {
+                $moved++;
+            } else {
+                Logs::addError('migration', 'Could not move a log file out of uploads/gae-logs/.', ['file' => $file, 'target' => $target]);
+            }
+        }
+
+        Logs::addLog('migration', 'Moved log files out of uploads/gae-logs/.', ['moved' => $moved, 'dir' => MAWIBLAH_LOG_PATH]);
     }
 
     /**

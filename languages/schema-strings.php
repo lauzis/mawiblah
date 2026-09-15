@@ -20,7 +20,7 @@ __( 'Dont send emails', 'mawiblah' );
 __( 'Email Open Tracking', 'mawiblah' );
 __( 'Embeds a 1×1 tracking pixel in outgoing emails. Requires server-side configuration (nginx must serve the pixel URL and execute PHP). When enabled, unique opens are recorded per subscriber per campaign. Note: inform subscribers in your privacy policy.', 'mawiblah' );
 __( 'Enable - file log', 'mawiblah' );
-__( 'Enable file-based logging to record plugin actions to daily log files. Logs are stored in {uploads}/gae-logs/mawiblah-YYYY-MM-DD.log and can be viewed under Mawiblah → Logs.', 'mawiblah' );
+__( 'Enable file-based logging to record plugin actions to daily log files. Logs are stored in {uploads}/mawiblah/logs-{random}/mawiblah-YYYY-MM-DD.log and can be viewed under Mawiblah → Logs.', 'mawiblah' );
 __( 'Enable open tracking', 'mawiblah' );
 __( 'Enable reCAPTCHA v3', 'mawiblah' );
 __( 'Enabled', 'mawiblah' );

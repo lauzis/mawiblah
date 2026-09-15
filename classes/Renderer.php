@@ -406,4 +406,11 @@ class Renderer
         require MAWIBLAH_PLUGIN_DIR . "/templates/logs.php";
         exit;
     }
+
+    /** Renders the bounced emails review page and exits. */
+    public static function bounces()
+    {
+        require MAWIBLAH_PLUGIN_DIR . "/templates/bounces.php";
+        exit;
+    }
 }

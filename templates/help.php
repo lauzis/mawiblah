@@ -10,6 +10,7 @@
             <li><a href="#help-developer-integration"><?php esc_html_e('Developer Integration', 'mawiblah'); ?></a></li>
             <li><a href="#help-template-overriding"><?php esc_html_e('Template Overriding', 'mawiblah'); ?></a></li>
             <li><a href="#help-settings-reference"><?php esc_html_e('Settings Reference', 'mawiblah'); ?></a></li>
+            <li><a href="#help-bounced-emails"><?php esc_html_e('Bounced Emails', 'mawiblah'); ?></a></li>
             <li><a href="#help-cron-setup"><?php esc_html_e('Background Send & Real Cron Setup', 'mawiblah'); ?></a></li>
             <li><a href="#help-settings-background"><?php esc_html_e('Settings Reference — Background Send & Open Tracking', 'mawiblah'); ?></a></li>
             <li><a href="#help-scheduler"><?php esc_html_e('Campaign Scheduler', 'mawiblah'); ?></a></li>
@@ -360,6 +361,8 @@ if ( $result['status'] === 'ok' ) {
         </div>
         <div class="inside">
 
+            <p><?php esc_html_e('The Settings page is split into tabs: Sending, Failing Email, Bounced Emails, Subscription Form, Open Tracking and Logging.', 'mawiblah'); ?></p>
+
             <h3><?php esc_html_e('Sending', 'mawiblah'); ?></h3>
             <table class="wp-list-table widefat fixed striped" style="max-width:800px;">
                 <thead>
@@ -390,7 +393,7 @@ if ( $result['status'] === 'ok' ) {
                 </tbody>
             </table>
 
-            <h3 style="margin-top:24px;"><?php esc_html_e('Debug', 'mawiblah'); ?></h3>
+            <h3 style="margin-top:24px;"><?php esc_html_e('Logging', 'mawiblah'); ?></h3>
             <table class="wp-list-table widefat fixed striped" style="max-width:800px;">
                 <thead>
                     <tr>
@@ -466,6 +469,59 @@ if ( $result['status'] === 'ok' ) {
                 </tbody>
             </table>
             <p style="margin-top:8px;"><?php esc_html_e('Each failure also stores the mailer error reason (e.g. SMTP rejection message) in the subscriber\'s meta for diagnostics. To re-enable sending, manually remove the subscriber from the "Failing Email" audience.', 'mawiblah'); ?></p>
+        </div>
+    </div>
+
+    <!-- ── Bounced Emails ─────────────────────────────────────────────────── -->
+    <div id="help-bounced-emails" class="postbox">
+        <div class="postbox-header">
+            <h2 class="hndle"><span><?php esc_html_e('Bounced Emails', 'mawiblah'); ?></span></h2>
+        </div>
+        <div class="inside">
+            <p><?php esc_html_e('A failed send is caught the moment wp_mail() reports it. A bounce is different: the mail server accepts the e-mail, wp_mail() reports success, and only minutes later does the receiving server say the address does not exist — in an e-mail, a delivery report, sent back to the sender. Without reading that mailbox, a dead address stays healthy on the WordPress side and is mailed with every campaign.', 'mawiblah'); ?></p>
+
+            <h3><?php esc_html_e('Setting it up', 'mawiblah'); ?></h3>
+            <ol style="padding-left:1.5em;">
+                <li><?php esc_html_e('Find the mailbox the reports arrive in. With WP Mail SMTP and "Return Path" off, that is the From address of your campaigns.', 'mawiblah'); ?></li>
+                <li><?php esc_html_e('Under Settings → Bounced Emails, enter its IMAP server, port, encryption, username, password and folder. For an inbox.eu mailbox: mail.inbox.eu, port 993, SSL/TLS.', 'mawiblah'); ?></li>
+                <li><?php esc_html_e('Press "Test connection". It uses what is in the fields, saved or not, and says how many messages the folder holds and whether the server can delete a single message by its UID.', 'mawiblah'); ?></li>
+                <li><?php esc_html_e('Set "Check the mailbox every hour" to Enabled and save, or use "Check mailbox now" on the Bounced Emails page.', 'mawiblah'); ?></li>
+            </ol>
+
+            <h3 style="margin-top:24px;"><?php esc_html_e('What a check does', 'mawiblah'); ?></h3>
+            <p><?php esc_html_e('It only reads. Messages are read from where the previous check stopped, and only those whose headers say they are a delivery report (multipart/report with a message/delivery-status part) are downloaded in full. Everything is fetched without marking it read, and nothing is flagged, moved or deleted. Out-of-office replies, read receipts and real replies from people are not bounces and are never touched.', 'mawiblah'); ?></p>
+            <p><?php esc_html_e('Each failed recipient becomes a row on the Bounced Emails page, matched to its subscriber and campaign by the X-Mawiblah-Subscriber and X-Mawiblah-Campaign headers campaign e-mails carry since 1.1.0, or by the address for older mail.', 'mawiblah'); ?></p>
+
+            <h3 style="margin-top:24px;"><?php esc_html_e('Approving and dismissing', 'mawiblah'); ?></h3>
+            <table class="wp-list-table widefat fixed striped" style="max-width:800px;">
+                <thead>
+                    <tr>
+                        <th style="width:30%"><?php esc_html_e('Decision', 'mawiblah'); ?></th>
+                        <th><?php esc_html_e('What happens', 'mawiblah'); ?></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><?php esc_html_e('Approve a hard bounce (5.x.x)', 'mawiblah'); ?></td>
+                        <td><?php esc_html_e('The address does not exist or refuses mail. The subscriber goes straight into the "Failing Email" audience and is skipped by every future campaign, the bounce is recorded on the subscriber (bounce_hard_count, bounce_last_status, bounce_last_reason), and the report is deleted from the mailbox.', 'mawiblah'); ?></td>
+                    </tr>
+                    <tr>
+                        <td><?php esc_html_e('Approve a soft bounce (4.x.x)', 'mawiblah'); ?></td>
+                        <td><?php esc_html_e('A full mailbox or a server that is down says nothing lasting about the address. The bounce is recorded on the subscriber (bounce_soft_count), who keeps receiving campaigns, and the report is deleted.', 'mawiblah'); ?></td>
+                    </tr>
+                    <tr>
+                        <td><?php esc_html_e('Dismiss', 'mawiblah'); ?></td>
+                        <td><?php esc_html_e('The subscriber is left alone and the report is deleted.', 'mawiblah'); ?></td>
+                    </tr>
+                </tbody>
+            </table>
+            <p style="margin-top:8px;"><?php esc_html_e('Only that one report is deleted: it is flagged \Deleted and removed with UID EXPUNGE, which leaves any other message you have marked for deletion in your mail client alone. A server without the UIDPLUS extension only gets the \Deleted flag. A report is never deleted if the mailbox settings or the mailbox\'s UIDVALIDITY have changed since it was read, because its UID could then belong to a different e-mail. To send to a subscriber again, remove them from the "Failing Email" audience.', 'mawiblah'); ?></p>
+
+            <h3 style="margin-top:24px;"><?php esc_html_e('The password', 'mawiblah'); ?></h3>
+            <p><?php esc_html_e('The password is stored encrypted, with a key derived from the salts in wp-config.php, so a database dump or backup on its own does not reveal it. Changing the salts makes it unreadable — enter it again. To keep it out of the database entirely, define it in wp-config.php; a constant takes precedence over the settings page:', 'mawiblah'); ?></p>
+            <pre style="background:#f6f7f7;padding:8px 12px;border-radius:4px;overflow:auto;">define('MAWIBLAH_BOUNCE_HOST', 'mail.inbox.eu');
+define('MAWIBLAH_BOUNCE_USER', 'info@example.com');
+define('MAWIBLAH_BOUNCE_PASS', '…');</pre>
         </div>
     </div>
 
@@ -599,7 +655,7 @@ if ( $result['status'] === 'ok' ) {
                             <?php
                             printf(
                                 /* translators: %s: batch size link */
-                                esc_html__('Processes up to N subscribers (configured in Settings → Subscribers per cron batch, default 100). Applies all normal send rules: do-not-disturb threshold, unsubscribed, failing email, open tracking pixel. Reschedules itself in 60 seconds if more subscribers remain.', 'mawiblah'),
+                                esc_html__('Processes up to N subscribers (configured in Settings → Sending → Subscribers per cron batch, default 100). Applies all normal send rules: do-not-disturb threshold, unsubscribed, failing email, open tracking pixel. Reschedules itself in 60 seconds if more subscribers remain.', 'mawiblah'),
                             );
                             ?>
                         </td>
@@ -747,7 +803,7 @@ if ( $result['status'] === 'ok' ) {
                 <tbody>
                     <tr>
                         <td><code>mawiblah_scheduler_check</code></td>
-                        <td><?php esc_html_e('Checks all active schedules and fires a background campaign send for any whose next_send time has passed. The check frequency is configurable in Settings → Scheduler (default: every 1 hour).', 'mawiblah'); ?></td>
+                        <td><?php esc_html_e('Checks all active schedules and fires a background campaign send for any whose next_send time has passed. The check frequency is configurable in Settings → Sending → Scheduler check interval (default: every 1 hour).', 'mawiblah'); ?></td>
                     </tr>
                     <tr>
                         <td><code>mawiblah_background_send</code></td>
@@ -759,7 +815,7 @@ if ( $result['status'] === 'ok' ) {
             <div class="notice notice-warning inline" style="margin:12px 0 0;">
                 <p>
                     <strong><?php esc_html_e('Send time is approximate:', 'mawiblah'); ?></strong>
-                    <?php esc_html_e('Campaigns will not fire at the exact configured time. The scheduler check runs on a fixed interval (e.g. every hour), so a send can be delayed by up to the full length of that interval depending on when the check last ran. For example, with a 1-hour check interval, a campaign set for 09:00 may not send until 09:59 if the previous check ran at 09:00:01. To minimise the delay, reduce the check interval in Settings → Scheduler.', 'mawiblah'); ?>
+                    <?php esc_html_e('Campaigns will not fire at the exact configured time. The scheduler check runs on a fixed interval (e.g. every hour), so a send can be delayed by up to the full length of that interval depending on when the check last ran. For example, with a 1-hour check interval, a campaign set for 09:00 may not send until 09:59 if the previous check ran at 09:00:01. To minimise the delay, reduce the check interval in Settings → Sending → Scheduler check interval.', 'mawiblah'); ?>
                 </p>
             </div>
 

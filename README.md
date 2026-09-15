@@ -70,6 +70,28 @@ The initial version was built by hand. From version 1.0.9 onward, most changes h
 
 ## Change log
 
+### --- 1.1.0 ---
+- **New:** Bounced Emails. `wp_mail()` only learns whether the outgoing server accepted a message,
+  so a dead mailbox at a live domain — accepted, then bounced minutes later by the receiving server —
+  looked healthy and was mailed with every campaign. Mawiblah now reads the mailbox the bounce
+  reports go to over IMAP (**Settings → Bounced Emails**, with a "Test connection" button), hourly
+  or on demand, and lists every bounce under **Mawiblah → Bounced Emails**. Nothing changes until a
+  bounce is approved: a hard bounce (5.x.x) then moves the subscriber straight into **Failing Email**,
+  a soft one (4.x.x) is only recorded, and the report is deleted from the mailbox. Dismissing deletes
+  the report and leaves the subscriber alone. A check only reads — messages stay unread, and
+  anything that is not a delivery report is never touched.
+- **New:** campaign e-mails carry `X-Mawiblah-Campaign` and `X-Mawiblah-Subscriber` headers (hashes,
+  not ids or addresses), so a bounce names its campaign and subscriber even when an alias rewrote the
+  address.
+- **Security:** the mailbox password is stored encrypted with a key derived from the wp-config.php
+  salts; `MAWIBLAH_BOUNCE_PASS` (and `_HOST`, `_USER`) in wp-config.php keep it out of the database.
+- **Changed:** the Settings page is split into tabs — Sending, Failing Email, Bounced Emails,
+  Subscription Form, Open Tracking and Logging — the way the other plugins built on
+  `lauzis/wp-plugin-packages` show theirs. Option keys come from the field ids, so every saved
+  value stays where it was; "Can disable actual email sending" moved from Logging to Sending.
+- **Requires:** PHP 8.2. The IMAP client, `directorytree/imapengine`, speaks IMAP itself, so PHP's
+  `imap` extension — removed from PHP 8.4 — is not needed. The lock file is resolved for PHP 8.2.
+
 ### --- 1.0.55 ---
 - **Fix:** logs are written to `{uploads}/mawiblah/logs-{random}/` instead of `{uploads}/gae-logs/`.
   The log path had been carried over from Google Analytics Events in 1.0.9 and was still

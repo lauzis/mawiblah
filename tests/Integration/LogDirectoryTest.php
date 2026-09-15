@@ -56,7 +56,8 @@ class LogDirectoryTest extends WP_UnitTestCase
         $this->assertFileDoesNotExist($this->legacyDir . 'mawiblah-2020-01-01.log');
         $this->assertSame("old line\n", file_get_contents(MAWIBLAH_LOG_PATH . 'mawiblah-2020-01-01.log'));
         $this->assertSame("gae line\n", file_get_contents($this->legacyDir . 'gae-2020-01.log'));
-        $this->assertSame('1.0.55', get_option('mawiblah_db_version'));
+        // Later migrations run too, so the version only has to have got this far.
+        $this->assertTrue(version_compare(get_option('mawiblah_db_version'), '1.0.55', '>='));
     }
 
     /** A day already started in the new directory keeps both halves, oldest first. */

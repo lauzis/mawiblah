@@ -1,0 +1,48 @@
+Return-Path: <>
+Received: from AM0PR02MB5555.eurprd02.prod.outlook.com (2603:10a6:208:1b::10)
+ by mail.inbox.eu; Tue, 15 Sep 2026 05:35:02 +0000
+From: postmaster@awave.com
+To: info@gudlenieks.lv
+Date: Tue, 15 Sep 2026 05:35:01 +0000
+Subject: Undeliverable: =?utf-8?B?8J+Pq/CfpJMgQmV6bWFrc2FzIGRydWvEgWphbWkgZGFyYmkgYsSTcm5pZW0=?=
+Auto-Submitted: auto-replied
+MIME-Version: 1.0
+Content-Type: multipart/report; report-type=delivery-status;
+	boundary="_000_ms365ndrboundary_"
+Message-ID: <ndr-0001@AM0PR02MB5555.eurprd02.prod.outlook.com>
+
+--_000_ms365ndrboundary_
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+
+Your message to aivars.lauzis@awave.com couldn't be delivered.
+aivars.lauzis wasn't found at awave.com.
+
+--_000_ms365ndrboundary_
+Content-Type: message/delivery-status
+
+Reporting-MTA: dns;AM0PR02MB5555.eurprd02.prod.outlook.com
+Received-From-MTA: dns;mail.inbox.eu
+Arrival-Date: Tue, 15 Sep 2026 05:35:00 +0000
+
+Original-Recipient: rfc822;aivars.lauzis@awave.com
+Final-Recipient: rfc822;aivars.lauzis@awave.com
+Action: failed
+Status: 5.1.10
+Diagnostic-Code: smtp;550 5.1.10 RESOLVER.ADR.RecipientNotFound; Recipient
+ aivars.lauzis@awave.com not found by SMTP address lookup
+
+--_000_ms365ndrboundary_
+Content-Type: text/rfc822-headers
+
+Return-Path: info@gudlenieks.lv
+From: Gudlenieks <info@gudlenieks.lv>
+To: aivars.lauzis@awave.com
+Subject: =?utf-8?B?8J+Pq/CfpJMgQmV6bWFrc2FzIGRydWvEgWphbWkgZGFyYmkgYsSTcm5pZW0=?=
+Date: Tue, 15 Sep 2026 05:34:59 +0000
+Content-Type: text/html; charset=UTF-8
+X-Mawiblah-Campaign: 237639df16d283272a4919f0a517ebdb
+X-Mawiblah-Subscriber: d2949eb6aaa490c835219e945ff37dad
+List-Unsubscribe-Post: List-Unsubscribe=One-Click
+
+--_000_ms365ndrboundary_--

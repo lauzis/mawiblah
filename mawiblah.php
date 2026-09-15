@@ -3,14 +3,14 @@
  * Plugin Name: Mawiblah
  * Plugin URI: https://github.com/lauzis/
  * Description: Fff-ine, will build my own mailchimp... with blackjack and hookers.
- * Version: 1.0.55
+ * Version: 1.1.0
  * Author: Aivars Lauzis
  * Author URI: https://github.com/lauzis/
  * License: GPL3 - http://www.gnu.org/licenses/gpl.html
- * Requires PHP: 8.0
+ * Requires PHP: 8.2
  */
 
-define('MAWIBLAH_VERSION_BASE', '1.0.55');
+define('MAWIBLAH_VERSION_BASE', '1.1.0');
 if (!defined('MAWIBLAH_VERSION')) {
     define('MAWIBLAH_VERSION', MAWIBLAH_VERSION_BASE);
 }
@@ -105,9 +105,15 @@ add_action('after_setup_theme', static function (): void {
 
 add_action('carbon_fields_register_fields', ['\Mawiblah\Settings', 'registerFields']);
 
-// The Slack test button answers over admin-ajax, which never renders the
-// settings page, so its endpoint has to be registered on every admin request
-// rather than when the button is drawn.
+// The bounce mailbox password never reaches wp_options in the clear. Registered
+// here rather than on a later hook, so it is in place whenever the settings
+// page saves.
+add_filter('sanitize_option__mawiblah-bounce-password', ['\Mawiblah\Settings', 'encryptBouncePassword']);
+
+// The Slack and mailbox test buttons answer over admin-ajax, which never renders
+// the settings page, so their endpoints have to be registered on every admin
+// request rather than when the buttons are drawn. The same goes for the Bounced
+// Emails page's forms, which post to admin-post.php.
 if (is_admin()) {
     add_action('admin_init', static function (): void {
         $tester = \Mawiblah\Logs::slackTester();
@@ -115,6 +121,9 @@ if (is_admin()) {
         if ($tester) {
             $tester->boot();
         }
+
+        \Mawiblah\BounceMailbox::boot();
+        \Mawiblah\Bounces::bootAdmin();
     });
 }
 
@@ -140,6 +149,15 @@ require(MAWIBLAH_PLUGIN_DIR . '/classes/CronSend.php');
 require(MAWIBLAH_PLUGIN_DIR . '/classes/Import.php');
 require(MAWIBLAH_PLUGIN_DIR . '/classes/Scheduler.php');
 require(MAWIBLAH_PLUGIN_DIR . '/classes/SchedulerCron.php');
+require(MAWIBLAH_PLUGIN_DIR . '/classes/Secrets.php');
+require(MAWIBLAH_PLUGIN_DIR . '/classes/BounceParser.php');
+// Extends a vendor class, so it can only be declared when vendor/ is there;
+// BounceMailbox::configured() answers false without it.
+if (class_exists('\DirectoryTree\ImapEngine\Connection\ImapConnection')) {
+    require(MAWIBLAH_PLUGIN_DIR . '/classes/BounceImapConnection.php');
+}
+require(MAWIBLAH_PLUGIN_DIR . '/classes/BounceMailbox.php');
+require(MAWIBLAH_PLUGIN_DIR . '/classes/Bounces.php');
 
 function mawiblah_init(): void
 {
@@ -157,6 +175,7 @@ function mawiblah_init(): void
     \Mawiblah\CronSend::init();
     \Mawiblah\Scheduler::init();
     \Mawiblah\SchedulerCron::init();
+    \Mawiblah\Bounces::init();
 }
 
 add_action('init', 'mawiblah_init');

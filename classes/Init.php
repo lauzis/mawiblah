@@ -18,6 +18,7 @@ class Init
     const MAWIBLAH_LOGS      = 'mawiblah-logs';
     const MAWIBLAH_HELP      = 'mawiblah-help';
     const MAWIBLAH_SCHEDULER = 'mawiblah-scheduler';
+    const MAWIBLAH_BOUNCES   = 'mawiblah-bounces';
     /** Bootstraps the plugin: runs migrations, registers admin menu, hooks, REST routes, and blocks. */
     public function init(): void
     {
@@ -50,6 +51,7 @@ class Init
             self::MAWIBLAH_LOGS,
             self::MAWIBLAH_HELP,
             self::MAWIBLAH_SCHEDULER,
+            self::MAWIBLAH_BOUNCES,
         ];
     }
 
@@ -427,6 +429,18 @@ class Init
             [$this, 'import']
         );
 
+        $pendingBounces = Bounces::counts()[Bounces::STATE_PENDING];
+
+        add_submenu_page(
+            'mawiblah',
+            'Bounced Emails',
+            '<span class="dashicons dashicons-undo" style="font-size:16px;line-height:1.4;margin-right:6px;vertical-align:middle;"></span>Bounced Emails'
+                . ($pendingBounces ? ' <span class="awaiting-mod">' . (int) $pendingBounces . '</span>' : ''),
+            'manage_options',
+            self::MAWIBLAH_BOUNCES,
+            [$this, 'bounces']
+        );
+
         if (Logs::enabled() || !empty(Logs::getLogFiles())) {
             add_submenu_page(
                 'mawiblah',
@@ -490,5 +504,10 @@ class Init
     /** Admin page callback: renders the in-plugin help page. */
     public function help() {
         Renderer::help();
+    }
+
+    /** Admin page callback: renders the bounced emails review page. */
+    public function bounces() {
+        Renderer::bounces();
     }
 }

@@ -28,7 +28,10 @@ class Settings
             // the dashicon every other Mawiblah submenu item carries.
             'page_menu_title' => '<span class="dashicons dashicons-admin-settings" style="font-size:16px;line-height:1.4;margin-right:6px;vertical-align:middle;"></span>'
                 . __('Settings', 'mawiblah'),
-            'mode'            => 'flat',
+            // One tab per schema section, as the other plugins built on the
+            // shared package have it. Option keys come from the field ids, so
+            // regrouping sections never moves a stored value.
+            'mode'            => 'tabs',
             'page_parent'     => 'mawiblah',
             'page_file'       => MAWIBLAH_SETTINGS_PAGE,
         ]);
@@ -51,6 +54,9 @@ class Settings
         if ($tester) {
             $page->callback('logs_slack_test', [$tester, 'render']);
         }
+
+        // Draws the "Test connection" button at the end of Bounced Emails.
+        $page->callback('bounce_mailbox_test', [BounceMailbox::class, 'renderTestButton']);
 
         $page->register(MAWIBLAH_CONFIG_PATH . '/settings.json', [
             'prefix' => self::PREFIX,
@@ -160,6 +166,8 @@ class Settings
         }
 
         delete_option('mawiblah_log_token');
+
+        Bounces::uninstall();
     }
 
     /** Plugin activation hook handler (currently a stub). */
@@ -397,6 +405,60 @@ class Settings
     public static function openTrackingEnabled(): bool
     {
         return self::getOption('mawiblah-open-tracking-enabled') === 'enabled';
+    }
+
+    /** True when the hourly bounce check is switched on. */
+    public static function bouncesEnabled(): bool
+    {
+        return self::getOption('mawiblah-bounce-enabled') === 'enabled';
+    }
+
+    /**
+     * The bounce mailbox connection, with wp-config.php constants taking
+     * precedence over the settings page: MAWIBLAH_BOUNCE_HOST,
+     * MAWIBLAH_BOUNCE_USER and MAWIBLAH_BOUNCE_PASS.
+     *
+     * @return array{host: string, port: int, encryption: string, username: string, password: string, folder: string}
+     */
+    public static function bounceMailbox(): array
+    {
+        $encryption = (string) self::getOption('mawiblah-bounce-encryption');
+
+        return [
+            'host'       => defined('MAWIBLAH_BOUNCE_HOST')
+                ? (string) MAWIBLAH_BOUNCE_HOST
+                : trim((string) self::getOption('mawiblah-bounce-host')),
+            'port'       => (int) (self::getOption('mawiblah-bounce-port') ?: 993),
+            'encryption' => in_array($encryption, ['ssl', 'starttls', 'none'], true) ? $encryption : 'ssl',
+            'username'   => defined('MAWIBLAH_BOUNCE_USER')
+                ? (string) MAWIBLAH_BOUNCE_USER
+                : trim((string) self::getOption('mawiblah-bounce-username')),
+            'password'   => defined('MAWIBLAH_BOUNCE_PASS')
+                ? (string) MAWIBLAH_BOUNCE_PASS
+                : Secrets::decrypt((string) self::getOption('mawiblah-bounce-password')),
+            'folder'     => trim((string) self::getOption('mawiblah-bounce-folder')) ?: 'INBOX',
+        ];
+    }
+
+    /** Messages read from the bounce mailbox per check (default 50, at most 500). */
+    public static function bounceBatchSize(): int
+    {
+        return max(1, min(500, (int) (self::getOption('mawiblah-bounce-batch-size') ?: 50)));
+    }
+
+    /**
+     * Encrypts the bounce mailbox password on its way into wp_options.
+     *
+     * Hooked on sanitize_option, which add_option() and update_option() both
+     * run -- Carbon Fields calls whichever the option needs. An untouched field
+     * posts the stored ciphertext back, which Secrets::encrypt() passes through.
+     *
+     * @param mixed $value
+     * @return mixed
+     */
+    public static function encryptBouncePassword($value)
+    {
+        return is_string($value) ? Secrets::encrypt($value) : $value;
     }
 
     /** Returns true only when reCAPTCHA is enabled AND both site key and secret key are non-empty. */

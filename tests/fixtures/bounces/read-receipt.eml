@@ -1,0 +1,22 @@
+Return-Path: <reader@example.org>
+From: reader@example.org
+To: info@gudlenieks.lv
+Subject: Read: Test sheaduler 1111
+Date: Mon, 14 Sep 2026 11:00:00 +0000
+MIME-Version: 1.0
+Content-Type: multipart/report; report-type=disposition-notification; boundary="mdn"
+
+--mdn
+Content-Type: text/plain
+
+Your message was read.
+
+--mdn
+Content-Type: message/disposition-notification
+
+Reporting-UA: example.org; Webmail
+Final-Recipient: rfc822; reader@example.org
+Original-Message-ID: <abc@gudlenieks.lv>
+Disposition: manual-action/MDN-sent-manually; displayed
+
+--mdn--

@@ -389,6 +389,45 @@ Each time `wp_mail()` fails for a subscriber, the plugin:
 
 The threshold is configurable under **Settings → Failing Email**. Subscribers in the Failing Email audience are skipped in all future campaign sends (counted as `emailsSkipped`).
 
+### Bounced Emails
+
+`wp_mail()` only knows whether the outgoing mail server accepted a message. A dead mailbox at a live
+domain is accepted, reported as sent, and bounced minutes later by the receiving server — as an
+e-mail, a delivery status notification (RFC 3464), to the sender. `Bounces` reads that mailbox over
+IMAP (`directorytree/imapengine`, no PHP `imap` extension needed) and holds every bounce for approval.
+
+```mermaid
+flowchart TD
+    A[Hourly cron or "Check mailbox now"] --> B[Read headers above the saved UID cursor]
+    B --> C{multipart/report?}
+    C -- No --> D[Skip, advance cursor]
+    C -- Yes --> E[Fetch whole message, BODY.PEEK]
+    E --> F{message/delivery-status part?}
+    F -- No --> D
+    F -- Yes --> G[One pending row per failed recipient]
+    G --> D
+    G --> H[Bounced Emails page]
+    H -- Approve hard 5.x.x --> I[Failing Email audience + bounce meta, delete report]
+    H -- Approve soft 4.x.x --> J[Bounce meta only, delete report]
+    H -- Dismiss --> K[Delete report only]
+```
+
+- **Read-only until approved.** A check never flags, moves or deletes; messages stay unread.
+- **Matching.** Campaign e-mails carry `X-Mawiblah-Campaign` and `X-Mawiblah-Subscriber` (hashes). A
+  report quotes them back; mail sent before 1.1.0 is matched by the address in `Original-Recipient`
+  or `Final-Recipient`.
+- **Storage.** `{prefix}mawiblah_bounces`, one row per recipient, unique on
+  `(mailbox, uidvalidity, uid, recipient)` so re-reading a report inserts nothing. The cursor lives
+  in the `mawiblah_bounce_cursor` option and resets when the mailbox or its `UIDVALIDITY` changes.
+- **Subscriber meta** written on approval: `bounce_hard_count`, `bounce_soft_count`,
+  `bounce_last_at`, `bounce_last_status`, `bounce_last_reason`, `bounce_last_campaign`.
+- **Deleting a report** stores `\Deleted` on its UID and runs `UID EXPUNGE` for that UID only
+  (UIDPLUS); a plain `EXPUNGE` would also remove anything else flagged in the folder. Refused when the
+  mailbox settings or `UIDVALIDITY` differ from those the report was read under.
+- **Credentials** are set under **Settings → Bounced Emails**; the password is encrypted with a key
+  derived from the wp-config.php salts (`Secrets`). `MAWIBLAH_BOUNCE_HOST`, `MAWIBLAH_BOUNCE_USER`
+  and `MAWIBLAH_BOUNCE_PASS` constants take precedence.
+
 ### Subscriber Features
 - Unsubscribe functionality with confirmation page (human click) and RFC 8058 one-click (mail client)
 - `List-Unsubscribe` + `List-Unsubscribe-Post` headers on every campaign email
@@ -402,7 +441,7 @@ The threshold is configurable under **Settings → Failing Email**. Subscribers 
 
 A schedule is its own post (`mawiblah_scheduler`) pointing at one campaign. One WP-Cron event,
 `mawiblah_scheduler_check`, walks every active schedule at the interval configured under
-**Settings → Scheduler** and starts a background send for any that is due.
+**Settings → Sending → Scheduler check interval** and starts a background send for any that is due.
 
 ### Scheduler fields
 
@@ -472,7 +511,12 @@ The resolved threshold and where it came from (`schedule` or `global`) are recor
 
 ## Settings
 
-### Email Intervals
+The Settings page is split into tabs, one per section of `config/settings.json`: **Sending**,
+**Failing Email**, **Bounced Emails**, **Subscription Form**, **Open Tracking** and **Logging**.
+A setting is stored under its field id (`_mawiblah-<id>`), never under its tab, so moving a field
+between tabs keeps its saved value.
+
+### Sending
 Control the minimum time between emails sent to the same subscriber to avoid overwhelming them.
 
 The **Don't Disturb Threshold** set here is the site-wide default. An individual schedule can
@@ -482,10 +526,10 @@ that schedule starts.
 ### Failing Email
 - **Failure threshold** — number of failed sends before a subscriber is moved to the Failing Email audience (default: 3, minimum: 1)
 
-### Debugging
+### Logging
 - Enable debugging with IP restrictions
-- Skip actual email sending for testing
-- **File logging** — when enabled (`enable-db-log` option value, kept for backwards compatibility), log entries are written to daily files at `{uploads}/gae-logs/mawiblah-YYYY-MM-DD.log`. Each entry is a single line: `[timestamp] [action] message | {json context}`. Use the **Logs** page to view file list and clear all logs. Files can also be read directly via SSH or the hosting file manager.
+- Skip actual email sending for testing (on the **Sending** tab)
+- **File logging** — when enabled (`enable-db-log` option value, kept for backwards compatibility), log entries are written to daily files at `{uploads}/mawiblah/logs-{random}/mawiblah-YYYY-MM-DD.log`. Each entry is a single line: `[timestamp] [action] message | {json context}`. Use the **Logs** page to view file list and clear all logs. Files can also be read directly via SSH or the hosting file manager.
 
 ### Click Timing
 Campaign click times are logged to analyze when subscribers are most active, helping optimize send times.

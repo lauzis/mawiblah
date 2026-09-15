@@ -365,11 +365,11 @@ class RestRoutes
             'campaign'   => $campaign->campaignHash,
         ], rest_url('mawiblah/v1/unsubscribe'));
 
-        $emailHeaders = [
+        $emailHeaders = array_merge([
             'Content-Type: text/html; charset=UTF-8',
             'List-Unsubscribe: <' . $unsubUrl . '>',
             'List-Unsubscribe-Post: List-Unsubscribe=One-Click',
-        ];
+        ], BounceParser::trackingHeaders((string) $campaign->campaignHash, (string) $subscriber->subscriberHash));
 
         $mailerError    = '';
         $captureMailError = function (\WP_Error $error) use (&$mailerError) {

@@ -52,6 +52,11 @@ class Migrations
             self::migrateTo1055();
             update_option('mawiblah_db_version', '1.0.55');
         }
+
+        if (version_compare($currentVersion, '1.1.0', '<')) {
+            Bounces::install();
+            update_option('mawiblah_db_version', '1.1.0');
+        }
     }
 
     /**

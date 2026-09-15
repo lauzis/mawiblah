@@ -48,7 +48,7 @@ if (!empty($logFiles)) {
         <div class="notice notice-warning inline" style="margin-top:20px;">
             <p>
                 <?php esc_html_e('File logging is currently disabled. Enable it under', 'mawiblah'); ?>
-                <a href="<?php echo esc_url(admin_url('admin.php?page=mawiblah-settings')); ?>"><?php esc_html_e('Settings → Debug mode', 'mawiblah'); ?></a>.
+                <a href="<?php echo esc_url(admin_url('admin.php?page=mawiblah-settings')); ?>"><?php esc_html_e('Settings → Logging', 'mawiblah'); ?></a>.
             </p>
         </div>
     <?php endif; ?>

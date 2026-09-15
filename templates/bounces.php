@@ -28,6 +28,7 @@ $configured = BounceMailbox::configured();
 $enabled    = Settings::bouncesEnabled();
 $nextRun    = wp_next_scheduled(Bounces::CRON_HOOK);
 $failing    = Subscribers::failingEmailAudience();
+$threshold  = Settings::failingEmailThreshold();
 $pageUrl    = admin_url('admin.php?page=' . Init::MAWIBLAH_BOUNCES);
 $settingsUrl = admin_url('admin.php?page=' . MAWIBLAH_SETTINGS_PAGE);
 $dateFormat = get_option('date_format') . ' ' . get_option('time_format');
@@ -54,17 +55,26 @@ $when = static function ($gmt) use ($dateFormat): string {
             </p>
             <ul style="list-style:disc;padding-left:1.5em;max-width:860px;">
                 <li>
+                    <strong><?php esc_html_e('Count as failure', 'mawiblah'); ?></strong> —
                     <?php
                     printf(
-                        /* translators: %s: audience name */
-                        esc_html__('Approve a hard bounce (5.x.x — the address does not exist or refuses mail): the subscriber goes into the %s audience and stops receiving campaigns, and the report is deleted from the mailbox.', 'mawiblah'),
+                        /* translators: 1: failure threshold, 2: audience name */
+                        esc_html__('adds one to the subscriber\'s failure count, the same count a send that fails on the spot adds to. At %1$d failures they are moved into %2$s and stop receiving campaigns.', 'mawiblah'),
+                        (int) $threshold,
                         '<strong>' . esc_html($failing ? $failing->name : 'Failing Email') . '</strong>'
                     );
                     ?>
                 </li>
-                <li><?php esc_html_e('Approve a soft bounce (4.x.x — mailbox full, server unavailable): recorded on the subscriber, who keeps receiving campaigns, and the report is deleted.', 'mawiblah'); ?></li>
-                <li><?php esc_html_e('Dismiss: the subscriber is left alone and the report is deleted.', 'mawiblah'); ?></li>
+                <li>
+                    <strong><?php esc_html_e('Move to Failing Email', 'mawiblah'); ?></strong> —
+                    <?php esc_html_e('moves the subscriber there straight away, whatever the count. For an address that plainly does not exist: a hard bounce such as 5.1.1 "user unknown".', 'mawiblah'); ?>
+                </li>
+                <li>
+                    <strong><?php esc_html_e('Dismiss', 'mawiblah'); ?></strong> —
+                    <?php esc_html_e('leaves the subscriber alone.', 'mawiblah'); ?>
+                </li>
             </ul>
+            <p style="max-width:860px;"><?php esc_html_e('Whichever you choose, the bounce report is deleted from the mailbox. Hard (5.x.x) means the address does not exist or refuses mail; soft (4.x.x) means something temporary, like a full mailbox.', 'mawiblah'); ?></p>
 
             <table class="widefat striped" style="max-width:860px;margin-top:12px;">
                 <tbody>
@@ -164,8 +174,9 @@ $when = static function ($gmt) use ($dateFormat): string {
                     <label for="mawiblah-bounce-bulk" class="screen-reader-text"><?php esc_html_e('Bulk action', 'mawiblah'); ?></label>
                     <select name="bulk_action" id="mawiblah-bounce-bulk">
                         <option value=""><?php esc_html_e('Bulk actions', 'mawiblah'); ?></option>
-                        <option value="approve"><?php esc_html_e('Approve and delete reports', 'mawiblah'); ?></option>
-                        <option value="dismiss"><?php esc_html_e('Dismiss and delete reports', 'mawiblah'); ?></option>
+                        <option value="count"><?php esc_html_e('Count as failure', 'mawiblah'); ?></option>
+                        <option value="fail"><?php esc_html_e('Move to Failing Email', 'mawiblah'); ?></option>
+                        <option value="dismiss"><?php esc_html_e('Dismiss', 'mawiblah'); ?></option>
                     </select>
                     <button type="submit" class="button action"
                             onclick="return document.getElementById('mawiblah-bounce-bulk').value !== '' && confirm('<?php echo esc_js(__('Apply this to every selected bounce? Reports are deleted from the mailbox.', 'mawiblah')); ?>');">
@@ -206,7 +217,7 @@ $when = static function ($gmt) use ($dateFormat): string {
                     <th><?php esc_html_e('Reason', 'mawiblah'); ?></th>
                     <th style="width:14%;"><?php esc_html_e('Campaign', 'mawiblah'); ?></th>
                     <th style="width:12%;"><?php esc_html_e('Subscriber now', 'mawiblah'); ?></th>
-                    <th style="width:<?php echo $state === Bounces::STATE_PENDING ? '15' : '14'; ?>%;">
+                    <th style="width:<?php echo $state === Bounces::STATE_PENDING ? '17' : '16'; ?>%;">
                         <?php $state === Bounces::STATE_PENDING ? esc_html_e('Decide', 'mawiblah') : esc_html_e('Handled', 'mawiblah'); ?>
                     </th>
                 </tr>
@@ -266,6 +277,16 @@ $when = static function ($gmt) use ($dateFormat): string {
                                 <span class="description"><?php esc_html_e('Not a subscriber', 'mawiblah'); ?></span>
                             <?php else : ?>
                                 <a href="<?php echo esc_url(get_edit_post_link($subscriberId)); ?>">#<?php echo (int) $subscriberId; ?></a><br>
+                                <span class="description">
+                                    <?php
+                                    printf(
+                                        /* translators: 1: failures so far, 2: failure threshold */
+                                        esc_html__('Failures: %1$d of %2$d', 'mawiblah'),
+                                        (int) get_post_meta($subscriberId, 'email_fail_count', true),
+                                        (int) $threshold
+                                    );
+                                    ?>
+                                </span><br>
                                 <?php
                                 if ($failing && has_term($failing->term_id, Subscribers::postType() . '_category', $subscriberId)) {
                                     esc_html_e('In Failing Email', 'mawiblah');
@@ -279,15 +300,23 @@ $when = static function ($gmt) use ($dateFormat): string {
                         </td>
                         <td>
                             <?php if ($state === Bounces::STATE_PENDING) : ?>
-                                <button type="submit" name="row_action" value="approve:<?php echo (int) $row->id; ?>" class="button button-primary" style="margin-bottom:4px;"
-                                        title="<?php echo esc_attr($isHard && $isSubscriber
-                                            ? __('Moves the subscriber into Failing Email and deletes the report from the mailbox.', 'mawiblah')
-                                            : __('Records the bounce and deletes the report from the mailbox.', 'mawiblah')); ?>">
-                                    <?php esc_html_e('Approve', 'mawiblah'); ?>
-                                </button>
+                                <?php if ($isSubscriber) : ?>
+                                    <button type="submit" name="row_action" value="count:<?php echo (int) $row->id; ?>" class="button button-primary" style="margin-bottom:4px;"
+                                            title="<?php echo esc_attr(sprintf(
+                                                /* translators: %d: failure threshold */
+                                                __('Adds one to the subscriber\'s failures, moves them to Failing Email at %d, and deletes the report from the mailbox.', 'mawiblah'),
+                                                (int) $threshold
+                                            )); ?>">
+                                        <?php esc_html_e('Count as failure', 'mawiblah'); ?>
+                                    </button>
+                                    <button type="submit" name="row_action" value="fail:<?php echo (int) $row->id; ?>" class="button" style="margin-bottom:4px;"
+                                            title="<?php esc_attr_e('Moves the subscriber into Failing Email straight away and deletes the report from the mailbox.', 'mawiblah'); ?>">
+                                        <?php esc_html_e('Move to Failing Email', 'mawiblah'); ?>
+                                    </button>
+                                <?php endif; ?>
                                 <button type="submit" name="row_action" value="dismiss:<?php echo (int) $row->id; ?>" class="button"
                                         title="<?php esc_attr_e('Leaves the subscriber alone and deletes the report from the mailbox.', 'mawiblah'); ?>">
-                                    <?php esc_html_e('Dismiss', 'mawiblah'); ?>
+                                    <?php $isSubscriber ? esc_html_e('Dismiss', 'mawiblah') : esc_html_e('Delete report', 'mawiblah'); ?>
                                 </button>
                             <?php else : ?>
                                 <?php
@@ -295,6 +324,18 @@ $when = static function ($gmt) use ($dateFormat): string {
                                 echo esc_html($when($row->handled_at));
                                 if ($user) {
                                     echo '<br>' . esc_html($user->display_name);
+                                }
+                                ?>
+                                <?php
+                                $resolutions = [
+                                    Bounces::RESOLUTION_MOVED         => __('Moved to Failing Email', 'mawiblah'),
+                                    Bounces::RESOLUTION_COUNTED       => __('Counted as a failure', 'mawiblah'),
+                                    Bounces::RESOLUTION_COUNTED_MOVED => __('Counted — threshold reached, moved to Failing Email', 'mawiblah'),
+                                    Bounces::RESOLUTION_NO_SUBSCRIBER => __('No subscriber to apply it to', 'mawiblah'),
+                                ];
+
+                                if (isset($resolutions[$row->resolution ?? ''])) {
+                                    echo '<br><strong>' . esc_html($resolutions[$row->resolution]) . '</strong>';
                                 }
                                 ?>
                                 <br>

@@ -70,6 +70,16 @@ The initial version was built by hand. From version 1.0.9 onward, most changes h
 
 ## Change log
 
+### --- 1.1.1 ---
+- **Changed:** a bounce is decided with one of three buttons, per row or as a bulk action, instead of
+  an Approve whose effect depended on whether the bounce was hard or soft.
+  **Count as failure** adds one to the subscriber's `email_fail_count` — the counter a send that fails
+  on the spot already adds to — and moves them into **Failing Email** once it reaches the threshold
+  (**Settings → Failing Email**). **Move to Failing Email** does it straight away. **Dismiss** leaves
+  the subscriber alone. Each deletes the report from the mailbox, and the Approved list shows which
+  was chosen (a new `resolution` column, added by the 1.1.1 migration). The page shows each
+  subscriber's failures against the threshold.
+
 ### --- 1.1.0 ---
 - **New:** Bounced Emails. `wp_mail()` only learns whether the outgoing server accepted a message,
   so a dead mailbox at a live domain — accepted, then bounced minutes later by the receiving server —

@@ -57,6 +57,12 @@ class Migrations
             Bounces::install();
             update_option('mawiblah_db_version', '1.1.0');
         }
+
+        // Adds the bounce table's resolution column; dbDelta alters it in place.
+        if (version_compare($currentVersion, '1.1.1', '<')) {
+            Bounces::install();
+            update_option('mawiblah_db_version', '1.1.1');
+        }
     }
 
     /**

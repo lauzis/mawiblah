@@ -848,16 +848,48 @@ class Subscribers
             update_post_meta($subscriberId, 'sent_' . $campaignPostId . '_error', $reason);
         }
 
+        self::countFailure($subscriberId);
+    }
+
+    /**
+     * Adds one to the subscriber's lifetime failure count, and moves them into
+     * the "Failing Email" audience once it reaches the configured threshold.
+     *
+     * Shared by a send that failed on the spot and a bounce counted as a
+     * failure, so both reach Failing Email by the same rule.
+     *
+     * @param int $subscriberId Subscriber post ID.
+     * @return bool True when this failure moved the subscriber into Failing Email.
+     */
+    public static function countFailure(int $subscriberId): bool
+    {
         $failCount = (int) get_post_meta($subscriberId, 'email_fail_count', true) + 1;
         update_post_meta($subscriberId, 'email_fail_count', $failCount);
 
-        $threshold = Settings::failingEmailThreshold();
-        if ($failCount >= $threshold) {
-            $audience = self::failingEmailAudience();
-            if ($audience && !has_term($audience->term_id, self::postType() . '_category', $subscriberId)) {
-                self::addSubscriberToAudience($subscriberId, $audience->term_id);
-            }
+        if ($failCount < Settings::failingEmailThreshold()) {
+            return false;
         }
+
+        return self::moveToFailingEmail($subscriberId);
+    }
+
+    /**
+     * Puts a subscriber into the "Failing Email" audience, which every send skips.
+     *
+     * @param int $subscriberId Subscriber post ID.
+     * @return bool True when they were not in it already.
+     */
+    public static function moveToFailingEmail(int $subscriberId): bool
+    {
+        $audience = self::failingEmailAudience();
+
+        if (!$audience || has_term($audience->term_id, self::postType() . '_category', $subscriberId)) {
+            return false;
+        }
+
+        self::addSubscriberToAudience($subscriberId, (int) $audience->term_id);
+
+        return true;
     }
 
     /** Returns the "Failing Email" system audience term, creating it if it does not exist. */

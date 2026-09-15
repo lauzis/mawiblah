@@ -492,7 +492,8 @@ if ( $result['status'] === 'ok' ) {
             <p><?php esc_html_e('It only reads. Messages are read from where the previous check stopped, and only those whose headers say they are a delivery report (multipart/report with a message/delivery-status part) are downloaded in full. Everything is fetched without marking it read, and nothing is flagged, moved or deleted. Out-of-office replies, read receipts and real replies from people are not bounces and are never touched.', 'mawiblah'); ?></p>
             <p><?php esc_html_e('Each failed recipient becomes a row on the Bounced Emails page, matched to its subscriber and campaign by the X-Mawiblah-Subscriber and X-Mawiblah-Campaign headers campaign e-mails carry since 1.1.0, or by the address for older mail.', 'mawiblah'); ?></p>
 
-            <h3 style="margin-top:24px;"><?php esc_html_e('Approving and dismissing', 'mawiblah'); ?></h3>
+            <h3 style="margin-top:24px;"><?php esc_html_e('Deciding on a bounce', 'mawiblah'); ?></h3>
+            <p><?php esc_html_e('Each bounce has three buttons, and the same three are bulk actions. Whichever you choose, the report is deleted from the mailbox, and a counted or moved bounce is recorded on the subscriber (bounce_hard_count or bounce_soft_count, bounce_last_status, bounce_last_reason).', 'mawiblah'); ?></p>
             <table class="wp-list-table widefat fixed striped" style="max-width:800px;">
                 <thead>
                     <tr>
@@ -502,16 +503,16 @@ if ( $result['status'] === 'ok' ) {
                 </thead>
                 <tbody>
                     <tr>
-                        <td><?php esc_html_e('Approve a hard bounce (5.x.x)', 'mawiblah'); ?></td>
-                        <td><?php esc_html_e('The address does not exist or refuses mail. The subscriber goes straight into the "Failing Email" audience and is skipped by every future campaign, the bounce is recorded on the subscriber (bounce_hard_count, bounce_last_status, bounce_last_reason), and the report is deleted from the mailbox.', 'mawiblah'); ?></td>
+                        <td><?php esc_html_e('Count as failure', 'mawiblah'); ?></td>
+                        <td><?php esc_html_e('Adds one to the subscriber\'s email_fail_count — the counter a send that fails on the spot also adds to. When it reaches the Failure threshold (Settings → Failing Email, default 3) the subscriber is moved into the "Failing Email" audience and skipped by every future campaign. Suits a soft bounce (4.x.x), which is usually temporary.', 'mawiblah'); ?></td>
                     </tr>
                     <tr>
-                        <td><?php esc_html_e('Approve a soft bounce (4.x.x)', 'mawiblah'); ?></td>
-                        <td><?php esc_html_e('A full mailbox or a server that is down says nothing lasting about the address. The bounce is recorded on the subscriber (bounce_soft_count), who keeps receiving campaigns, and the report is deleted.', 'mawiblah'); ?></td>
+                        <td><?php esc_html_e('Move to Failing Email', 'mawiblah'); ?></td>
+                        <td><?php esc_html_e('Moves the subscriber into "Failing Email" straight away, whatever the count. Suits a hard bounce (5.x.x) that says the address does not exist.', 'mawiblah'); ?></td>
                     </tr>
                     <tr>
                         <td><?php esc_html_e('Dismiss', 'mawiblah'); ?></td>
-                        <td><?php esc_html_e('The subscriber is left alone and the report is deleted.', 'mawiblah'); ?></td>
+                        <td><?php esc_html_e('The subscriber is left alone; only the report is deleted.', 'mawiblah'); ?></td>
                     </tr>
                 </tbody>
             </table>

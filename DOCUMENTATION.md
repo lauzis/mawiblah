@@ -407,10 +407,18 @@ flowchart TD
     F -- Yes --> G[One pending row per failed recipient]
     G --> D
     G --> H[Bounced Emails page]
-    H -- Approve hard 5.x.x --> I[Failing Email audience + bounce meta, delete report]
-    H -- Approve soft 4.x.x --> J[Bounce meta only, delete report]
+    H -- Count as failure --> I[email_fail_count + 1, bounce meta, delete report]
+    I --> J{Reached the failure threshold?}
+    J -- Yes --> L[Failing Email audience]
+    J -- No --> M[Still receives campaigns]
+    H -- Move to Failing Email --> N[Failing Email audience, bounce meta, delete report]
     H -- Dismiss --> K[Delete report only]
 ```
+
+- **Decisions.** Per row or in bulk. *Count as failure* goes through `Subscribers::countFailure()`,
+  the same path a failed `wp_mail()` takes via `sentEmailFailed()`, so both reach Failing Email at the
+  one threshold. *Move to Failing Email* calls `Subscribers::moveToFailingEmail()` directly. The row's
+  `resolution` records which happened: `counted`, `counted_moved`, `moved` or `no_subscriber`.
 
 - **Read-only until approved.** A check never flags, moves or deletes; messages stay unread.
 - **Matching.** Campaign e-mails carry `X-Mawiblah-Campaign` and `X-Mawiblah-Subscriber` (hashes). A

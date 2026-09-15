@@ -7,6 +7,7 @@ use DirectoryTree\ImapEngine\Testing\FakeMailbox;
 use DirectoryTree\ImapEngine\Testing\FakeMessage;
 use Mawiblah\Bounces;
 use Mawiblah\Secrets;
+use Mawiblah\Settings;
 use Mawiblah\Subscribers;
 use WP_UnitTestCase;
 
@@ -26,7 +27,7 @@ class BouncesTest extends WP_UnitTestCase
         parent::setUp();
 
         Bounces::install();
-        update_option('mawiblah_db_version', '1.1.0');
+        update_option('mawiblah_db_version', '1.1.1');
 
         $this->inbox = new FakeFolder('INBOX', messages: [
             new FakeMessage(1, contents: "From: reader@example.org\r\nSubject: Thanks!\r\n\r\nLoved the newsletter."),
@@ -79,7 +80,8 @@ class BouncesTest extends WP_UnitTestCase
         $this->assertSame(2, $summary['recorded']);
         $this->assertSame(2, Bounces::counts()[Bounces::STATE_PENDING]);
         $this->assertSame([1, 2, 3], $this->uids(), 'A check deletes nothing.');
-        $this->assertFalse($this->inFailingEmail($this->hard->id), 'Nothing happens to a subscriber before approval.');
+        $this->assertFalse($this->inFailingEmail($this->hard->id), 'Nothing happens to a subscriber before a decision.');
+        $this->assertSame(0, $this->failures($this->hard->id));
     }
 
     public function test_a_second_check_reads_only_what_arrived_since(): void
@@ -109,33 +111,63 @@ class BouncesTest extends WP_UnitTestCase
         $this->assertFalse($second['hasMore']);
     }
 
-    public function test_approving_a_hard_bounce_moves_the_subscriber_to_failing_email_and_deletes_the_report(): void
+    public function test_counting_a_failure_below_the_threshold_keeps_the_subscriber_receiving(): void
     {
         Bounces::check(10);
         $row = $this->pendingFor('aivars.lauzis@awave.com');
 
         $this->assertSame((int) $this->hard->id, (int) $row->subscriber_id);
+        $this->assertSame(['handled' => true, 'error' => '', 'moved' => false], Bounces::countAsFailure((int) $row->id));
 
-        $this->assertSame(['handled' => true, 'error' => ''], Bounces::approve((int) $row->id));
-
-        $this->assertTrue($this->inFailingEmail($this->hard->id));
+        $this->assertSame(1, $this->failures($this->hard->id));
+        $this->assertFalse($this->inFailingEmail($this->hard->id));
         $this->assertSame('1', get_post_meta($this->hard->id, 'bounce_hard_count', true));
-        $this->assertSame('5.1.10', get_post_meta($this->hard->id, 'bounce_last_status', true));
-        $this->assertSame([1, 3], $this->uids(), 'Only the approved report is gone.');
+        $this->assertSame([1, 3], $this->uids(), 'Only that report is gone.');
 
         $handled = Bounces::get((int) $row->id);
         $this->assertSame(Bounces::STATE_RESOLVED, $handled->state);
+        $this->assertSame(Bounces::RESOLUTION_COUNTED, $handled->resolution);
         $this->assertSame(1, (int) $handled->message_deleted);
     }
 
-    public function test_approving_a_soft_bounce_records_it_and_keeps_the_subscriber_receiving(): void
+    /** The same threshold a send that fails on the spot is held to. */
+    public function test_the_counted_failure_that_reaches_the_threshold_moves_the_subscriber(): void
+    {
+        $threshold = Settings::failingEmailThreshold();
+        update_post_meta($this->hard->id, 'email_fail_count', $threshold - 1);
+
+        Bounces::check(10);
+        $row    = $this->pendingFor('aivars.lauzis@awave.com');
+        $result = Bounces::countAsFailure((int) $row->id);
+
+        $this->assertTrue($result['moved']);
+        $this->assertSame($threshold, $this->failures($this->hard->id));
+        $this->assertTrue($this->inFailingEmail($this->hard->id));
+        $this->assertSame(Bounces::RESOLUTION_COUNTED_MOVED, Bounces::get((int) $row->id)->resolution);
+    }
+
+    public function test_moving_to_failing_email_happens_straight_away_whatever_the_count(): void
+    {
+        Bounces::check(10);
+        $row = $this->pendingFor('aivars.lauzis@awave.com');
+
+        $this->assertSame(['handled' => true, 'error' => '', 'moved' => true], Bounces::moveToFailingEmail((int) $row->id));
+
+        $this->assertTrue($this->inFailingEmail($this->hard->id));
+        $this->assertSame(0, $this->failures($this->hard->id), 'Moving does not count.');
+        $this->assertSame('5.1.10', get_post_meta($this->hard->id, 'bounce_last_status', true));
+        $this->assertSame([1, 3], $this->uids());
+        $this->assertSame(Bounces::RESOLUTION_MOVED, Bounces::get((int) $row->id)->resolution);
+    }
+
+    public function test_a_soft_bounce_can_be_counted_too(): void
     {
         Bounces::check(10);
         $row = $this->pendingFor('lauzis@inbox.lv');
 
-        Bounces::approve((int) $row->id);
+        Bounces::countAsFailure((int) $row->id);
 
-        $this->assertFalse($this->inFailingEmail($this->soft->id));
+        $this->assertSame(1, $this->failures($this->soft->id));
         $this->assertSame('1', get_post_meta($this->soft->id, 'bounce_soft_count', true));
         $this->assertSame([1, 2], $this->uids());
     }
@@ -148,9 +180,13 @@ class BouncesTest extends WP_UnitTestCase
         $this->assertTrue(Bounces::dismiss((int) $row->id)['handled']);
 
         $this->assertFalse($this->inFailingEmail($this->hard->id));
+        $this->assertSame(0, $this->failures($this->hard->id));
         $this->assertSame('', get_post_meta($this->hard->id, 'bounce_hard_count', true));
         $this->assertSame([1, 3], $this->uids());
-        $this->assertSame(Bounces::STATE_DISMISSED, Bounces::get((int) $row->id)->state);
+
+        $dismissed = Bounces::get((int) $row->id);
+        $this->assertSame(Bounces::STATE_DISMISSED, $dismissed->state);
+        $this->assertSame('', $dismissed->resolution);
     }
 
     public function test_a_handled_bounce_cannot_be_handled_again(): void
@@ -158,11 +194,11 @@ class BouncesTest extends WP_UnitTestCase
         Bounces::check(10);
         $row = $this->pendingFor('aivars.lauzis@awave.com');
 
-        Bounces::approve((int) $row->id);
-        $again = Bounces::dismiss((int) $row->id);
+        Bounces::countAsFailure((int) $row->id);
+        $again = Bounces::countAsFailure((int) $row->id);
 
         $this->assertFalse($again['handled']);
-        $this->assertSame(Bounces::STATE_RESOLVED, Bounces::get((int) $row->id)->state);
+        $this->assertSame(1, $this->failures($this->hard->id), 'The second click counts nothing.');
     }
 
     /** A UID only means the same e-mail in the mailbox it was read from. */
@@ -172,7 +208,7 @@ class BouncesTest extends WP_UnitTestCase
         $row = $this->pendingFor('aivars.lauzis@awave.com');
 
         $this->username = 'someone-else@mawiblah.test';
-        $result = Bounces::approve((int) $row->id);
+        $result = Bounces::moveToFailingEmail((int) $row->id);
 
         $this->assertTrue($result['handled'], 'The subscriber side still happens.');
         $this->assertNotSame('', $result['error']);
@@ -216,6 +252,11 @@ class BouncesTest extends WP_UnitTestCase
             $email,
             Bounces::STATE_PENDING
         ));
+    }
+
+    private function failures(int $subscriberId): int
+    {
+        return (int) get_post_meta($subscriberId, 'email_fail_count', true);
     }
 
     private function inFailingEmail(int $subscriberId): bool

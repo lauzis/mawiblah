@@ -8,21 +8,30 @@ namespace Mawiblah;
  * A check only reads. It walks the mailbox from where the previous check
  * stopped, parses anything that is a delivery report, and records one pending
  * row per failed recipient. Nothing happens to a subscriber or to the mailbox
- * until somebody decides on the Bounced Emails page:
+ * until somebody decides on the Bounced Emails page -- and whichever way they
+ * decide, the report is then deleted from the mailbox:
  *
- * - Approve a hard bounce (5.x.x): the subscriber goes straight into the Failing
- *   Email audience -- the address does not exist, so there is nothing to wait
- *   for -- and the report is deleted from the mailbox.
- * - Approve a soft bounce (4.x.x): recorded on the subscriber and the report
- *   deleted, but campaigns keep going out. A full mailbox or a server that is
- *   down says nothing lasting about the address.
- * - Dismiss: the subscriber is left alone and the report deleted.
+ * - Count as failure: one more on the subscriber's email_fail_count, the
+ *   counter a send that fails on the spot also adds to. At the Failing Email
+ *   threshold they are moved into that audience, by the same rule.
+ * - Move to Failing Email: straight away, whatever the count -- for an address
+ *   that plainly does not exist.
+ * - Dismiss: the subscriber is left alone.
+ *
+ * Which of the first two a bounce deserves is the reader's call; the hard (5.x.x)
+ * and soft (4.x.x) label on the page is there to inform it, not to make it.
  */
 class Bounces
 {
     public const STATE_PENDING   = 'pending';
     public const STATE_RESOLVED  = 'resolved';
     public const STATE_DISMISSED = 'dismissed';
+
+    /** How a resolved bounce was applied to its subscriber. */
+    public const RESOLUTION_MOVED         = 'moved';
+    public const RESOLUTION_COUNTED       = 'counted';
+    public const RESOLUTION_COUNTED_MOVED = 'counted_moved';
+    public const RESOLUTION_NO_SUBSCRIBER = 'no_subscriber';
 
     public const CRON_HOOK     = 'mawiblah_bounce_check';
     public const CONTINUE_HOOK = 'mawiblah_bounce_check_continue';
@@ -79,6 +88,7 @@ class Bounces
   reason text,
   subject varchar(255) NOT NULL DEFAULT '',
   state varchar(20) NOT NULL DEFAULT 'pending',
+  resolution varchar(20) NOT NULL DEFAULT '',
   message_deleted tinyint(1) NOT NULL DEFAULT 0,
   created_at datetime NOT NULL,
   handled_at datetime DEFAULT NULL,
@@ -264,68 +274,90 @@ class Bounces
     }
 
     /**
-     * Approves a bounce: applies it to the subscriber and deletes the report.
+     * Counts a bounce as one failure on its subscriber -- moving them into
+     * Failing Email if that reaches the threshold -- and deletes the report.
      *
-     * @return array{handled: bool, error: string} Handled even when the report
-     *   could not be deleted -- the subscriber side has already happened -- in
-     *   which case error says why it is still in the mailbox.
+     * @return array{handled: bool, error: string, moved: bool} Handled even when
+     *   the report could not be deleted -- the subscriber side has already
+     *   happened -- in which case error says why it is still in the mailbox.
+     *   Moved when the subscriber ended up in Failing Email.
      */
-    public static function approve(int $id, int $userId = 0): array
+    public static function countAsFailure(int $id, int $userId = 0): array
     {
-        return self::handle($id, self::STATE_RESOLVED, $userId);
+        return self::handle($id, self::STATE_RESOLVED, self::RESOLUTION_COUNTED, $userId);
+    }
+
+    /**
+     * Moves a bounce's subscriber into Failing Email straight away and deletes the report.
+     *
+     * @return array{handled: bool, error: string, moved: bool}
+     */
+    public static function moveToFailingEmail(int $id, int $userId = 0): array
+    {
+        return self::handle($id, self::STATE_RESOLVED, self::RESOLUTION_MOVED, $userId);
     }
 
     /**
      * Dismisses a bounce: the subscriber is left alone, the report deleted.
      *
-     * @return array{handled: bool, error: string}
+     * @return array{handled: bool, error: string, moved: bool}
      */
     public static function dismiss(int $id, int $userId = 0): array
     {
-        return self::handle($id, self::STATE_DISMISSED, $userId);
+        return self::handle($id, self::STATE_DISMISSED, '', $userId);
     }
 
-    /** @return array{handled: bool, error: string} */
-    private static function handle(int $id, string $state, int $userId): array
+    /**
+     * @param string $how RESOLUTION_COUNTED or RESOLUTION_MOVED; '' for a dismissal.
+     * @return array{handled: bool, error: string, moved: bool}
+     */
+    private static function handle(int $id, string $state, string $how, int $userId): array
     {
         global $wpdb;
 
         $row = self::get($id);
 
         if (!$row) {
-            return ['handled' => false, 'error' => sprintf(__('Bounce #%d no longer exists.', 'mawiblah'), $id)];
+            return ['handled' => false, 'error' => sprintf(__('Bounce #%d no longer exists.', 'mawiblah'), $id), 'moved' => false];
         }
 
         if ($row->state !== self::STATE_PENDING) {
-            return ['handled' => false, 'error' => sprintf(__('Bounce #%d has already been handled.', 'mawiblah'), $id)];
+            return ['handled' => false, 'error' => sprintf(__('Bounce #%d has already been handled.', 'mawiblah'), $id), 'moved' => false];
         }
 
-        if ($state === self::STATE_RESOLVED) {
-            self::applyToSubscriber($row);
-        }
-
-        $deleted = self::deleteReport($row);
+        $resolution = $state === self::STATE_RESOLVED ? self::applyToSubscriber($row, $how) : '';
+        $deleted    = self::deleteReport($row);
 
         $wpdb->update(
             self::table(),
-            ['state' => $state, 'handled_at' => gmdate('Y-m-d H:i:s'), 'handled_by' => $userId],
+            ['state' => $state, 'resolution' => $resolution, 'handled_at' => gmdate('Y-m-d H:i:s'), 'handled_by' => $userId],
             ['id' => $id]
         );
 
-        Logs::addLog('bounces', "Bounce #{$id} {$state}", [
+        Logs::addLog('bounces', "Bounce #{$id} {$state}" . ($resolution !== '' ? " ({$resolution})" : ''), [
             'recipient'     => $row->recipient,
             'subscriberId'  => (int) $row->subscriber_id,
             'kind'          => $row->kind,
             'status'        => $row->status_code,
+            'resolution'    => $resolution,
             'reportDeleted' => $deleted === true,
             'error'         => $deleted === true ? '' : $deleted,
         ]);
 
-        return ['handled' => true, 'error' => $deleted === true ? '' : $deleted];
+        return [
+            'handled' => true,
+            'error'   => $deleted === true ? '' : $deleted,
+            'moved'   => in_array($resolution, [self::RESOLUTION_MOVED, self::RESOLUTION_COUNTED_MOVED], true),
+        ];
     }
 
-    /** Records the bounce on its subscriber, and for a hard bounce stops their campaigns. */
-    private static function applyToSubscriber(object $row): void
+    /**
+     * Records the bounce on its subscriber, then counts it or moves them.
+     *
+     * @param string $how RESOLUTION_COUNTED or RESOLUTION_MOVED.
+     * @return string The resolution that happened, one of the RESOLUTION_* values.
+     */
+    private static function applyToSubscriber(object $row, string $how): string
     {
         global $wpdb;
 
@@ -343,7 +375,7 @@ class Bounces
         }
 
         if (!$subscriberId) {
-            return;
+            return self::RESOLUTION_NO_SUBSCRIBER;
         }
 
         $countKey = $row->kind === BounceParser::KIND_HARD ? 'bounce_hard_count' : 'bounce_soft_count';
@@ -354,15 +386,13 @@ class Bounces
         update_post_meta($subscriberId, 'bounce_last_reason', (string) $row->reason);
         update_post_meta($subscriberId, 'bounce_last_campaign', (int) $row->campaign_id);
 
-        if ($row->kind !== BounceParser::KIND_HARD) {
-            return;
+        if ($how === self::RESOLUTION_MOVED) {
+            Subscribers::moveToFailingEmail($subscriberId);
+
+            return self::RESOLUTION_MOVED;
         }
 
-        $audience = Subscribers::failingEmailAudience();
-
-        if ($audience && !has_term($audience->term_id, Subscribers::postType() . '_category', $subscriberId)) {
-            Subscribers::addSubscriberToAudience($subscriberId, (int) $audience->term_id);
-        }
+        return Subscribers::countFailure($subscriberId) ? self::RESOLUTION_COUNTED_MOVED : self::RESOLUTION_COUNTED;
     }
 
     /**
@@ -516,7 +546,7 @@ class Bounces
         // A row's own button wins over whatever is ticked for the bulk action.
         $rowAction = sanitize_text_field(wp_unslash($_POST['row_action'] ?? ''));
 
-        if (preg_match('/^(approve|dismiss):(\d+)$/', $rowAction, $match)) {
+        if (preg_match('/^(count|fail|dismiss):(\d+)$/', $rowAction, $match)) {
             $do  = $match[1];
             $ids = [(int) $match[2]];
         } elseif ($do === 'bulk') {
@@ -548,7 +578,8 @@ class Bounces
                 }
                 break;
 
-            case 'approve':
+            case 'count':
+            case 'fail':
             case 'dismiss':
                 if (!$ids) {
                     $notices[] = ['warning', __('No bounces were selected.', 'mawiblah')];
@@ -556,10 +587,17 @@ class Bounces
                 }
 
                 $handled = 0;
+                $moved   = 0;
 
                 foreach ($ids as $id) {
-                    $result   = $do === 'approve' ? self::approve($id, $userId) : self::dismiss($id, $userId);
+                    $result = match ($do) {
+                        'count' => self::countAsFailure($id, $userId),
+                        'fail'  => self::moveToFailingEmail($id, $userId),
+                        default => self::dismiss($id, $userId),
+                    };
+
                     $handled += $result['handled'] ? 1 : 0;
+                    $moved   += $result['moved'] ? 1 : 0;
 
                     if ($result['error'] !== '') {
                         $notices[] = ['error', $result['error']];
@@ -568,9 +606,27 @@ class Bounces
 
                 BounceMailbox::disconnect();
 
-                $notices[] = ['success', $do === 'approve'
-                    ? sprintf(_n('%d bounce approved.', '%d bounces approved.', $handled, 'mawiblah'), $handled)
-                    : sprintf(_n('%d bounce dismissed.', '%d bounces dismissed.', $handled, 'mawiblah'), $handled)];
+                if ($do === 'count') {
+                    $notices[] = ['success', sprintf(_n('%d bounce counted as a failure.', '%d bounces counted as failures.', $handled, 'mawiblah'), $handled)];
+
+                    if ($moved) {
+                        $notices[] = ['info', sprintf(
+                            _n('%d subscriber reached the failure threshold and was moved to Failing Email.', '%d subscribers reached the failure threshold and were moved to Failing Email.', $moved, 'mawiblah'),
+                            $moved
+                        )];
+                    }
+                } elseif ($do === 'fail') {
+                    $notices[] = ['success', sprintf(_n('%d subscriber moved to Failing Email.', '%d subscribers moved to Failing Email.', $moved, 'mawiblah'), $moved)];
+
+                    if ($handled > $moved) {
+                        $notices[] = ['info', sprintf(
+                            _n('%d bounce had no subscriber to move; its report was deleted.', '%d bounces had no subscriber to move; their reports were deleted.', $handled - $moved, 'mawiblah'),
+                            $handled - $moved
+                        )];
+                    }
+                } else {
+                    $notices[] = ['success', sprintf(_n('%d bounce dismissed.', '%d bounces dismissed.', $handled, 'mawiblah'), $handled)];
+                }
                 break;
         }
 

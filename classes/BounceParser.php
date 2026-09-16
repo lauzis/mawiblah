@@ -37,14 +37,27 @@ class BounceParser
      */
     public const KIND_QUOTA = 'quota';
 
+    /**
+     * Mailbox disabled (x.2.1): the address exists but is switched off, as a
+     * provider does to an account nobody has signed into for a long time. It
+     * can take mail again if its owner comes back -- until the provider
+     * deletes the account for good.
+     */
+    public const KIND_INACTIVE = 'inactive';
+
     /** Every kind a recorded bounce can have. */
-    public const KINDS = [self::KIND_HARD, self::KIND_SOFT, self::KIND_SPAM, self::KIND_QUOTA];
+    public const KINDS = [self::KIND_HARD, self::KIND_INACTIVE, self::KIND_QUOTA, self::KIND_SOFT, self::KIND_SPAM];
 
     /** Diagnostic wording that marks a permanent failure as a spam or policy refusal. */
     private const SPAM_PATTERN = '/\b(spam|junk|unsolicited|spamhaus|dnsbl|rbl|block ?list(ed)?|black ?list(ed)?|reputation)\b/i';
 
     /** Diagnostic wording that marks a failure as a full mailbox, whatever its status code. */
     private const QUOTA_PATTERN = '/\b(over ?quota|quota exceeded|exceeded (its |the )?(storage|quota)|storage allocation|mailbox (is )?full|mailbox size limit|insufficient (system )?storage|out of storage)\b/i';
+
+    /** Diagnostic wording that marks a failure as a switched-off mailbox. */
+    // "account has been suspended" and "mailbox was disabled" are as common as
+    // the bare pair, so a few words are allowed between the two halves.
+    private const INACTIVE_PATTERN = '/\b(inactive (user|account|mailbox|recipient)|(account|mailbox|user)\b[^.;,]{0,24}\b(inactive|disabled|deactivated|suspended|closed|locked)|dormant)\b/i';
 
     /** Headers every campaign e-mail carries, quoted back by most bounces. */
     public const HEADER_CAMPAIGN   = 'X-Mawiblah-Campaign';
@@ -242,7 +255,7 @@ class BounceParser
     }
 
     /**
-     * Hard, soft, spam, over quota, or null for a recipient that was not a failure at all.
+     * Hard, inactive, over quota, soft, spam, or null for a recipient that was not a failure at all.
      *
      * The status code decides when there is one: an action of "failed" with a
      * 4.x.x status is a message that expired in a queue, which says nothing
@@ -252,6 +265,11 @@ class BounceParser
      * status, or a diagnostic saying over quota, mailbox full or storage
      * allocation, as in iCloud's "552 5.2.2 user is over quota". The address
      * works; it has no room.
+     *
+     * A disabled mailbox comes next: an x.2.1 status, or a diagnostic saying
+     * inactive user, account disabled or suspended, as in inbox.lv's "554 5.2.1
+     * Recipient address rejected: Inactive user". The address exists but is
+     * switched off, and can take mail again if its owner signs in.
      *
      * A permanent failure is spam rather than hard when the receiving side
      * refused the message and not the address -- a 5.7.x security or policy
@@ -273,6 +291,10 @@ class BounceParser
 
         if (substr($status, 1) === '.2.2' || preg_match(self::QUOTA_PATTERN, $reason)) {
             return self::KIND_QUOTA;
+        }
+
+        if (substr($status, 1) === '.2.1' || preg_match(self::INACTIVE_PATTERN, $reason)) {
+            return self::KIND_INACTIVE;
         }
 
         if ($temporary) {

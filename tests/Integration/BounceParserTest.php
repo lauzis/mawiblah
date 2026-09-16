@@ -54,6 +54,17 @@ class BounceParserTest extends WP_UnitTestCase
         $this->assertSame('', $bounce['campaignHash'], 'A report without the header names no campaign.');
     }
 
+    /** The mailbox exists but is switched off, which is not the same as gone. */
+    public function test_a_disabled_mailbox_is_inactive_not_hard(): void
+    {
+        $bounce = self::parse('inactive-user.eml');
+
+        $this->assertNotNull($bounce);
+        $this->assertSame('dormant@example.lv', $bounce['recipients'][0]['email']);
+        $this->assertSame('5.2.1', $bounce['recipients'][0]['status']);
+        $this->assertSame(BounceParser::KIND_INACTIVE, $bounce['recipients'][0]['kind']);
+    }
+
     /** iCloud sends a full mailbox as a permanent failure; the address still works. */
     public function test_a_full_mailbox_is_over_quota_whether_permanent_or_temporary(): void
     {
@@ -96,7 +107,7 @@ class BounceParserTest extends WP_UnitTestCase
         $this->assertSame('554 5.7.0 Reject, id=09876-39 - spam', $bounce['recipients'][0]['reason']);
     }
 
-    public function test_classify_tells_hard_soft_and_spam_apart(): void
+    public function test_classify_tells_the_kinds_apart(): void
     {
         $this->assertSame(BounceParser::KIND_HARD, BounceParser::classify('failed', '5.1.1', '550 5.1.1 <gone@example.org>: User unknown'));
         $this->assertSame(BounceParser::KIND_SPAM, BounceParser::classify('failed', '5.7.1', '550 5.7.1 Access denied'));
@@ -108,7 +119,9 @@ class BounceParserTest extends WP_UnitTestCase
         $this->assertSame(BounceParser::KIND_QUOTA, BounceParser::classify('failed', '5.2.2', '552 5.2.2 <x@example.com>: user is over quota'));
         $this->assertSame(BounceParser::KIND_QUOTA, BounceParser::classify('delayed', '4.2.2', '452 4.2.2 Mailbox full'));
         $this->assertSame(BounceParser::KIND_QUOTA, BounceParser::classify('failed', '5.0.0', '552 Requested mail action aborted: exceeded storage allocation'), 'The wording counts without an x.2.2 status.');
-        $this->assertSame(BounceParser::KIND_HARD, BounceParser::classify('failed', '5.2.1', '554 5.2.1 Recipient address rejected: Inactive user'), 'A disabled mailbox is not a full one.');
+        $this->assertSame(BounceParser::KIND_INACTIVE, BounceParser::classify('failed', '5.2.1', '554 5.2.1 Recipient address rejected: Inactive user'));
+        $this->assertSame(BounceParser::KIND_INACTIVE, BounceParser::classify('failed', '5.0.0', '550 The account has been suspended'), 'The wording counts without an x.2.1 status.');
+        $this->assertSame(BounceParser::KIND_QUOTA, BounceParser::classify('failed', '5.2.2', '552 5.2.2 Mailbox full'), 'A full mailbox is not a disabled one.');
     }
 
     public function test_tracking_headers_carry_only_well_formed_hashes(): void

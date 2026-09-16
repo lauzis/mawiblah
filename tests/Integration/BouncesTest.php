@@ -237,7 +237,13 @@ class BouncesTest extends WP_UnitTestCase
         Bounces::check(10);
 
         $this->assertSame(
-            [BounceParser::KIND_HARD => 1, BounceParser::KIND_SOFT => 1, BounceParser::KIND_SPAM => 1, BounceParser::KIND_QUOTA => 0],
+            [
+                BounceParser::KIND_HARD     => 1,
+                BounceParser::KIND_INACTIVE => 0,
+                BounceParser::KIND_QUOTA    => 0,
+                BounceParser::KIND_SOFT     => 1,
+                BounceParser::KIND_SPAM     => 1,
+            ],
             Bounces::kindCounts(Bounces::STATE_PENDING)
         );
 
@@ -293,11 +299,41 @@ class BouncesTest extends WP_UnitTestCase
             'created_at'  => gmdate('Y-m-d H:i:s'),
         ]);
 
-        $this->assertSame(2, Bounces::reclassify());
+        $wpdb->insert(Bounces::table(), [
+            'mailbox'     => 'info@mawiblah.test@imap.mawiblah.test/INBOX',
+            'uid'         => 101,
+            'bounced_at'  => gmdate('Y-m-d H:i:s'),
+            'recipient'   => 'dormant@example.lv',
+            'kind'        => BounceParser::KIND_HARD,
+            'status_code' => '5.2.1',
+            'action'      => 'failed',
+            'reason'      => '554 5.2.1 <dormant@example.lv>: Recipient address rejected: Inactive user',
+            'state'       => Bounces::STATE_PENDING,
+            'created_at'  => gmdate('Y-m-d H:i:s'),
+        ]);
+
+        $this->assertSame(3, Bounces::reclassify());
         $this->assertSame(BounceParser::KIND_SPAM, $this->pendingFor('old@example.org')->kind);
         $this->assertSame(BounceParser::KIND_QUOTA, $this->pendingFor('full@example.com')->kind);
+        $this->assertSame(BounceParser::KIND_INACTIVE, $this->pendingFor('dormant@example.lv')->kind);
         $this->assertSame(BounceParser::KIND_SOFT, $this->pendingFor('lauzis@inbox.lv')->kind, 'A server that is down stays soft.');
         $this->assertSame(BounceParser::KIND_HARD, $this->pendingFor('aivars.lauzis@awave.com')->kind, 'A real "not found" stays hard.');
+    }
+
+    public function test_an_inactive_mailbox_is_its_own_kind_and_counted_as_inactive(): void
+    {
+        $dormant = Subscribers::addSubscriber('dormant@example.lv');
+        $this->inbox->addMessage(new FakeMessage(4, contents: self::fixture('inactive-user.eml')));
+
+        Bounces::check(10);
+
+        $this->assertSame(1, Bounces::kindCounts(Bounces::STATE_PENDING)[BounceParser::KIND_INACTIVE]);
+        $this->assertCount(1, Bounces::rows(Bounces::STATE_PENDING, 1, 50, BounceParser::KIND_INACTIVE));
+
+        Bounces::countAsFailure((int) $this->pendingFor('dormant@example.lv')->id);
+
+        $this->assertSame('1', get_post_meta($dormant->id, 'bounce_inactive_count', true));
+        $this->assertSame('', get_post_meta($dormant->id, 'bounce_hard_count', true));
     }
 
     public function test_an_over_quota_bounce_is_its_own_kind_and_counted_as_quota(): void

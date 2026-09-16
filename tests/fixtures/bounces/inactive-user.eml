@@ -1,0 +1,45 @@
+Return-Path: <>
+From: MAILER-DAEMON@mail.inbox.eu (Mail Delivery System)
+To: info@gudlenieks.lv
+Subject: Undelivered Mail Returned to Sender
+Date: Tue, 15 Sep 2026 09:41:58 +0000 (UTC)
+Auto-Submitted: auto-replied
+MIME-Version: 1.0
+Content-Type: multipart/report; report-type=delivery-status;
+	boundary="B1C2D3E4F5.1789465318/mail.inbox.eu"
+
+This is a MIME-encapsulated message.
+
+--B1C2D3E4F5.1789465318/mail.inbox.eu
+Content-Description: Notification
+Content-Type: text/plain; charset=us-ascii
+
+This is the mail system at host mail.inbox.eu.
+
+<dormant@example.lv>: host mx.example.lv said: 554 5.2.1
+    <dormant@example.lv>: Recipient address rejected: Inactive user (in reply to
+    RCPT TO command)
+
+--B1C2D3E4F5.1789465318/mail.inbox.eu
+Content-Description: Delivery report
+Content-Type: message/delivery-status
+
+Reporting-MTA: dns; mail.inbox.eu
+Arrival-Date: Tue, 15 Sep 2026 09:41:56 +0000 (UTC)
+
+Final-Recipient: rfc822; dormant@example.lv
+Original-Recipient: rfc822;dormant@example.lv
+Action: failed
+Status: 5.2.1
+Remote-MTA: dns; mx.example.lv
+Diagnostic-Code: smtp; 554 5.2.1 <dormant@example.lv>: Recipient address rejected: Inactive user
+
+--B1C2D3E4F5.1789465318/mail.inbox.eu
+Content-Description: Undelivered Message Headers
+Content-Type: text/rfc822-headers
+
+From: Gudlenieks <info@gudlenieks.lv>
+To: dormant@example.lv
+Subject: Test sheaduler 1111
+
+--B1C2D3E4F5.1789465318/mail.inbox.eu--

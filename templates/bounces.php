@@ -24,20 +24,25 @@ $kinds = [
         'color' => '#d63638',
         'title' => __('Permanent failure (5.x.x): the address does not exist or refuses mail.', 'mawiblah'),
     ],
-    BounceParser::KIND_SOFT => [
-        'label' => __('Soft', 'mawiblah'),
-        'color' => '#dba617',
-        'title' => __('Temporary failure (4.x.x): mailbox full or server unavailable.', 'mawiblah'),
-    ],
-    BounceParser::KIND_SPAM => [
-        'label' => __('Spam', 'mawiblah'),
-        'color' => '#8c8f94',
-        'title' => __('Refused by a spam or policy filter (5.7.x): the address works, this e-mail was not accepted.', 'mawiblah'),
+    BounceParser::KIND_INACTIVE => [
+        'label' => __('Inactive', 'mawiblah'),
+        'color' => '#8c5cd6',
+        'title' => __('Mailbox disabled (x.2.1): the address exists but is switched off, as a provider does to an account nobody signs into. It can take mail again if its owner comes back.', 'mawiblah'),
     ],
     BounceParser::KIND_QUOTA => [
         'label' => __('Over quota', 'mawiblah'),
         'color' => '#2271b1',
         'title' => __('Mailbox full (x.2.2): the address works but has run out of space; mail gets through again once space is freed.', 'mawiblah'),
+    ],
+    BounceParser::KIND_SOFT => [
+        'label' => __('Soft', 'mawiblah'),
+        'color' => '#dba617',
+        'title' => __('Temporary failure (4.x.x): a server that is down, greylisting.', 'mawiblah'),
+    ],
+    BounceParser::KIND_SPAM => [
+        'label' => __('Spam', 'mawiblah'),
+        'color' => '#8c8f94',
+        'title' => __('Refused by a spam or policy filter (5.7.x): the address works, this e-mail was not accepted.', 'mawiblah'),
     ],
 ];
 
@@ -103,7 +108,7 @@ $when = static function ($gmt) use ($dateFormat): string {
                     <?php esc_html_e('leaves the subscriber alone.', 'mawiblah'); ?>
                 </li>
             </ul>
-            <p style="max-width:860px;"><?php esc_html_e('Whichever you choose, the bounce report is deleted from the mailbox. Hard (red, 5.x.x) means the address does not exist; soft (yellow, 4.x.x) means something temporary, like a server that is down; spam (gray, 5.7.x) means a spam or policy filter refused the e-mail while the address itself works — usually one to dismiss; over quota (blue, x.2.2) means the mailbox is full — usually one to count.', 'mawiblah'); ?></p>
+            <p style="max-width:860px;"><?php esc_html_e('Whichever you choose, the bounce report is deleted from the mailbox. Hard (red, 5.x.x) means the address does not exist; inactive (purple, x.2.1) means the mailbox is switched off — usually one to move; over quota (blue, x.2.2) means it is full — usually one to count; soft (yellow, 4.x.x) means something temporary, like a server that is down; spam (gray, 5.7.x) means a spam or policy filter refused the e-mail while the address itself works — usually one to dismiss.', 'mawiblah'); ?></p>
 
             <table class="widefat striped" style="max-width:860px;margin-top:12px;">
                 <tbody>

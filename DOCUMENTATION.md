@@ -423,6 +423,9 @@ flowchart TD
   - `quota` — permanent or temporary, an `x.2.2` status or a diagnostic saying over quota, mailbox
     full or storage allocation (e.g. iCloud's `552 5.2.2 … user is over quota`). The mailbox exists
     and has no room.
+  - `inactive` — permanent or temporary, an `x.2.1` status or a diagnostic saying inactive user,
+    account disabled, deactivated or suspended (e.g. inbox.lv's `554 5.2.1 … Inactive user`). The
+    mailbox exists but is switched off, and can take mail again if its owner signs in.
   - `soft` — any other 4.x.x.
   - `spam` — a permanent failure with a 5.7.x security/policy status, or a diagnostic naming spam, a
     block list, Spamhaus, a DNSBL/RBL or reputation (e.g. amavisd's `554 5.7.0 Reject, id=… - spam`).
@@ -439,7 +442,7 @@ flowchart TD
 - **Storage.** `{prefix}mawiblah_bounces`, one row per recipient, unique on
   `(mailbox, uidvalidity, uid, recipient)` so re-reading a report inserts nothing. The cursor lives
   in the `mawiblah_bounce_cursor` option and resets when the mailbox or its `UIDVALIDITY` changes.
-- **Subscriber meta** written on approval: `bounce_hard_count`, `bounce_soft_count`, `bounce_spam_count`, `bounce_quota_count`,
+- **Subscriber meta** written on approval: `bounce_hard_count`, `bounce_inactive_count`, `bounce_quota_count`, `bounce_soft_count`, `bounce_spam_count`,
   `bounce_last_at`, `bounce_last_status`, `bounce_last_reason`, `bounce_last_campaign`.
 - **Deleting a report** stores `\Deleted` on its UID and runs `UID EXPUNGE` for that UID only
   (UIDPLUS); a plain `EXPUNGE` would also remove anything else flagged in the folder. Refused when the

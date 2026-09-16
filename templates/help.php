@@ -493,7 +493,7 @@ if ( $result['status'] === 'ok' ) {
             <p><?php esc_html_e('Each failed recipient becomes a row on the Bounced Emails page, matched to its subscriber and campaign by the X-Mawiblah-Subscriber and X-Mawiblah-Campaign headers campaign e-mails carry since 1.1.0, or by the address for older mail.', 'mawiblah'); ?></p>
 
             <h3 style="margin-top:24px;"><?php esc_html_e('Deciding on a bounce', 'mawiblah'); ?></h3>
-            <p><?php esc_html_e('Each bounce has three buttons, and the same three are bulk actions. Whichever you choose, the report is deleted from the mailbox, and a counted or moved bounce is recorded on the subscriber (bounce_hard_count, bounce_soft_count, bounce_spam_count or bounce_quota_count, bounce_last_status, bounce_last_reason).', 'mawiblah'); ?></p>
+            <p><?php esc_html_e('Each bounce has three buttons, and the same three are bulk actions. Whichever you choose, the report is deleted from the mailbox, and a counted or moved bounce is recorded on the subscriber (bounce_hard_count, bounce_inactive_count, bounce_quota_count, bounce_soft_count or bounce_spam_count, bounce_last_status, bounce_last_reason).', 'mawiblah'); ?></p>
             <table class="wp-list-table widefat fixed striped" style="max-width:800px;">
                 <thead>
                     <tr>
@@ -508,7 +508,7 @@ if ( $result['status'] === 'ok' ) {
                     </tr>
                     <tr>
                         <td><?php esc_html_e('Move to Failing Email', 'mawiblah'); ?></td>
-                        <td><?php esc_html_e('Moves the subscriber into "Failing Email" straight away, whatever the count. Suits a hard bounce (5.x.x) that says the address does not exist.', 'mawiblah'); ?></td>
+                        <td><?php esc_html_e('Moves the subscriber into "Failing Email" straight away, whatever the count. Suits a hard or inactive bounce: the address does not exist, or the mailbox is switched off.', 'mawiblah'); ?></td>
                     </tr>
                     <tr>
                         <td><?php esc_html_e('Dismiss', 'mawiblah'); ?></td>
@@ -524,6 +524,7 @@ if ( $result['status'] === 'ok' ) {
                 <li><?php esc_html_e('Soft (yellow): a temporary failure (4.x.x) — a server that is down, greylisting. Usually one to count.', 'mawiblah'); ?></li>
                 <li><?php esc_html_e('Spam (gray): a spam or policy filter refused this e-mail — a 5.7.x status, or a diagnostic naming spam, a block list or reputation, such as "554 5.7.0 Reject, id=09876-39 - spam". The address works, so moving it to Failing Email would be wrong; dismiss it, or count it if the same subscriber keeps refusing. Many spam rejections across different subscribers point at the sending setup — DKIM signing, the domain\'s reputation, the content — rather than at the subscribers.', 'mawiblah'); ?></li>
                 <li><?php esc_html_e('Over quota (blue): the mailbox is full — an x.2.2 status, or a diagnostic saying over quota, mailbox full or storage allocation, such as "552 5.2.2 user is over quota". Some providers (iCloud among them) send it as a permanent failure, but the address works and mail gets through again once space is freed. Usually one to count: a mailbox that stays full over several campaigns reaches the failure threshold on its own.', 'mawiblah'); ?></li>
+                <li><?php esc_html_e('Inactive (purple): the mailbox is switched off — an x.2.1 status, or a diagnostic saying inactive user, account disabled or suspended, such as "554 5.2.1 Recipient address rejected: Inactive user". Providers do this to an account nobody has signed into for a long time; it can take mail again if its owner comes back, and is deleted for good if they do not. Usually one to move to Failing Email: nobody is reading it, and mailing dead accounts costs you reputation with that provider. If the person returns and subscribes again, take them out of Failing Email.', 'mawiblah'); ?></li>
             </ul>
             <p style="margin-top:8px;"><?php esc_html_e('Only that one report is deleted: it is flagged \Deleted and removed with UID EXPUNGE, which leaves any other message you have marked for deletion in your mail client alone. A server without the UIDPLUS extension only gets the \Deleted flag. A report is never deleted if the mailbox settings or the mailbox\'s UIDVALIDITY have changed since it was read, because its UID could then belong to a different e-mail. To send to a subscriber again, remove them from the "Failing Email" audience.', 'mawiblah'); ?></p>
 

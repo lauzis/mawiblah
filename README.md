@@ -70,6 +70,17 @@ The initial version was built by hand. From version 1.0.9 onward, most changes h
 
 ## Change log
 
+### --- 1.1.4 ---
+- **New:** a switched-off mailbox is its own type, **Inactive**, shown in purple.
+  `554 5.2.1 <…@inbox.lv>: Recipient address rejected: Inactive user` was Hard, next to addresses
+  that never existed, though this one does and takes mail again if its owner signs in — until the
+  provider deletes the account. An `x.2.1` status, or a diagnostic saying inactive user, account
+  disabled, deactivated or suspended, is now Inactive, with its own Type filter and a
+  `bounce_inactive_count`. The help page suggests moving those subscribers to Failing Email: nobody
+  reads a dormant mailbox, and mailing dead accounts costs reputation with the provider.
+- **Changed:** the Type filter reads Hard, Inactive, Over quota, Soft, Spam, so the permanent kinds
+  sit together. The 1.1.4 migration relabels bounces recorded before the type existed.
+
 ### --- 1.1.3 ---
 - **New:** over-quota bounces are their own type, shown in blue. `552 5.2.2 <…@icloud.com>: user is
   over quota` came in as Hard because iCloud sends it as a permanent failure, though the mailbox

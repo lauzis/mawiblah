@@ -5,15 +5,47 @@ class Templates
 {
 
     /**
+     * Runs a template's shortcodes with a campaign attached.
+     *
+     * [mawiblah_title] and [mawiblah_content] answer from the campaign the
+     * ShortCodes class is holding, and fall back to "Summary for the {month}"
+     * and a fixed sentence when it is holding none. Expanding a campaign's
+     * template without setting it first therefore bakes those fallbacks into
+     * the letter, and the later pass in Campaigns::lockTemplate() finds no
+     * shortcodes left to fill.
+     *
+     * @param string   $content        Raw template HTML.
+     * @param int|null $campaignPostId Campaign the letter is for, null for a bare preview.
+     * @return string
+     */
+    public static function renderWithCampaign(string $content, ?int $campaignPostId = null): string
+    {
+        $campaign = $campaignPostId ? Campaigns::getCampaignById($campaignPostId) : null;
+
+        ShortCodes::setCampaign($campaign);
+
+        try {
+            return do_shortcode($content);
+        } finally {
+            ShortCodes::setCampaign(null);
+        }
+    }
+
+    /**
      * Fetches a processed email template via an internal REST request.
      *
      * Used during campaign sending to retrieve templates with WPML-aware shortcode evaluation,
      * because the REST call ensures WPML is fully initialised before shortcodes run.
      *
-     * @param string $templateName Template filename without extension.
+     * The campaign travels with the request: the shortcodes are expanded on the
+     * far side, and without it the letter comes back carrying the fallback title
+     * and content rather than the campaign's own.
+     *
+     * @param string   $templateName   Template filename without extension.
+     * @param int|null $campaignPostId Campaign the letter is for.
      * @return string|bool Processed HTML string, or false on failure.
      */
-    public static function getTemplateByNameViaRest($templateName): string | bool
+    public static function getTemplateByNameViaRest($templateName, ?int $campaignPostId = null): string | bool
     {
         // When running under WP Cron there is no logged-in user, so an HTTP
         // loopback to the authenticated REST endpoint would always 401. Call
@@ -25,7 +57,8 @@ class Templates
                 return false;
             }
             Logs::addLog('template', "Template loaded directly (cron)", ['template' => $templateName]);
-            return do_shortcode($content);
+
+            return self::renderWithCampaign($content, $campaignPostId);
         }
 
         $cookies = [];
@@ -37,7 +70,7 @@ class Templates
         $cookieHeader = implode('; ', $cookies);
 
         $url = "/wp-json/mawiblah/v1/get-html-template";
-        $postData = (object) ['template'=> $templateName];
+        $postData = (object) ['template' => $templateName, 'campaign' => $campaignPostId];
 
          $response = wp_remote_post(site_url() . $url, [
              'body' => json_encode($postData),
@@ -206,7 +239,9 @@ class Templates
         $templateArchived = get_post_meta($campaignPostId, 'email_template_copied', true);
 
         $dir = MAWIBLAH_PLUGIN_DIR . '/email_templates/archived';
-        $template = self::getTemplateByNameViaRest($templateName);
+        // With the campaign, so the snapshot carries its title and content
+        // rather than the shortcodes' no-campaign fallbacks.
+        $template = self::getTemplateByNameViaRest($templateName, $campaignPostId);
 
         if ($template=== false) {
             return false;

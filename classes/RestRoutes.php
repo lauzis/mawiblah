@@ -8,14 +8,22 @@ class RestRoutes
     /**
      * Returns a processed email template with all shortcodes evaluated.
      *
-     * Requires editor capabilities. Used by the campaign editor to preview template output.
+     * Requires editor capabilities. Used by the campaign editor to preview
+     * template output, and by the send itself through the loopback in
+     * Templates::getTemplateByNameViaRest().
      *
-     * @param \WP_REST_Request $request JSON body containing 'template' (template name string).
+     * 'campaign' is optional and is what makes the difference between a letter
+     * carrying the campaign's own title and content and one carrying the
+     * fallbacks: the shortcodes are expanded here, so the campaign has to be
+     * held here. A preview without one is unchanged.
+     *
+     * @param \WP_REST_Request $request JSON body: 'template' (name), optional 'campaign' (post ID).
      * @return \WP_REST_Response Template HTML content and template name.
      */
     public static function getHtmlTemplate(\WP_REST_Request $request): \WP_REST_Response
     {
         $template        = sanitize_text_field($request->get_param('template') ?? '');
+        $campaignPostId  = (int) ($request->get_param('campaign') ?? 0);
         $templateContent = Templates::getEmailTemplateByName($template);
 
         // A template that is not there is not an "ok" answer. Reporting 200 with
@@ -32,7 +40,7 @@ class RestRoutes
 
         return new \WP_REST_Response([
             'status'       => 'ok',
-            'template'     => do_shortcode($templateContent),
+            'template'     => Templates::renderWithCampaign($templateContent, $campaignPostId ?: null),
             'templateName' => $template,
         ], 200);
     }

@@ -70,6 +70,18 @@ The initial version was built by hand. From version 1.0.9 onward, most changes h
 
 ## Change log
 
+### --- 1.1.5 ---
+- **Fix:** a campaign's own title and content never reached the letter. The template is fetched and
+  its shortcodes expanded *before* the campaign is attached — through the REST loopback, or directly
+  under cron — so `[mawiblah_title]` and `[mawiblah_content]` answered with their no-campaign
+  fallbacks ("Summary for the {month}" and a fixed sentence, translated), and the later pass in
+  `Campaigns::lockTemplate()` found no shortcodes left to fill. On gudlenieks.lv every monthly letter
+  went out headed "September apskats" instead of the campaign's "Mēneša jaunumi.", with the generic
+  body under it, and the archived copy in `email_templates/archived/` shows exactly that.
+  The campaign now travels with the request: `Templates::renderWithCampaign()` holds it while the
+  shortcodes run, `copyTemplate()` passes the campaign id down, and the REST route takes an optional
+  `campaign`. A preview with no campaign is unchanged.
+
 ### --- 1.1.4 ---
 - **New:** a switched-off mailbox is its own type, **Inactive**, shown in purple.
   `554 5.2.1 <…@inbox.lv>: Recipient address rejected: Inactive user` was Hard, next to addresses

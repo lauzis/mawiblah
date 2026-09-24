@@ -54,6 +54,14 @@ MAWIBLAH is a WordPress plugin that provides Mailchimp-like functionality for se
   running -- **started and not finished**, both halves. Reading
   `backgroundStarted` alone retired a schedule for ever the first time that flag
   outlived its send (fixed in 1.0.41)
+- **Stalled background sends** - each batch queues the next through one WP-Cron
+  event, and a concurrent cron run writing back an older copy of the `cron` option
+  can erase it (1.1.6). `CronSend` stamps `backgroundLastActivity` while it works;
+  `CronSend::resumeStalled()`, called from every `SchedulerCron::check()`, queues the
+  next batch again for a send started, not finished, with nothing queued and idle
+  for `STALL_AFTER` (10 min). Idle beyond `RESUME_WITHIN` (1 day) it is logged once
+  and left alone. **Do not drop the activity stamp** -- a busy batch has no event
+  queued either, and without the stamp it would be sent a second, concurrent batch
 - **Per-schedule do-not-disturb** - `override_dnd` + `dnd_threshold` let one
   schedule replace the global threshold. `SchedulerCron::check()` resolves the
   value and writes it to the campaign as `CronSend::DND_OVERRIDE_META`
@@ -295,6 +303,7 @@ pinned in `require-dev`; do not raise PHPUnit past `^9.6` without checking wp-ph
 | `tests/Integration/CampaignTest.php` | Campaign workflow, counters, placeholder filling |
 | `tests/Integration/EmailTemplateTest.php` | Shipped templates: discovery, full render with no variable left behind, faked send via `pre_wp_mail` |
 | `tests/Integration/SchedulerRerenderTest.php` | Recurring schedules release the locked template copy; one-off and `rerender_on_recurring=0` keep it |
+| `tests/Integration/StalledSendTest.php` | A send whose next batch was lost is resumed and finishes without sending anyone twice; a busy, queued, finished or day-old send is left alone; the scheduler check runs the resume |
 | `tests/Integration/SchedulerDontDisturbTest.php` | Per-schedule do-not-disturb override: written for the run, honoured by `CronSend`, removed when the send finishes |
 | `tests/Integration/TestModeDontDisturbTest.php` | A tester in test mode is sent the test e-mail inside the do-not-disturb threshold, and told so; a non-tester in test mode and a tester in the real send are still skipped |
 | `tests/Integration/SendConditionTest.php` | Send condition field holds a name only: the name rule, the scheduler with a whole shortcode stored, an unregistered condition, save validation and its notices |

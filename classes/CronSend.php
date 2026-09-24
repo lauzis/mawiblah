@@ -21,6 +21,35 @@ class CronSend
      */
     const DND_OVERRIDE_META = 'dnd_threshold_override';
 
+    /**
+     * Campaign meta holding the last moment a batch of this send did any work.
+     *
+     * A batch hands over to the next one through a single WP-Cron event, and WP-Cron
+     * saves its whole queue as one option: a concurrent cron run that read the queue
+     * a moment earlier writes it back without that event, and the send stops for good
+     * with nothing left to wake it. resumeStalled() puts the event back -- this stamp
+     * is how it tells a lost hand-off from a batch still busy sending, which has no
+     * event queued either.
+     */
+    const LAST_ACTIVITY_META = 'backgroundLastActivity';
+
+    /** Campaign meta set once a send has been reported as too old to resume. */
+    const STALL_REPORTED_META = 'backgroundStallReported';
+
+    /** Seconds without batch activity, and with no batch queued, before a send counts as stalled. */
+    const STALL_AFTER = 600;
+
+    /**
+     * Seconds without batch activity after which a stalled send is no longer resumed.
+     *
+     * Past a day the letter is old news; picking it up again, say for a send that
+     * died long before this check existed, is a decision for a person, not for cron.
+     */
+    const RESUME_WITHIN = 86400;
+
+    /** How often, at most, a busy batch refreshes LAST_ACTIVITY_META. */
+    const ACTIVITY_INTERVAL = 30;
+
     /** Registers the cron action hook. Call from plugin init. */
     public static function init(): void
     {
@@ -50,6 +79,92 @@ class CronSend
         if ($timestamp) {
             wp_unschedule_event($timestamp, self::HOOK, [$campaignPostId]);
         }
+    }
+
+    /**
+     * Queues the next batch again for every background send that has lost it.
+     *
+     * A send is stalled when it is started and not finished, has no batch queued,
+     * and no batch has done anything for STALL_AFTER seconds. Sends idle for longer
+     * than RESUME_WITHIN are reported once and left alone. Subscribers already
+     * handled are recorded per campaign, so the resumed batch skips them.
+     *
+     * Called from SchedulerCron::check(), which runs on its own WP-Cron event.
+     *
+     * @return int Number of sends resumed.
+     */
+    public static function resumeStalled(): int
+    {
+        $campaignIds = get_posts([
+            'post_type'      => Campaigns::postType(),
+            'post_status'    => 'any',
+            'posts_per_page' => -1,
+            'fields'         => 'ids',
+            'meta_key'       => 'backgroundStarted',
+        ]);
+
+        $resumed = 0;
+
+        foreach ($campaignIds as $campaignPostId) {
+            $campaignPostId = (int) $campaignPostId;
+
+            // Another process -- the batch itself -- writes these; read them fresh.
+            wp_cache_delete($campaignPostId, 'post_meta');
+
+            $started = (int) get_post_meta($campaignPostId, 'backgroundStarted', true);
+            if (!$started || get_post_meta($campaignPostId, 'campaignFinished', true)) {
+                continue;
+            }
+
+            if (wp_next_scheduled(self::HOOK, [$campaignPostId])) {
+                continue;
+            }
+
+            $lastActivity = max($started, (int) get_post_meta($campaignPostId, self::LAST_ACTIVITY_META, true));
+            $idle         = time() - $lastActivity;
+
+            if ($idle < self::STALL_AFTER) {
+                continue;
+            }
+
+            $title = get_the_title($campaignPostId);
+
+            if ($idle > self::RESUME_WITHIN) {
+                if (!get_post_meta($campaignPostId, self::STALL_REPORTED_META, true)) {
+                    update_post_meta($campaignPostId, self::STALL_REPORTED_META, time());
+                    Logs::addError('cron-send', "Stalled send too old to resume, finish or restart it by hand: {$title}", [
+                        'campaignPostId' => $campaignPostId,
+                        'lastActivity'   => gmdate('Y-m-d H:i:s', $lastActivity),
+                    ]);
+                }
+                continue;
+            }
+
+            $queued = wp_schedule_single_event(time(), self::HOOK, [$campaignPostId], true);
+
+            if (is_wp_error($queued)) {
+                Logs::addError('cron-send', "Stalled send could not be resumed: {$title}", [
+                    'campaignPostId' => $campaignPostId,
+                    'error'          => $queued->get_error_message(),
+                ]);
+                continue;
+            }
+
+            $resumed++;
+            Logs::addLog('cron-send', "Stalled send resumed: {$title}", [
+                'campaignPostId' => $campaignPostId,
+                'lastActivity'   => gmdate('Y-m-d H:i:s', $lastActivity),
+                'idleMin'        => round($idle / 60, 1),
+            ]);
+        }
+
+        return $resumed;
+    }
+
+    /** Records that a batch of this send is doing work right now. */
+    private static function touch(int $campaignPostId): void
+    {
+        update_post_meta($campaignPostId, self::LAST_ACTIVITY_META, time());
     }
 
     /**
@@ -96,6 +211,9 @@ class CronSend
             'sentSoFar'      => (int) ($before->emailsSend ?? 0),
             'failedSoFar'    => (int) ($before->emailsFailed ?? 0),
         ]);
+
+        self::touch($campaignPostId);
+        $lastTouch = time();
 
         // Register a shutdown handler so fatal errors inside the batch are always logged
         register_shutdown_function(function () use ($campaignPostId) {
@@ -153,6 +271,13 @@ class CronSend
                 if ($batchCount >= $batchSize) {
                     $hasMore = true;
                     break 2;
+                }
+
+                // A batch of a hundred takes minutes; keep the stamp fresh so a
+                // send that is busy is never taken for one that stalled.
+                if (time() - $lastTouch >= self::ACTIVITY_INTERVAL) {
+                    self::touch($campaignPostId);
+                    $lastTouch = time();
                 }
 
                 // Unsubscribed
@@ -264,7 +389,16 @@ class CronSend
         ]);
 
         if ($hasMore) {
-            wp_schedule_single_event(time() + 60, self::HOOK, [$campaignPostId]);
+            self::touch($campaignPostId);
+
+            $queued = wp_schedule_single_event(time() + 60, self::HOOK, [$campaignPostId], true);
+            if (is_wp_error($queued)) {
+                // Said out loud, though resumeStalled() will queue it again either way.
+                Logs::addError('cron-send', "Could not queue the next batch: {$campaign->post_title}", [
+                    'campaignPostId' => $campaignPostId,
+                    'error'          => $queued->get_error_message(),
+                ]);
+            }
         } else {
             Campaigns::campaignFinish($campaignPostId);
             Campaigns::backgroundSendStop($campaignPostId);

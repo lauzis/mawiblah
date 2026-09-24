@@ -173,6 +173,8 @@ Each campaign in MAWIBLAH tracks various metrics and metadata stored as WordPres
 - **`status`** - Current campaign status (draft, sending-in-progress, completed, etc.)
 - **`rerender_on_recurring`** - Boolean (`'1'`/`'0'`). When `'1'` (default), the locked template copy is cleared before each daily/weekly/monthly scheduled send so dynamic content (shortcodes, WP queries) is re-evaluated fresh. Has no effect on `once`-type schedules.
 - **`dnd_threshold_override`** - Do-not-disturb threshold, in seconds, for the send currently running. Written by `SchedulerCron` when the schedule that started the send overrides the global setting, and deleted by `CronSend` when the send finishes. Absent means "use the global setting"; an explicit `0` means "no do-not-disturb check for this run".
+- **`backgroundLastActivity`** - Unix timestamp of the last moment a batch of the running background send did work: set when a batch starts, every 30 seconds while it sends, and just before it queues the next batch. Cleared by `backgroundSendStart()` and `backgroundSendStop()`. `CronSend::resumeStalled()` reads it to tell a lost hand-off from a batch that is still busy — see [Resuming a stalled send](#resuming-a-stalled-send).
+- **`backgroundStallReported`** - Unix timestamp; set once when a send idle for more than a day is logged as too old to resume, so the error is not repeated on every check. Cleared with `backgroundLastActivity`.
 - **`send_condition_shortcode`** - Optional shortcode name (string, no brackets, no attributes). When set, `SchedulerCron` calls `do_shortcode("[{name} campaign_id='{id}']")` before every scheduled send. Empty/whitespace-only output → send is skipped and logged. Non-empty output → send proceeds normally. A name that is not a registered shortcode → send is skipped and logged. Leave blank to always send. Both the save and the scheduler reduce the value with `Campaigns::sendConditionShortcodeName()`, so a whole `[name campaign_id="5"]` counts as `name`.
 
 ### Email Delivery Counters
@@ -531,6 +533,40 @@ The resolved threshold and where it came from (`schedule` or `global`) are recor
 ```
 [2026-09-02 09:00:01] [scheduler] Scheduled campaign started: Weekly digest | {"schedulerId":12,"campaignPostId":42,"scheduleType":"weekly","dndThreshold":86400,"dndSource":"schedule"}
 ```
+
+### Resuming a stalled send
+
+A background send moves from batch to batch through one WP-Cron event, `mawiblah_background_send`,
+which each batch queues for the next. WP-Cron keeps its whole queue in a single option, and every
+cron run reads it, changes its part and writes all of it back. A concurrent run that read the queue
+just before a batch queued its successor writes the older copy back and the event is lost. Nothing
+else would ever wake the send: it stays started and not finished, and the scheduler skips every
+later occurrence of its schedule as "previous send still running".
+
+`SchedulerCron::check()` therefore calls `CronSend::resumeStalled()` on every run, for every
+background send — scheduled or started by hand:
+
+```mermaid
+flowchart TD
+    A[SchedulerCron::check] --> B[CronSend::resumeStalled]
+    B --> C{backgroundStarted\nand not campaignFinished?}
+    C -- No --> Z[leave it]
+    C -- Yes --> D{next batch queued?}
+    D -- Yes --> Z
+    D -- No --> E{idle since\nbackgroundLastActivity}
+    E -- "< 10 min: a batch is busy" --> Z
+    E -- "10 min – 1 day" --> F[queue the next batch\nlog 'Stalled send resumed']
+    E -- "> 1 day" --> G[log once as an error\nleave it for a person]
+
+    style F fill:#15803d,color:#fff
+    style G fill:#f59e0b,color:#000
+```
+
+A batch that is sending has no event queued either, which is why `backgroundLastActivity` is
+refreshed every 30 seconds while it works. The resumed batch skips everyone already recorded
+under `sent_{campaignId}`, so nobody is sent the letter twice. How soon a lost hand-off is caught
+depends on the **Scheduler check interval**: at 15 minutes a send loses 10–25 minutes, at the
+hourly default up to 70.
 
 ## Settings
 

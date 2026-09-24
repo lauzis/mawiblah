@@ -83,6 +83,10 @@ class SchedulerCron
             'schedulers' => count($schedulers),
         ]);
 
+        // Not a schedule of its own: any background send, scheduled or started
+        // by hand, whose next batch went missing is picked up again here.
+        CronSend::resumeStalled();
+
         foreach ($schedulers as $scheduler) {
             if ($scheduler->status !== 'active') {
                 Logs::addLog('scheduler', "Scheduler #{$scheduler->id}: skipped — status is '{$scheduler->status}'");

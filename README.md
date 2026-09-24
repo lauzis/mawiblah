@@ -70,6 +70,22 @@ The initial version was built by hand. From version 1.0.9 onward, most changes h
 
 ## Change log
 
+### --- 1.1.6 ---
+- **Fix:** a background send could stop halfway, for good. A batch hands over to the next one
+  through a single WP-Cron event, and WP-Cron keeps its whole queue in one option: a concurrent
+  cron run — any every-minute job, Action Scheduler's for one — that read the queue a moment before
+  the batch wrote writes its older copy back, and the event is gone. Nothing was left to wake the
+  send, it stayed "started, not finished", and every later occurrence of its schedule was skipped as
+  "previous send still running". On gudlenieks.lv the September monthly letter stopped this way at
+  1300 of ~3356 subscribers: the only one of its 13 batches that finished on the second of a cron
+  tick is the one whose hand-off vanished.
+  A send now stamps `backgroundLastActivity` while its batches work, and `CronSend::resumeStalled()`,
+  run from every scheduler check, queues the next batch again for a send that is started, not
+  finished, has no batch queued and has been idle for 10 minutes. Subscribers already handled are
+  recorded per campaign, so the resumed batch skips them. A send idle for more than a day is not
+  resumed — it is logged once as an error and left for a person to finish or restart. A failed
+  attempt to queue the next batch is now logged too.
+
 ### --- 1.1.5 ---
 - **Fix:** a campaign's own title and content never reached the letter. The template is fetched and
   its shortcodes expanded *before* the campaign is attached — through the REST loopback, or directly

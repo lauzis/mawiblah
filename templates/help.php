@@ -680,6 +680,10 @@ define('MAWIBLAH_BOUNCE_PASS', '…');</pre>
                         <td><?php esc_html_e('Clears the backgroundStarted flag and cancels the pending cron event. Already-sent subscribers are recorded — restarting the campaign would skip them.', 'mawiblah'); ?></td>
                     </tr>
                     <tr>
+                        <td><?php esc_html_e('Lost hand-off', 'mawiblah'); ?></td>
+                        <td><?php esc_html_e('Now and then WP Cron loses the event that starts the next batch, when two cron runs save the cron queue at the same moment. Every scheduler check looks for a send that is still running, has no batch queued and has been idle for 10 minutes, and queues its next batch again; subscribers already sent to are skipped. A send idle for more than a day is not resumed — it is logged as an error for you to finish or restart.', 'mawiblah'); ?></td>
+                    </tr>
+                    <tr>
                         <td><?php esc_html_e('Completion', 'mawiblah'); ?></td>
                         <td><?php esc_html_e('When the last subscriber is processed, the campaign is marked finished and the backgroundStarted flag is automatically cleared.', 'mawiblah'); ?></td>
                     </tr>

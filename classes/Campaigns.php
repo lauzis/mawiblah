@@ -1302,6 +1302,8 @@ class Campaigns
     {
         self::campaignStart($campaignPostId);
         update_post_meta($campaignPostId, 'backgroundStarted', time());
+        delete_post_meta($campaignPostId, CronSend::LAST_ACTIVITY_META);
+        delete_post_meta($campaignPostId, CronSend::STALL_REPORTED_META);
         $campaign = self::getCampaignById($campaignPostId);
         if ($campaign) {
             update_post_meta($campaignPostId, 'totalSubscribers', self::countUniqueSubscribers($campaign));
@@ -1316,6 +1318,8 @@ class Campaigns
     public static function backgroundSendStop(int $campaignPostId): void
     {
         delete_post_meta($campaignPostId, 'backgroundStarted');
+        delete_post_meta($campaignPostId, CronSend::LAST_ACTIVITY_META);
+        delete_post_meta($campaignPostId, CronSend::STALL_REPORTED_META);
     }
 
     /**

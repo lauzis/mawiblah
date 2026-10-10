@@ -19,6 +19,21 @@ class SubscriptionForm
     }
 
     /**
+     * A keyed signature of a form's audience list, so the public endpoint can
+     * tell a list this site rendered from one a request made up. Order and
+     * duplicates do not matter.
+     *
+     * @param string[] $audienceHashes
+     */
+    public static function audienceSignature(array $audienceHashes): string
+    {
+        $hashes = array_values(array_unique(array_map('strval', $audienceHashes)));
+        sort($hashes);
+
+        return hash_hmac('sha256', 'mawiblah-audiences|' . implode(',', $hashes), wp_salt('auth'));
+    }
+
+    /**
      * Renders the subscription form HTML, conditionally loading reCAPTCHA v3 if fully configured.
      *
      * @param string[] $audienceHashes Audience hashes to embed as hidden inputs.
@@ -35,6 +50,7 @@ class SubscriptionForm
         $buttonText     = $options['buttonText']     ?? __('Subscribe', 'mawiblah');
         $successMessage = $options['successMessage'] ?? '';
         $errorMessage   = $options['errorMessage']   ?? '';
+        $audienceSignature = self::audienceSignature($audienceHashes);
         ob_start();
         include MAWIBLAH_TEMPLATE_DIR . '/subscription-form/form.php';
         return ob_get_clean();
@@ -55,6 +71,7 @@ class SubscriptionForm
         $audienceHashes = array_map('sanitize_text_field', (array) ($request->get_param('audienceHashes') ?? []));
         $honeypot       = $request->get_param('honeypot') ?? '';
         $recaptchaToken = sanitize_text_field($request->get_param('recaptchaToken') ?? '');
+        $signature      = sanitize_text_field($request->get_param('audienceSignature') ?? '');
 
         // Honeypot — silently succeed so bots think it worked
         if (!empty($honeypot)) {
@@ -66,6 +83,21 @@ class SubscriptionForm
             if (!self::verifyRecaptcha($recaptchaToken)) {
                 return new \WP_REST_Response(['status' => 'error', 'message' => __('Verification failed. Please try again.', 'mawiblah')], 400);
             }
+        }
+
+        // Only the audience list a rendered form offered, signed when it was
+        // rendered: a request cannot name audiences of its own choosing.
+        if ($audienceHashes && !hash_equals(self::audienceSignature($audienceHashes), $signature)) {
+            return new \WP_REST_Response(['status' => 'error', 'message' => __('Verification failed. Please try again.', 'mawiblah')], 400);
+        }
+
+        // Never through the public form, whatever a form was configured with.
+        $unsubed = Subscribers::unsubedAudience();
+        if ($unsubed && !empty($unsubed->term_id)) {
+            $unsubedHash = Subscribers::getAudience((int) $unsubed->term_id)->audienceHash ?? '';
+            $audienceHashes = array_values(array_filter($audienceHashes, static function ($hash) use ($unsubedHash) {
+                return '' === $unsubedHash || $hash !== $unsubedHash;
+            }));
         }
 
         $result = self::subscribeByEmail($email, $audienceHashes);

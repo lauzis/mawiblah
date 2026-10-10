@@ -235,7 +235,8 @@ class Subscribers
         $post->firstInteraction = get_post_meta($post->id, 'firstInteraction', true) ?? null;
 
         if (!$post->subscriberHash) {
-            update_post_meta($post->id, 'subscriberHash', Helpers::generateSubscriberHash($post->id));
+            $post->subscriberHash = Helpers::generateSubscriberHash($post->id);
+            update_post_meta($post->id, 'subscriberHash', $post->subscriberHash);
         }
 
         // get_the_terms() answers false for a subscriber in no audience and a WP_Error
@@ -304,7 +305,7 @@ class Subscribers
 
         $audienceHash = get_term_meta($audience->term_id, 'audienceHash', true);
         if (!$audienceHash) {
-            $audienceHash = md5((string) $audience->term_id);
+            $audienceHash = Helpers::randomHash();
             add_term_meta($audience->term_id, 'audienceHash', $audienceHash, true);
         }
         $audience->audienceHash = $audienceHash;
@@ -467,7 +468,7 @@ class Subscribers
         }
         $unsubToken = get_post_meta($id, 'unsubToken', true);
         if (!$unsubToken) {
-            $unsubToken = md5($id . $subEmail);
+            $unsubToken = Helpers::randomHash();
             add_post_meta($id, 'unsubToken', $unsubToken);
         }
         return $unsubToken;

@@ -22,6 +22,7 @@
         <?php /* Honeypot — hidden via inline style so it survives theme CSS resets */ ?>
         <input type="text" name="website" style="display:none" tabindex="-1" autocomplete="off" aria-hidden="true" />
 
+        <input type="hidden" class="mawiblah-subscribe-form__signature" value="<?= esc_attr($audienceSignature ?? '') ?>" />
         <?php foreach ($audienceHashes as $hash): ?>
             <input type="hidden" class="mawiblah-subscribe-form__audience" value="<?= esc_attr($hash) ?>" />
         <?php endforeach; ?>

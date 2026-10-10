@@ -41,6 +41,8 @@
         var email     = form.querySelector('.mawiblah-subscribe-form__input').value;
         var honeypot  = form.querySelector('input[name="website"]').value;
         var audiences = getAudienceHashes(form);
+        var signatureField = form.querySelector('.mawiblah-subscribe-form__signature');
+        var signature = signatureField ? signatureField.value : '';
         var siteKey   = wrapper.dataset.recaptchaSiteKey || '';
         var version   = wrapper.dataset.recaptchaVersion || 'v3';
 
@@ -57,6 +59,7 @@
                 body: JSON.stringify({
                     email:          email,
                     audienceHashes: audiences,
+                    audienceSignature: signature,
                     honeypot:       honeypot,
                     recaptchaToken: recaptchaToken || '',
                 }),

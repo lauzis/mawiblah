@@ -36,17 +36,15 @@ class Unsubscribe
     {
         $subscriber = Subscribers::getSubscriber($email);
 
-        $gravityFormsEmails = GravityForms::findEmail($email);
-
-        if ($subscriber || count($gravityFormsEmails) > 0) {
-            // we havte to mark email as unsubscribed
-            if ($subscriber) {
-                $subId = $subscriber->ID;
-            } else {
-                //There is no email in subscribers list but there is in gravity forms
-                // add and mark as unsubscribed
-                $subId = Subscribers::addSubscriber($email);
-            }
+        // The link in an e-mail carries both the address and that subscriber's
+        // own hash. Both have to match before the confirmation form (and the
+        // token in it) is shown; anything else gets the same page as an unknown
+        // address, so the page cannot be used to learn who is on the list.
+        if ($subscriber
+            && '' !== $subscriberHash
+            && hash_equals((string) $subscriber->subscriberHash, $subscriberHash)
+        ) {
+            $subId = $subscriber->ID;
             $unsubToken = Subscribers::getUnsubToken($subId, $email);
 
             $formUrl = Helpers::getCurrentUrlPath() . self::unsubscribeConfirmLink($subscriberHash, $email, $unsubToken, $campaignHash);

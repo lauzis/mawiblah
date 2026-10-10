@@ -192,7 +192,19 @@ class Helpers
      * @return string MD5 hash used as the public subscriber identifier.
      */
     public static function generateSubscriberHash(int $id): string{
-        return md5($id);
+        // Random, not derived from the id: it goes out in every e-mail link and
+        // must not be something another id can be turned into. Stored once;
+        // hashes already stored stay as they are, so sent links keep working.
+        return self::randomHash();
+    }
+
+    /**
+     * 32 hex characters from a cryptographically secure source -- the same shape
+     * as the MD5 hashes used before, so stored values and new ones look alike.
+     */
+    public static function randomHash(): string
+    {
+        return bin2hex(random_bytes(16));
     }
 
     /**

@@ -419,10 +419,6 @@ class Tests
         self::echoResult($total === 0 && $unique === 0 && $users === 0 ? 'All zero' : "Not zero (total=$total unique=$unique users=$users)", $total === 0 && $unique === 0 && $users === 0 ? 'success' : 'error');
 
         self::echoTitle('First visit — all three increment');
-        // Start the session first so any existing store data is loaded, then wipe it.
-        // Doing $_SESSION = [] before session_start() would be overwritten by the store restore.
-        if ( ! session_id() ) { session_start(); }
-        $_SESSION = [];
         Visits::visit($c->campaignHash, $sub1->subscriberHash, $url);
         $total  = (int) get_post_meta($cId, 'linksClickedTotal', true);
         $unique = (int) get_post_meta($cId, 'linksClicked', true);
@@ -447,7 +443,6 @@ class Tests
         self::echoResult("total=$total unique=$unique users=$users", $ok ? 'success' : 'error');
 
         self::echoTitle('New subscriber — uniqueUserClicks increments');
-        $_SESSION = [];
         Visits::visit($c->campaignHash, $sub2->subscriberHash, $url);
         $users = (int) get_post_meta($cId, 'uniqueUserClicks', true);
         self::echoResult("users=$users", $users === 2 ? 'success' : 'error');

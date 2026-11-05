@@ -119,9 +119,10 @@ Campaign objects include these meta fields:
 - `emailsUnsubed` - Total unsubscribed users encountered
 - `emailsNewlyUnsubed` - Users who unsubscribed during this campaign
 - `uniqueUserClicks` - Unique users who clicked any link
-- `linksClicked` - Unique link clicks (per session)
+- `linksClicked` - Unique link clicks (once per subscriber per URL)
 - `linksClickedTotal` - Total link clicks (including duplicates)
 - `links` - JSON object with individual URL click counts
+- `clicked_by`, `clicked_link` - Who already clicked (subscriber hash; md5 of subscriber hash and URL), one row each; what makes the unique counts unique. Cleared by `resetCounters()`
 - `campaignHash` - Unique campaign identifier (MD5 hash)
 - `testStarted`, `testFinished`, `testApproved` - Test workflow timestamps
 - `campaignStarted`, `campaignFinished` - Campaign execution timestamps
@@ -247,7 +248,7 @@ add_action('wp_dashboard_setup', [Actions::class, 'registerDashboardWidget']);
 
 ### Click Tracking
 - URLs are tracked per campaign
-- Session-based duplicate click prevention
+- Duplicate clicks recognised by subscriber, from the `clicked_by` / `clicked_link` campaign meta -- no PHP session (removed in 1.1.8: it put a cookie on every tracked page and counted the same subscriber again in another browser)
 - Stores click timestamps for timing analysis
 - Both unique and total click counts
 

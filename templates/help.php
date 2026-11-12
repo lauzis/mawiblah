@@ -807,6 +807,14 @@ define('MAWIBLAH_BOUNCE_PASS', '…');</pre>
                 <?php esc_html_e('Normal sending rules still apply: do-not-disturb threshold, unsubscribed flag, failing-email audience, and email-sending enabled/disabled setting.', 'mawiblah'); ?>
             </p>
 
+            <h3 style="margin-top:24px;"><?php esc_html_e('Test run before each send', 'mawiblah'); ?></h3>
+            <p>
+                <?php esc_html_e('With "Send a test run to the campaign\'s testers before each send" ticked on the schedule (on by default), the campaign is sent in test mode to the testers in its audiences a set number of days before every send (default 1 day), at the same time of day. The subject starts with "[Test]". Use it to read what a recurring schedule is about to send while there is still time to change the campaign or pause the schedule.', 'mawiblah'); ?>
+            </p>
+            <p>
+                <?php esc_html_e('The test run does not change the campaign\'s counters or send state and does not restart the testers\' do-not-disturb window, so testers still receive the real send. Each test run is listed in the schedule\'s history, marked "Test run"; when it sent nothing — no testers in the audiences, or the send condition said no — the history says why.', 'mawiblah'); ?>
+            </p>
+
             <h3 style="margin-top:24px;"><?php esc_html_e('WP Cron events triggered by the Scheduler', 'mawiblah'); ?></h3>
             <table class="wp-list-table widefat fixed striped" style="max-width:800px;">
                 <thead>

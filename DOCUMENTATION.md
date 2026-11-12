@@ -475,7 +475,7 @@ A schedule is its own post (`mawiblah_scheduler`) pointing at one campaign. One 
 | `campaign_id` | int | Campaign post ID to send |
 | `status` | string | `active`, `paused` or `completed` |
 | `schedule_type` | string | `once`, `daily`, `weekly` or `monthly` |
-| `run_history` | array | The last 25 runs: started, finished, campaign_id, campaign, sent, failed, skipped, unsubed, and `skipped_reason` for an occurrence that did not send |
+| `run_history` | array | The last 50 runs, test runs included: started, finished, campaign_id, campaign, sent, failed, skipped, unsubed, and `skipped_reason` for an occurrence that did not send; a test run also has `test` (`true`) and `test_for` (the `next_send` it tested) |
 | `send_time` | string | `H:i` in the site timezone |
 | `send_day` | int | Day-of-week (`0`=Sun…`6`=Sat) for weekly; day-of-month (`1`-`31`) for monthly |
 | `send_date` | string | `YYYY-MM-DD`, for `once` schedules |
@@ -484,6 +484,42 @@ A schedule is its own post (`mawiblah_scheduler`) pointing at one campaign. One 
 | `last_sent` | int | Unix timestamp of the last occurrence that fired |
 | `override_dnd` | bool | `1` when this schedule replaces the global do-not-disturb threshold |
 | `dnd_threshold` | int | Threshold in seconds used when `override_dnd` is on; `0` means no do-not-disturb check |
+| `test_run` | bool | `1` to send a test run before each occurrence. Absent counts as on |
+| `test_run_days` | int | Days before `next_send` the test run is due, `1`–`30`, default `1` |
+| `test_run_for` | int | The `next_send` last tested, so each occurrence is tested once |
+
+### Test run
+
+With **Send a test run to the campaign's testers before each send** ticked (the default),
+`SchedulerCron::check()` calls `maybeRunTest()` for every active schedule before deciding whether it
+is due. A test run is due from `test_run_days` calendar days before `next_send` (site timezone, same
+time of day) until `next_send` itself, unless `test_run_for` already holds that occurrence or it
+falls after the `end_date`.
+
+```mermaid
+flowchart TD
+    A[SchedulerCron::check] --> B{test_run on and\ndue_at <= now < next_send?}
+    B -- No --> Z[nothing]
+    B -- Yes --> C{test_run_for == next_send?}
+    C -- Yes --> Z
+    C -- No --> D[write test_run_for]
+    D --> E{send condition\nrefuses?}
+    E -- Yes --> F[recordTestRun with reason]
+    E -- No --> G[CronSend::sendTestRun\ntesters only, subject '[Test] …']
+    G --> H[recordTestRun with counts]
+```
+
+`CronSend::sendTestRun()` sends synchronously to the testers in the campaign's audiences
+(`Subscribers::getTestModeSubscribers($audiences, 0)`), renders with `lockTemplate($campaign, true)`
+and has no open-tracking pixel. It leaves the real send untouched: no campaign counters, no
+`campaignStarted`/`campaignFinished`/`backgroundStarted`, only the test-mode `sent_test_{id}` key
+(cleared first), and **no `lastInteraction` stamp** — otherwise the do-not-disturb window would keep
+the testers out of the real send. Testers ignore the do-not-disturb threshold as in a manual test;
+unsubscribed and failing addresses are skipped, and nothing is sent while e-mail sending is off. A
+failed test e-mail is logged as an error and not counted against the address.
+
+The campaign need not be test-approved for a test run; the real send still requires it.
+
 
 ### Do-not-disturb override
 

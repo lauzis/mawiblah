@@ -16,6 +16,11 @@ namespace Mawiblah;
  * A schedule may also override the global do-not-disturb threshold (override_dnd +
  * dnd_threshold): SchedulerCron hands the resolved value to the send it starts, so one
  * schedule can contact subscribers more (or less) often than the site-wide setting allows.
+ *
+ * A schedule may run a test (test_run + test_run_days): that many days before each
+ * occurrence SchedulerCron sends the campaign to its testers in test mode, so the letter
+ * can be looked at while there is still time to fix it. test_run_for remembers which
+ * occurrence was last tested, so each one is tested once.
  */
 class Scheduler
 {
@@ -74,7 +79,40 @@ class Scheduler
         $post->last_sent     = (int) get_post_meta($post->ID, 'last_sent', true);
         $post->override_dnd  = (bool) get_post_meta($post->ID, 'override_dnd', true);
         $post->dnd_threshold = (int) get_post_meta($post->ID, 'dnd_threshold', true);
+        // On unless switched off -- a schedule saved before the setting existed included.
+        $post->test_run      = !metadata_exists('post', $post->ID, 'test_run') || (bool) get_post_meta($post->ID, 'test_run', true);
+        $post->test_run_days = max(1, (int) get_post_meta($post->ID, 'test_run_days', true) ?: self::TEST_RUN_DAYS_DEFAULT);
+        $post->test_run_for  = (int) get_post_meta($post->ID, 'test_run_for', true);
         return $post;
+    }
+
+    /** Days before an occurrence its test run is sent, unless the schedule says otherwise. */
+    const TEST_RUN_DAYS_DEFAULT = 1;
+
+    /** Most days ahead a test run may be set. */
+    const TEST_RUN_DAYS_MAX = 30;
+
+    /**
+     * When the test run for the schedule's next occurrence is due, or 0 for none.
+     *
+     * Counted in calendar days in the site timezone, so a test for a 09:00 send is
+     * sent at 09:00 across a daylight-saving change too.
+     *
+     * @param object $scheduler Scheduler with meta attached.
+     * @return int Unix timestamp.
+     */
+    public static function testRunDueAt(object $scheduler): int
+    {
+        if (empty($scheduler->test_run) || (int) $scheduler->next_send <= 0) {
+            return 0;
+        }
+
+        $days = max(1, (int) $scheduler->test_run_days);
+
+        return (new \DateTimeImmutable('@' . (int) $scheduler->next_send))
+            ->setTimezone(wp_timezone())
+            ->modify("-{$days} days")
+            ->getTimestamp();
     }
 
     /**
@@ -89,9 +127,11 @@ class Scheduler
      * @param string $endDate      Optional YYYY-MM-DD cutoff for recurring schedules; empty = forever.
      * @param bool   $overrideDnd  True to ignore the global do-not-disturb threshold for this schedule.
      * @param int    $dndThreshold Threshold in seconds used when $overrideDnd is true (0 = no do-not-disturb check).
+     * @param bool   $testRun      True to send a test run to the campaign's testers before each occurrence.
+     * @param int    $testRunDays  How many days before each occurrence the test run is sent.
      * @return int|null New post ID or null on failure.
      */
-    public static function add(string $name, int $campaignId, string $scheduleType, string $sendTime, int $sendDay, string $sendDate = '', string $endDate = '', bool $overrideDnd = false, int $dndThreshold = 0): ?int
+    public static function add(string $name, int $campaignId, string $scheduleType, string $sendTime, int $sendDay, string $sendDate = '', string $endDate = '', bool $overrideDnd = false, int $dndThreshold = 0, bool $testRun = true, int $testRunDays = self::TEST_RUN_DAYS_DEFAULT): ?int
     {
         $id = wp_insert_post([
             'post_type'   => self::POST_TYPE,
@@ -115,8 +155,16 @@ class Scheduler
         update_post_meta($id, 'end_date',      sanitize_text_field($endDate));
         update_post_meta($id, 'override_dnd',  $overrideDnd ? 1 : 0);
         update_post_meta($id, 'dnd_threshold', $overrideDnd ? absint($dndThreshold) : 0);
+        update_post_meta($id, 'test_run',      $testRun ? 1 : 0);
+        update_post_meta($id, 'test_run_days', self::clampTestRunDays($testRunDays));
 
         return $id;
+    }
+
+    /** Keeps a test-run lead time between one day and TEST_RUN_DAYS_MAX. */
+    public static function clampTestRunDays(int $days): int
+    {
+        return max(1, min(self::TEST_RUN_DAYS_MAX, $days));
     }
 
     /**
@@ -132,8 +180,10 @@ class Scheduler
      * @param string $endDate      Optional cutoff date.
      * @param bool   $overrideDnd  True to ignore the global do-not-disturb threshold for this schedule.
      * @param int    $dndThreshold Threshold in seconds used when $overrideDnd is true (0 = no do-not-disturb check).
+     * @param bool   $testRun      True to send a test run to the campaign's testers before each occurrence.
+     * @param int    $testRunDays  How many days before each occurrence the test run is sent.
      */
-    public static function update(int $id, string $name, int $campaignId, string $scheduleType, string $sendTime, int $sendDay, string $sendDate = '', string $endDate = '', bool $overrideDnd = false, int $dndThreshold = 0): void
+    public static function update(int $id, string $name, int $campaignId, string $scheduleType, string $sendTime, int $sendDay, string $sendDate = '', string $endDate = '', bool $overrideDnd = false, int $dndThreshold = 0, bool $testRun = true, int $testRunDays = self::TEST_RUN_DAYS_DEFAULT): void
     {
         wp_update_post(['ID' => $id, 'post_title' => sanitize_text_field($name)]);
 
@@ -148,6 +198,8 @@ class Scheduler
         update_post_meta($id, 'end_date',      sanitize_text_field($endDate));
         update_post_meta($id, 'override_dnd',  $overrideDnd ? 1 : 0);
         update_post_meta($id, 'dnd_threshold', $overrideDnd ? absint($dndThreshold) : 0);
+        update_post_meta($id, 'test_run',      $testRun ? 1 : 0);
+        update_post_meta($id, 'test_run_days', self::clampTestRunDays($testRunDays));
     }
 
     /**
@@ -173,14 +225,15 @@ class Scheduler
         wp_delete_post($id, true);
     }
 
-    /** How many past runs a schedule remembers. */
-    const HISTORY_LIMIT = 25;
+    /** How many past runs, test runs included, a schedule remembers. */
+    const HISTORY_LIMIT = 50;
 
     /**
      * The schedule's past runs, newest first.
      *
      * Each entry: started, finished, campaign_id, campaign, sent, failed,
      * skipped, unsubed, and for an occurrence that never sent, skipped_reason.
+     * A test run also carries test (true) and test_for, the occurrence it tested.
      *
      * @param int $schedulerId Scheduler post ID.
      * @return array<int, array<string, mixed>>
@@ -252,12 +305,55 @@ class Scheduler
     }
 
     /**
+     * Records a test run: the campaign sent to its testers ahead of an occurrence.
+     *
+     * A test run is sent there and then, so it goes in closed. Pass a reason when
+     * it sent nothing.
+     *
+     * @param int    $schedulerId    Scheduler post ID.
+     * @param int    $campaignPostId Campaign that was tested.
+     * @param int    $testFor        The occurrence (next_send) it was a test for.
+     * @param int    $started        When the test run began.
+     * @param array  $counts         sent, failed and skipped.
+     * @param string $reason         Why it sent nothing, or empty.
+     * @return void
+     */
+    public static function recordTestRun(int $schedulerId, int $campaignPostId, int $testFor, int $started, array $counts, string $reason = ''): void
+    {
+        $runs = self::getRuns($schedulerId);
+
+        $run = [
+            'started'     => $started,
+            'finished'    => time(),
+            'campaign_id' => $campaignPostId,
+            'campaign'    => get_the_title($campaignPostId),
+            'sent'        => (int) ($counts['sent'] ?? 0),
+            'failed'      => (int) ($counts['failed'] ?? 0),
+            'skipped'     => (int) ($counts['skipped'] ?? 0),
+            'unsubed'     => 0,
+            'test'        => true,
+            'test_for'    => $testFor,
+        ];
+
+        if ($reason !== '') {
+            $run['skipped_reason'] = $reason;
+        }
+
+        array_unshift($runs, $run);
+
+        update_post_meta($schedulerId, 'run_history', array_slice($runs, 0, self::HISTORY_LIMIT));
+    }
+
+    /**
      * Closes the open run for whichever schedule sent this campaign.
      *
      * Called when the campaign finishes, from any path -- a schedule, a manual
      * background send, the browser. Only a run this schedule opened and has not
      * closed is touched, so a hand-started send does not rewrite the history of
      * a scheduled one.
+     *
+     * The open run is not always the newest entry: a test run for the next
+     * occurrence can be recorded while this one is still sending.
      *
      * @param int $campaignPostId Campaign that finished.
      * @return void
@@ -272,16 +368,24 @@ class Scheduler
             }
 
             $runs = self::getRuns($scheduler->id);
+            $open = null;
 
-            if (!$runs || !empty($runs[0]['finished'])) {
+            foreach ($runs as $i => $run) {
+                if (empty($run['test'])) {
+                    $open = empty($run['finished']) ? $i : null;
+                    break;
+                }
+            }
+
+            if ($open === null) {
                 continue;
             }
 
-            $runs[0]['finished'] = time();
-            $runs[0]['sent']     = (int) ($campaign->emailsSend ?? 0);
-            $runs[0]['failed']   = (int) ($campaign->emailsFailed ?? 0);
-            $runs[0]['skipped']  = (int) ($campaign->emailsSkipped ?? 0);
-            $runs[0]['unsubed']  = (int) ($campaign->emailsUnsubed ?? 0);
+            $runs[$open]['finished'] = time();
+            $runs[$open]['sent']     = (int) ($campaign->emailsSend ?? 0);
+            $runs[$open]['failed']   = (int) ($campaign->emailsFailed ?? 0);
+            $runs[$open]['skipped']  = (int) ($campaign->emailsSkipped ?? 0);
+            $runs[$open]['unsubed']  = (int) ($campaign->emailsUnsubed ?? 0);
 
             update_post_meta($scheduler->id, 'run_history', $runs);
         }

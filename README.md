@@ -70,6 +70,26 @@ The initial version was built by hand. From version 1.0.9 onward, most changes h
 
 ## Change log
 
+### --- 1.1.8 ---
+- **New:** a schedule can send a test run before each send. Tick **Send a test run to the
+  campaign's testers before each send** on the schedule form (on by default) and choose how many
+  days ahead (default 1). That many days before each occurrence, at the same time of day, the
+  scheduler check sends the campaign in test mode to the testers in its audiences, with `[Test]`
+  before the subject — so the letter a recurring schedule will send can be looked at while there is
+  still time to change it. Schedules saved before this version have it switched on.
+- The test run leaves the real send alone: no campaign counters, no started/finished state, the
+  test-mode `sent_test_{id}` key only, and the testers' last interaction is not stamped, so the
+  do-not-disturb window does not keep them out of the real send. Unsubscribed and failing
+  addresses are skipped; with e-mail sending off nothing goes out. A send condition that refuses
+  at test time, or audiences with no testers, are recorded as a test run that did not send, with
+  the reason. Each occurrence is tested once (`test_run_for`).
+- Test runs appear in the schedule's history, marked **Test run** with the send they were for.
+  The history now keeps 50 entries instead of 25 so test runs do not halve it.
+- **Fix:** `Scheduler::finishRun()` closed the newest history entry only; it now closes the newest
+  real run even when a test run was recorded above it while the send was still going.
+- The send-condition check moved into `SchedulerCron::sendConditionRefusal()`, shared by the send
+  and the test run. Behaviour and log lines are unchanged.
+
 ### --- 1.1.6 ---
 - **Fix:** a background send could stop halfway, for good. A batch hands over to the next one
   through a single WP-Cron event, and WP-Cron keeps its whole queue in one option: a concurrent

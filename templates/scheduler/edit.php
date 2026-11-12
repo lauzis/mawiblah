@@ -2,6 +2,7 @@
 
 use Mawiblah\Campaigns;
 use Mawiblah\Helpers;
+use Mawiblah\Scheduler;
 use Mawiblah\Settings;
 
 defined('ABSPATH') || exit;
@@ -202,6 +203,33 @@ $globalDndThreshold = max(0, (int) Settings::dontDisturbThreshold());
                     </td>
                 </tr>
 
+                <tr>
+                    <th scope="row">
+                        <label for="scheduler-test-run"><?php esc_html_e('Test Run', 'mawiblah'); ?></label>
+                    </th>
+                    <td>
+                        <label>
+                            <input type="checkbox" id="scheduler-test-run" name="test_run" value="1"
+                                   <?php checked(!$isEdit || $scheduler->test_run); ?>>
+                            <?php esc_html_e('Send a test run to the campaign\'s testers before each send', 'mawiblah'); ?>
+                        </label>
+                        <p class="description"><?php esc_html_e('The campaign is sent in test mode, with "[Test]" before the subject, only to testers in its audiences. Counters, send state and the do-not-disturb window are left alone, so testers still get the real send. The test run appears in the history below.', 'mawiblah'); ?></p>
+                    </td>
+                </tr>
+
+                <tr id="row-test-run-days">
+                    <th scope="row">
+                        <label for="scheduler-test-run-days"><?php esc_html_e('Days before the send', 'mawiblah'); ?></label>
+                    </th>
+                    <td>
+                        <input type="number" id="scheduler-test-run-days" name="test_run_days" step="1"
+                               min="1" max="<?php echo (int) Scheduler::TEST_RUN_DAYS_MAX; ?>"
+                               class="small-text"
+                               value="<?php echo (int) ($isEdit ? $scheduler->test_run_days : Scheduler::TEST_RUN_DAYS_DEFAULT); ?>">
+                        <p class="description"><?php esc_html_e('How many days before each send the test run goes out, at the same time of day. A test run due when the schedule is saved goes out on the next scheduler check.', 'mawiblah'); ?></p>
+                    </td>
+                </tr>
+
                 <tr id="row-end-date">
                     <th scope="row">
                         <label for="scheduler-end-date"><?php esc_html_e('End Date', 'mawiblah'); ?></label>
@@ -268,6 +296,7 @@ $globalDndThreshold = max(0, (int) Settings::dontDisturbThreshold());
                             $runStarted  = (int) ($run['started'] ?? 0);
                             $runFinished = (int) ($run['finished'] ?? 0);
                             $runReason   = $run['skipped_reason'] ?? '';
+                            $runIsTest   = !empty($run['test']);
                             ?>
                             <tr>
                                 <td><?php echo $runStarted ? esc_html(wp_date('Y-m-d H:i', $runStarted, $schedulerTz)) : '—'; ?></td>
@@ -291,6 +320,13 @@ $globalDndThreshold = max(0, (int) Settings::dontDisturbThreshold());
                                 </td>
                                 <td>
                                     <?php
+                                    if ($runIsTest) {
+                                        printf(
+                                            '<strong>%s</strong> ',
+                                            esc_html__('Test run:', 'mawiblah')
+                                        );
+                                    }
+
                                     $runCampaign = (int) ($run['campaign_id'] ?? 0);
                                     $runTitle    = $run['campaign'] ?? '';
                                     if ($runCampaign && get_post_status($runCampaign)) {
@@ -301,6 +337,17 @@ $globalDndThreshold = max(0, (int) Settings::dontDisturbThreshold());
                                         );
                                     } else {
                                         echo esc_html($runTitle ?: '—');
+                                    }
+
+                                    if ($runIsTest && !empty($run['test_for'])) {
+                                        printf(
+                                            '<br><span class="description">%s</span>',
+                                            esc_html(sprintf(
+                                                /* translators: %s: date and time of the send the test run was for */
+                                                __('for the send on %s, to testers only', 'mawiblah'),
+                                                wp_date('Y-m-d H:i', (int) $run['test_for'], $schedulerTz)
+                                            ))
+                                        );
                                     }
 
                                     if ($runReason) {
@@ -324,7 +371,7 @@ $globalDndThreshold = max(0, (int) Settings::dontDisturbThreshold());
                         <?php
                         printf(
                             /* translators: %d: number of runs kept */
-                            esc_html__('The last %d runs are kept. Counts come from the campaign as it finished; a run that sent nothing says why.', 'mawiblah'),
+                            esc_html__('The last %d runs, test runs included, are kept. Counts come from the campaign as it finished; a run that sent nothing says why.', 'mawiblah'),
                             (int) \Mawiblah\Scheduler::HISTORY_LIMIT
                         );
                         ?>
@@ -351,6 +398,9 @@ $globalDndThreshold = max(0, (int) Settings::dontDisturbThreshold());
     var rowDnd        = document.getElementById('row-dnd-threshold');
     var preview       = document.getElementById('scheduler-preview');
     var previewList   = document.getElementById('scheduler-preview-list');
+    var testRun       = document.getElementById('scheduler-test-run');
+    var testRunDays   = document.getElementById('scheduler-test-run-days');
+    var rowTestRun    = document.getElementById('row-test-run-days');
 
     function toggleRows() {
         var type = typeSelect.value;
@@ -449,9 +499,15 @@ $globalDndThreshold = max(0, (int) Settings::dontDisturbThreshold());
             return;
         }
         previewList.innerHTML = '';
+        var days = parseInt(testRunDays.value, 10) || 1;
         dates.forEach(function (d) {
             var li = document.createElement('li');
             li.textContent = formatDate(d);
+            if (testRun.checked) {
+                var t = new Date(d);
+                t.setDate(t.getDate() - days);
+                li.textContent += ' (<?php echo esc_js(__('test run', 'mawiblah')); ?> ' + formatDate(t) + ')';
+            }
             previewList.appendChild(li);
         });
         preview.style.display = '';
@@ -461,8 +517,15 @@ $globalDndThreshold = max(0, (int) Settings::dontDisturbThreshold());
         rowDnd.style.display = overrideDnd.checked ? '' : 'none';
     }
 
+    function toggleTestRunRow() {
+        rowTestRun.style.display = testRun.checked ? '' : 'none';
+        updatePreview();
+    }
+
     typeSelect.addEventListener('change', toggleRows);
     overrideDnd.addEventListener('change', toggleDndRow);
+    testRun.addEventListener('change', toggleTestRunRow);
+    testRunDays.addEventListener('change', updatePreview);
     sendDateInput.addEventListener('change', updatePreview);
     sendTimeInput.addEventListener('change', updatePreview);
     dayWeekSelect.addEventListener('change', updatePreview);
@@ -470,5 +533,6 @@ $globalDndThreshold = max(0, (int) Settings::dontDisturbThreshold());
 
     toggleRows();
     toggleDndRow();
+    toggleTestRunRow();
 }());
 </script>

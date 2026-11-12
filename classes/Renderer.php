@@ -332,11 +332,14 @@ class Renderer
                     $overrideDnd  = !empty($_POST['override_dnd']);
                     $dndThreshold = $overrideDnd ? absint($_POST['dnd_threshold'] ?? 0) : 0;
 
+                    $testRun     = !empty($_POST['test_run']);
+                    $testRunDays = Scheduler::clampTestRunDays(absint($_POST['test_run_days'] ?? Scheduler::TEST_RUN_DAYS_DEFAULT));
+
                     if ($name && $campaignId) {
                         if ($schedulerId) {
-                            Scheduler::update($schedulerId, $name, $campaignId, $scheduleType, $sendTime, $sendDay, $sendDate, $endDate, $overrideDnd, $dndThreshold);
+                            Scheduler::update($schedulerId, $name, $campaignId, $scheduleType, $sendTime, $sendDay, $sendDate, $endDate, $overrideDnd, $dndThreshold, $testRun, $testRunDays);
                         } else {
-                            Scheduler::add($name, $campaignId, $scheduleType, $sendTime, $sendDay, $sendDate, $endDate, $overrideDnd, $dndThreshold);
+                            Scheduler::add($name, $campaignId, $scheduleType, $sendTime, $sendDay, $sendDate, $endDate, $overrideDnd, $dndThreshold, $testRun, $testRunDays);
                         }
                     }
                 }

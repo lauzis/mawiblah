@@ -187,7 +187,8 @@ class SchedulerDontDisturbTest extends WP_UnitTestCase
             gmdate('Y-m-d', time() + 86400),
             '',
             $overrideDnd,
-            $threshold
+            $threshold,
+            false
         );
 
         Scheduler::updateMeta($this->schedulerId, ['next_send' => time() - 60]);

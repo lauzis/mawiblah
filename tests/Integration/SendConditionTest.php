@@ -38,7 +38,7 @@ class SendConditionTest extends WP_UnitTestCase
         $this->campaignId = Campaigns::addCampaign('PHPUnit Send Condition Campaign', 'Subject', 'Title', 'Content', [], 'test-template');
         Campaigns::testApprove($this->campaignId);
 
-        $this->schedulerId = (int) Scheduler::add('PHPUnit Send Condition Schedule', $this->campaignId, 'daily', '09:00', 1);
+        $this->schedulerId = (int) Scheduler::add('PHPUnit Send Condition Schedule', $this->campaignId, 'daily', '09:00', 1, '', '', false, 0, false);
         Scheduler::updateMeta($this->schedulerId, ['next_send' => time() - 60]);
     }
 

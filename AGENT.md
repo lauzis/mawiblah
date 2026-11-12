@@ -35,8 +35,8 @@ MAWIBLAH is a WordPress plugin that provides Mailchimp-like functionality for se
   subscription form's captcha outright, null to let it proceed. The self-tests
   use it so the suite passes on a site with reCAPTCHA on, without touching the
   site's settings.
-- **Run history** - each schedule keeps its last `Scheduler::HISTORY_LIMIT` (25)
-  runs in `run_history` post meta and shows them on its edit screen: started,
+- **Run history** - each schedule keeps its last `Scheduler::HISTORY_LIMIT` (50)
+  runs, test runs included, in `run_history` post meta and shows them on its edit screen: started,
   finished, how long it took, the campaign, and sent/failed/skipped/unsubscribed.
   A campaign's own counters are overwritten by every later send, so a run has to
   be recorded when it happens or it is lost. `startRun()` opens an entry,
@@ -45,7 +45,8 @@ MAWIBLAH is a WordPress plugin that provides Mailchimp-like functionality for se
   occurrence that came due and refused, with the reason.
 - **Scheduler / SchedulerCron** - A scheduler is its own post (`campaign_id`,
   `status`, `schedule_type` once|daily|weekly|monthly, `send_time`, `send_day`,
-  `send_date`, `next_send`, `end_date`, `override_dnd`, `dnd_threshold`). One WP-Cron event,
+  `send_date`, `next_send`, `end_date`, `override_dnd`, `dnd_threshold`, `test_run`,
+  `test_run_days`, `test_run_for`). One WP-Cron event,
   `mawiblah_scheduler_check`, runs at the interval in settings and walks every
   active scheduler: past `next_send` and the campaign is reset, background-sent
   and `next_send` advanced (or the scheduler marked `completed` for a one-off).
@@ -54,6 +55,15 @@ MAWIBLAH is a WordPress plugin that provides Mailchimp-like functionality for se
   running -- **started and not finished**, both halves. Reading
   `backgroundStarted` alone retired a schedule for ever the first time that flag
   outlived its send (fixed in 1.0.41)
+- **Scheduled test run** - with `test_run` on (the default, also for schedules saved
+  before it existed), `SchedulerCron::maybeRunTest()` sends the campaign to its testers
+  `test_run_days` before `next_send` via `CronSend::sendTestRun()`, once per occurrence
+  (`test_run_for`, written before sending). It must not disturb the real send: no counters,
+  no campaign state, `sent_test_{id}` only and **no `lastInteraction` stamp** -- a stamp would
+  put the testers inside the do-not-disturb window for the send they previewed. A failed test
+  e-mail is logged, not passed to `sentEmailFailed()`, which writes the real-send key.
+  Recorded with `Scheduler::recordTestRun()` (`test` => true, `test_for`); `finishRun()`
+  closes the newest *non-test* entry
 - **Stalled background sends** - each batch queues the next through one WP-Cron
   event, and a concurrent cron run writing back an older copy of the `cron` option
   can erase it (1.1.6). `CronSend` stamps `backgroundLastActivity` while it works;
@@ -306,6 +316,7 @@ pinned in `require-dev`; do not raise PHPUnit past `^9.6` without checking wp-ph
 | `tests/Integration/StalledSendTest.php` | A send whose next batch was lost is resumed and finishes without sending anyone twice; a busy, queued, finished or day-old send is left alone; the scheduler check runs the resume |
 | `tests/Integration/SchedulerDontDisturbTest.php` | Per-schedule do-not-disturb override: written for the run, honoured by `CronSend`, removed when the send finishes |
 | `tests/Integration/TestModeDontDisturbTest.php` | A tester in test mode is sent the test e-mail inside the do-not-disturb threshold, and told so; a non-tester in test mode and a tester in the real send are still skipped |
+| `tests/Integration/SchedulerTestRunTest.php` | Scheduled test run: sent to testers only, `[Test]` subject, once per occurrence, at the lead time, leaves counters/send state/last interaction alone, recorded in history; `finishRun()` closes the real run under a test entry |
 | `tests/Integration/SendConditionTest.php` | Send condition field holds a name only: the name rule, the scheduler with a whole shortcode stored, an unregistered condition, save validation and its notices |
 | `tests/Integration/SubscriberTest.php` | Subscriber CRUD, hashes, audience shape |
 | `tests/Integration/SubscriptionFormTest.php` | Subscription form REST endpoint |

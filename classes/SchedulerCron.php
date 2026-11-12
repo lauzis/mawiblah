@@ -18,6 +18,9 @@ namespace Mawiblah;
  *
  * A schedule can also carry its own do-not-disturb threshold; the resolved value is
  * written to the campaign as CronSend::DND_OVERRIDE_META for the duration of that run.
+ *
+ * A schedule with test_run on also gets a test run ahead of each occurrence: the
+ * campaign sent in test mode to its testers, test_run_days before next_send.
  */
 class SchedulerCron
 {
@@ -93,6 +96,8 @@ class SchedulerCron
                 continue;
             }
 
+            self::maybeRunTest($scheduler, $now);
+
             if ($scheduler->next_send <= 0 || $scheduler->next_send > $now) {
                 Logs::addLog('scheduler', "Scheduler #{$scheduler->id}: not due yet", [
                     'next_send' => gmdate('Y-m-d H:i:s', $scheduler->next_send),
@@ -132,70 +137,27 @@ class SchedulerCron
             }
 
             // Custom send-condition shortcode: skip the send if the shortcode returns empty output.
-            $conditionValue = $campaign->send_condition_shortcode ?? '';
-            if (!empty($conditionValue)) {
-                // The field holds a name, but a campaign saved before it was
-                // validated can hold a whole `[name campaign_id="5"]`. Wrapped
-                // again, the stray bracket and attribute text survived the
-                // shortcode's own empty answer, so the condition never said no.
-                $conditionShortcode = Campaigns::sendConditionShortcodeName($conditionValue);
-
-                if ($conditionShortcode === null || !shortcode_exists($conditionShortcode)) {
-                    // An unknown shortcode is printed back as its own text, which
-                    // is not empty -- it would send every time. A condition that
-                    // cannot be asked has not said yes.
-                    $output     = '';
-                    $skipReason = sprintf(
-                        /* translators: %s: the Send Condition Shortcode field value */
-                        __('the send condition [%s] is not a registered shortcode', 'mawiblah'),
-                        $conditionValue
-                    );
-                    Logs::addLog('scheduler', "Scheduler #{$scheduler->id}: send condition [{$conditionValue}] is not a registered shortcode", [
-                        'campaignPostId'           => $campaignPostId,
-                        'send_condition_shortcode' => $conditionValue,
-                        'decision'                 => 'skip',
-                    ]);
-                } else {
-                    $output = trim(do_shortcode("[{$conditionShortcode} campaign_id='{$campaignPostId}']"));
-                    $skipReason = sprintf(
-                        /* translators: %s: shortcode name */
-                        __('the send condition [%s] returned nothing', 'mawiblah'),
-                        $conditionShortcode
-                    );
-
-                    // What the rule answered, whichever way it went. Only its
-                    // refusals were logged, so a schedule with a condition that
-                    // said yes looked exactly like one with no condition at all --
-                    // and a condition that never runs looks the same again.
-                    Logs::addLog('scheduler', "Scheduler #{$scheduler->id}: send condition [{$conditionShortcode}] returned " . ($output === '' ? 'nothing' : '"' . mb_substr($output, 0, 80) . '"'), [
-                        'campaignPostId'           => $campaignPostId,
-                        'send_condition_shortcode' => $conditionShortcode,
-                        'output'                   => mb_substr($output, 0, 200),
-                        'decision'                 => $output === '' ? 'skip' : 'send',
+            $skipReason = self::sendConditionRefusal($scheduler, $campaign);
+            if ($skipReason !== null) {
+                Logs::addLog('scheduler', "Scheduler #{$scheduler->id}: send skipped — custom rule returned empty", [
+                    'campaignPostId'       => $campaignPostId,
+                    'send_condition_shortcode' => $campaign->send_condition_shortcode ?? '',
+                ]);
+                Scheduler::recordSkippedRun(
+                    (int) $scheduler->id,
+                    $campaignPostId,
+                    $skipReason
+                );
+                if ($scheduler->schedule_type !== 'once') {
+                    Scheduler::updateMeta($scheduler->id, [
+                        'next_send' => Scheduler::computeNextSend(
+                            $scheduler->schedule_type,
+                            $scheduler->send_time,
+                            $scheduler->send_day
+                        ),
                     ]);
                 }
-
-                if ($output === '') {
-                    Logs::addLog('scheduler', "Scheduler #{$scheduler->id}: send skipped — custom rule returned empty", [
-                        'campaignPostId'       => $campaignPostId,
-                        'send_condition_shortcode' => $conditionValue,
-                    ]);
-                    Scheduler::recordSkippedRun(
-                        (int) $scheduler->id,
-                        $campaignPostId,
-                        $skipReason
-                    );
-                    if ($scheduler->schedule_type !== 'once') {
-                        Scheduler::updateMeta($scheduler->id, [
-                            'next_send' => Scheduler::computeNextSend(
-                                $scheduler->schedule_type,
-                                $scheduler->send_time,
-                                $scheduler->send_day
-                            ),
-                        ]);
-                    }
-                    continue;
-                }
+                continue;
             }
 
             // If the previous scheduled send is still in progress, skip this occurrence
@@ -279,6 +241,135 @@ class SchedulerCron
             'schedulers' => count($schedulers),
             'triggered'  => $triggered,
             'elapsedMs'  => (int) round((microtime(true) - $started) * 1000),
+        ]);
+    }
+
+    /**
+     * Asks the campaign's send condition whether this occurrence may send.
+     *
+     * @param object $scheduler Scheduler with meta attached.
+     * @param object $campaign  Campaign with meta attached.
+     * @return string|null Why it may not, or null when it may (or there is no condition).
+     */
+    private static function sendConditionRefusal(object $scheduler, object $campaign): ?string
+    {
+        $campaignPostId = (int) $campaign->id;
+        $conditionValue = $campaign->send_condition_shortcode ?? '';
+
+        if (empty($conditionValue)) {
+            return null;
+        }
+
+        // The field holds a name, but a campaign saved before it was
+        // validated can hold a whole `[name campaign_id="5"]`. Wrapped
+        // again, the stray bracket and attribute text survived the
+        // shortcode's own empty answer, so the condition never said no.
+        $conditionShortcode = Campaigns::sendConditionShortcodeName($conditionValue);
+
+        if ($conditionShortcode === null || !shortcode_exists($conditionShortcode)) {
+            // An unknown shortcode is printed back as its own text, which
+            // is not empty -- it would send every time. A condition that
+            // cannot be asked has not said yes.
+            Logs::addLog('scheduler', "Scheduler #{$scheduler->id}: send condition [{$conditionValue}] is not a registered shortcode", [
+                'campaignPostId'           => $campaignPostId,
+                'send_condition_shortcode' => $conditionValue,
+                'decision'                 => 'skip',
+            ]);
+
+            return sprintf(
+                /* translators: %s: the Send Condition Shortcode field value */
+                __('the send condition [%s] is not a registered shortcode', 'mawiblah'),
+                $conditionValue
+            );
+        }
+
+        $output = trim(do_shortcode("[{$conditionShortcode} campaign_id='{$campaignPostId}']"));
+
+        // What the rule answered, whichever way it went. Only its
+        // refusals were logged, so a schedule with a condition that
+        // said yes looked exactly like one with no condition at all --
+        // and a condition that never runs looks the same again.
+        Logs::addLog('scheduler', "Scheduler #{$scheduler->id}: send condition [{$conditionShortcode}] returned " . ($output === '' ? 'nothing' : '"' . mb_substr($output, 0, 80) . '"'), [
+            'campaignPostId'           => $campaignPostId,
+            'send_condition_shortcode' => $conditionShortcode,
+            'output'                   => mb_substr($output, 0, 200),
+            'decision'                 => $output === '' ? 'skip' : 'send',
+        ]);
+
+        if ($output !== '') {
+            return null;
+        }
+
+        return sprintf(
+            /* translators: %s: shortcode name */
+            __('the send condition [%s] returned nothing', 'mawiblah'),
+            $conditionShortcode
+        );
+    }
+
+    /**
+     * Sends the test run for a schedule's next occurrence, if one is due.
+     *
+     * Due from test_run_days before next_send until next_send itself -- past that
+     * the real send is what happens -- and once per occurrence, which test_run_for
+     * remembers. It is marked before anything is sent, so a check running alongside
+     * this one does not send the testers a second copy. An occurrence the send
+     * condition would refuse right now is recorded as a test run that did not send,
+     * with the reason: that is the answer the real send would get if it were due.
+     *
+     * @param object $scheduler Scheduler with meta attached.
+     * @param int    $now       Unix timestamp of this check.
+     * @return void
+     */
+    private static function maybeRunTest(object $scheduler, int $now): void
+    {
+        $dueAt   = Scheduler::testRunDueAt($scheduler);
+        $testFor = (int) $scheduler->next_send;
+
+        if (!$dueAt || $now < $dueAt || $now >= $testFor || (int) $scheduler->test_run_for === $testFor) {
+            return;
+        }
+
+        // An occurrence after the end date will not be sent; neither is its test.
+        if (!empty($scheduler->end_date)) {
+            try {
+                $endDate = new \DateTimeImmutable($scheduler->end_date . ' 23:59:59', wp_timezone());
+                if ($testFor > $endDate->getTimestamp()) {
+                    return;
+                }
+            } catch (\Throwable $e) {
+                // Malformed end_date -- the send ignores it too.
+            }
+        }
+
+        $campaignPostId = (int) $scheduler->campaign_id;
+        $campaign       = $campaignPostId ? Campaigns::getCampaignById($campaignPostId) : null;
+
+        if (!$campaign) {
+            return;
+        }
+
+        Scheduler::updateMeta($scheduler->id, ['test_run_for' => $testFor]);
+
+        $started = time();
+        $reason  = self::sendConditionRefusal($scheduler, $campaign);
+
+        if ($reason !== null) {
+            $result = ['sent' => 0, 'failed' => 0, 'skipped' => 0, 'reason' => $reason];
+        } else {
+            $result = CronSend::sendTestRun($campaignPostId);
+        }
+
+        Scheduler::recordTestRun((int) $scheduler->id, $campaignPostId, $testFor, $started, $result, $result['reason']);
+
+        Logs::addLog('scheduler', "Scheduler #{$scheduler->id}: test run for {$campaign->post_title}", [
+            'schedulerId'    => $scheduler->id,
+            'campaignPostId' => $campaignPostId,
+            'testFor'        => gmdate('Y-m-d H:i:s', $testFor),
+            'sent'           => $result['sent'],
+            'failed'         => $result['failed'],
+            'skipped'        => $result['skipped'],
+            'reason'         => $result['reason'],
         ]);
     }
 }

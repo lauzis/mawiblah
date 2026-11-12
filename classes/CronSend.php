@@ -415,6 +415,112 @@ class CronSend
     }
 
     /**
+     * Sends a campaign to its testers, in test mode, and says what happened.
+     *
+     * A schedule's test run, sent there and then -- testers are a handful, not a
+     * list to batch. It sits between two real sends and must disturb neither, so it
+     * leaves the campaign's counters and started/finished state alone, records each
+     * tester under the test-mode key only, and does not stamp their last interaction:
+     * a test letter that started the do-not-disturb window would keep the testers out
+     * of the real send it was a preview of. As in a manual test, testers ignore the
+     * do-not-disturb threshold; unsubscribed and failing addresses are still skipped.
+     *
+     * @param int $campaignPostId Campaign post ID.
+     * @return array{sent:int, failed:int, skipped:int, reason:string} reason is set when nothing could be sent.
+     */
+    public static function sendTestRun(int $campaignPostId): array
+    {
+        $result   = ['sent' => 0, 'failed' => 0, 'skipped' => 0, 'reason' => ''];
+        $campaign = Campaigns::getCampaignById($campaignPostId);
+
+        if (!$campaign) {
+            $result['reason'] = __('the campaign no longer exists', 'mawiblah');
+            return $result;
+        }
+
+        $testers = Subscribers::getTestModeSubscribers(array_map('intval', (array) ($campaign->audiences ?? [])), 0);
+
+        if (!$testers) {
+            $result['reason'] = __("the campaign's audiences have no testers", 'mawiblah');
+            return $result;
+        }
+
+        $template = Campaigns::lockTemplate($campaign, true);
+        if ($template === false) {
+            $result['reason'] = __('the e-mail template could not be rendered', 'mawiblah');
+            return $result;
+        }
+
+        Subscribers::resetTestSent($campaignPostId);
+
+        $failingEmailAudience = Subscribers::failingEmailAudience();
+        $sendEmails           = Settings::sendEmails();
+        /* translators: %s: campaign e-mail subject */
+        $subject              = sprintf(__('[Test] %s', 'mawiblah'), $campaign->subject);
+
+        foreach ($testers as $subscriber) {
+            if ($subscriber->unsubed) {
+                $result['skipped']++;
+                self::logSkip($campaignPostId, $subscriber, 'test run: unsubscribed');
+                continue;
+            }
+
+            if ($failingEmailAudience
+                && has_term($failingEmailAudience->term_id, Subscribers::postType() . '_category', $subscriber->id)) {
+                $result['skipped']++;
+                self::logSkip($campaignPostId, $subscriber, 'test run: in the failing-email audience');
+                continue;
+            }
+
+            if (!$sendEmails) {
+                $result['skipped']++;
+                self::logSkip($campaignPostId, $subscriber, 'test run: e-mail sending is switched off in settings');
+                continue;
+            }
+
+            $emailBody  = Campaigns::fillTemplate($template, $campaign, $subscriber);
+            $unsubToken = Subscribers::getUnsubToken($subscriber->id, $subscriber->email);
+            $unsubUrl   = add_query_arg([
+                'subscriber' => $subscriber->subscriberHash,
+                'token'      => $unsubToken,
+                'campaign'   => $campaign->campaignHash,
+            ], rest_url('mawiblah/v1/unsubscribe'));
+
+            $emailHeaders = array_merge([
+                'Content-Type: text/html; charset=UTF-8',
+                'List-Unsubscribe: <' . $unsubUrl . '>',
+                'List-Unsubscribe-Post: List-Unsubscribe=One-Click',
+            ], BounceParser::trackingHeaders((string) $campaign->campaignHash, (string) $subscriber->subscriberHash));
+
+            $mailerError      = '';
+            $captureMailError = static function (\WP_Error $error) use (&$mailerError): void {
+                $mailerError = $error->get_error_message();
+            };
+            add_action('wp_mail_failed', $captureMailError);
+
+            $sent = wp_mail($subscriber->email, $subject, $emailBody, $emailHeaders);
+
+            remove_action('wp_mail_failed', $captureMailError);
+
+            if ($sent) {
+                $result['sent']++;
+                Subscribers::markCampaignProcessed($subscriber->id, $campaignPostId, true);
+            } else {
+                // Not sentEmailFailed(): that writes the real-send key, and the
+                // real send would then pass this tester over.
+                $result['failed']++;
+                Logs::addError('scheduler', "Test run e-mail to {$subscriber->email} failed: {$campaign->post_title}", [
+                    'campaignPostId' => $campaignPostId,
+                    'subscriberId'   => $subscriber->id,
+                    'error'          => $mailerError ?: 'wp_mail returned false',
+                ]);
+            }
+        }
+
+        return $result;
+    }
+
+    /**
      * Resolves the do-not-disturb threshold for this run: the schedule's override when one
      * was written for the campaign, otherwise the global setting.
      *

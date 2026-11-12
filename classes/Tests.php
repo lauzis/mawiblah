@@ -939,7 +939,7 @@ class Tests
         );
 
         self::echoTitle('Schedule stores the override');
-        $sId = Scheduler::add('DND Override Test Schedule', $cId, 'weekly', '09:00', 1, '', '', true, $scheduleThreshold);
+        $sId = Scheduler::add('DND Override Test Schedule', $cId, 'weekly', '09:00', 1, '', '', true, $scheduleThreshold, false);
         $scheduler = Scheduler::getById((int) $sId);
         $ok = $scheduler && $scheduler->override_dnd && $scheduler->dnd_threshold === $scheduleThreshold;
         self::echoResult(
@@ -973,7 +973,7 @@ class Tests
         );
 
         self::echoTitle('Turning the override off clears the stored threshold');
-        Scheduler::update((int) $sId, 'DND Override Test Schedule', $cId, 'weekly', '09:00', 1, '', '', false, $scheduleThreshold);
+        Scheduler::update((int) $sId, 'DND Override Test Schedule', $cId, 'weekly', '09:00', 1, '', '', false, $scheduleThreshold, false);
         $scheduler = Scheduler::getById((int) $sId);
         $ok = $scheduler && !$scheduler->override_dnd && $scheduler->dnd_threshold === 0;
         self::echoResult(
@@ -1010,7 +1010,7 @@ class Tests
         update_post_meta($cId, 'testApproved', time());
 
         // Due a minute ago, so the next check picks it up.
-        $sId = Scheduler::add('Send Condition Test Schedule', $cId, 'daily', '09:00', 1, '', '', false, 0);
+        $sId = Scheduler::add('Send Condition Test Schedule', $cId, 'daily', '09:00', 1, '', '', false, 0, false);
         Scheduler::updateMeta((int) $sId, ['next_send' => time() - 60]);
 
         self::echoTitle('The shortcode is called with the campaign id');

@@ -219,13 +219,15 @@ class ShortCodes
             return '';
         }
 
-        $campaign = Campaigns::getCampaignById($campaignId);
-        if (!$campaign || empty($campaign->campaignFinished)) {
+        // A scheduled campaign is sent as run campaigns of its own, so its last send
+        // is the newest of theirs, not its own campaignFinished.
+        $lastFinished = Campaigns::lastFinished($campaignId);
+        if (!$lastFinished) {
             // No previous send recorded — allow the send so the first occurrence always goes out.
             return 'yes';
         }
 
-        $since = date('Y-m-d H:i:s', (int) $campaign->campaignFinished);
+        $since = date('Y-m-d H:i:s', $lastFinished);
 
         $posts = get_posts([
             'post_type'      => 'post',

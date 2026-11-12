@@ -15,7 +15,7 @@ use WP_UnitTestCase;
  * Covers the per-schedule do-not-disturb override: a schedule may contact subscribers on
  * its own threshold rather than the site-wide one, and only for the run it started.
  *
- * SchedulerCron writes the resolved threshold to the campaign as
+ * SchedulerCron writes the resolved threshold to the run campaign it sends as
  * CronSend::DND_OVERRIDE_META, CronSend reads it in place of the global setting, and the
  * meta is dropped when the send finishes — these tests assert all three.
  */
@@ -28,6 +28,8 @@ class SchedulerDontDisturbTest extends WP_UnitTestCase
     private int $campaignId  = 0;
     private int $audienceId  = 0;
     private int $schedulerId = 0;
+    /** The run campaign the schedule's occurrence was sent as. */
+    private int $runId       = 0;
     private array $subscriberIds = [];
     private $loopbackStub = null;
 
@@ -66,6 +68,12 @@ class SchedulerDontDisturbTest extends WP_UnitTestCase
         CronSend::unschedule($this->campaignId);
         $this->removeArchive();
 
+        if ($this->runId) {
+            CronSend::unschedule($this->runId);
+            Campaigns::deleteCampaign($this->runId);
+            $this->runId = 0;
+        }
+
         if ($this->schedulerId) {
             Scheduler::delete($this->schedulerId);
             $this->schedulerId = 0;
@@ -97,19 +105,19 @@ class SchedulerDontDisturbTest extends WP_UnitTestCase
         $this->runSchedule(false, 0);
 
         $this->assertFalse(
-            metadata_exists('post', $this->campaignId, CronSend::DND_OVERRIDE_META),
+            metadata_exists('post', $this->runId, CronSend::DND_OVERRIDE_META),
             'A schedule with the override off must not leave a threshold on the campaign.'
         );
         $this->assertSame(
             self::GLOBAL_SECONDS,
-            CronSend::doNotDisturbThreshold($this->campaignId),
+            CronSend::doNotDisturbThreshold($this->runId),
             'Without an override the global setting decides.'
         );
 
         $sent = $this->processBatch();
 
         $this->assertSame([], $sent, 'The global threshold should have held this subscriber back.');
-        $this->assertSame('sent', get_post_meta($recent, 'sent_' . $this->campaignId, true));
+        $this->assertSame('sent', get_post_meta($recent, 'sent_' . $this->runId, true));
     }
 
     public function test_an_override_replaces_the_global_threshold_for_that_send(): void
@@ -123,9 +131,9 @@ class SchedulerDontDisturbTest extends WP_UnitTestCase
 
         $this->assertSame(
             self::SCHEDULE_SECONDS,
-            (int) get_post_meta($this->campaignId, CronSend::DND_OVERRIDE_META, true)
+            (int) get_post_meta($this->runId, CronSend::DND_OVERRIDE_META, true)
         );
-        $this->assertSame(self::SCHEDULE_SECONDS, CronSend::doNotDisturbThreshold($this->campaignId));
+        $this->assertSame(self::SCHEDULE_SECONDS, CronSend::doNotDisturbThreshold($this->runId));
 
         $sent = $this->processBatch();
 
@@ -134,8 +142,8 @@ class SchedulerDontDisturbTest extends WP_UnitTestCase
             $sent,
             'The schedule threshold should have released the subscriber the global one blocked.'
         );
-        $this->assertSame('sent', get_post_meta($inside, 'sent_' . $this->campaignId, true));
-        $this->assertSame('sent', get_post_meta($outside, 'sent_' . $this->campaignId, true));
+        $this->assertSame('sent', get_post_meta($inside, 'sent_' . $this->runId, true));
+        $this->assertSame('sent', get_post_meta($outside, 'sent_' . $this->runId, true));
     }
 
     public function test_the_override_is_removed_once_the_send_finishes(): void
@@ -143,18 +151,18 @@ class SchedulerDontDisturbTest extends WP_UnitTestCase
         $this->addSubscriber('dnd-finish@mawiblah.test', time() - 600);
 
         $this->runSchedule(true, self::SCHEDULE_SECONDS);
-        $this->assertTrue(metadata_exists('post', $this->campaignId, CronSend::DND_OVERRIDE_META));
+        $this->assertTrue(metadata_exists('post', $this->runId, CronSend::DND_OVERRIDE_META));
 
         $this->processBatch();
 
         $this->assertFalse(
-            metadata_exists('post', $this->campaignId, CronSend::DND_OVERRIDE_META),
+            metadata_exists('post', $this->runId, CronSend::DND_OVERRIDE_META),
             'The per-run override outlived the send it belonged to.'
         );
-        $this->assertNotEmpty(get_post_meta($this->campaignId, 'campaignFinished', true));
+        $this->assertNotEmpty(get_post_meta($this->runId, 'campaignFinished', true));
         $this->assertSame(
             self::GLOBAL_SECONDS,
-            CronSend::doNotDisturbThreshold($this->campaignId),
+            CronSend::doNotDisturbThreshold($this->runId),
             'A later send must fall back to the global setting.'
         );
     }
@@ -166,8 +174,13 @@ class SchedulerDontDisturbTest extends WP_UnitTestCase
         $this->runSchedule(false, 0);
 
         $this->assertFalse(
-            metadata_exists('post', $this->campaignId, CronSend::DND_OVERRIDE_META),
-            'A leftover override must be cleared when the schedule no longer asks for one.'
+            metadata_exists('post', $this->runId, CronSend::DND_OVERRIDE_META),
+            'A run started with the override off must not carry a threshold.'
+        );
+        $this->assertSame(
+            self::GLOBAL_SECONDS,
+            CronSend::doNotDisturbThreshold($this->runId),
+            'Without an override the run uses the global setting.'
         );
     }
 
@@ -195,9 +208,16 @@ class SchedulerDontDisturbTest extends WP_UnitTestCase
 
         SchedulerCron::check();
 
+        $this->runId = (int) Scheduler::getById($this->schedulerId)->last_run_campaign_id;
+
+        $this->assertNotSame(0, $this->runId, 'The occurrence was not sent as a run campaign of its own.');
         $this->assertNotEmpty(
-            get_post_meta($this->campaignId, 'backgroundStarted', true),
+            get_post_meta($this->runId, 'backgroundStarted', true),
             'SchedulerCron did not start the scheduled send.'
+        );
+        $this->assertEmpty(
+            get_post_meta($this->campaignId, 'backgroundStarted', true),
+            'The schedule\'s own campaign was sent instead of a copy.'
         );
     }
 
@@ -215,7 +235,7 @@ class SchedulerDontDisturbTest extends WP_UnitTestCase
         };
 
         add_filter('pre_wp_mail', $capture, 10, 2);
-        CronSend::processBatch($this->campaignId);
+        CronSend::processBatch($this->runId);
         remove_filter('pre_wp_mail', $capture, 10);
 
         return $sent;
@@ -233,20 +253,18 @@ class SchedulerDontDisturbTest extends WP_UnitTestCase
         return (int) $subscriber->id;
     }
 
-    private function archivePath(): string
+    private function archivePath(int $campaignId): string
     {
-        return MAWIBLAH_PLUGIN_DIR . '/email_templates/archived/' . $this->campaignId . '_' . self::TEMPLATE . '.html';
+        return MAWIBLAH_PLUGIN_DIR . '/email_templates/archived/' . $campaignId . '_' . self::TEMPLATE . '.html';
     }
 
-    /** Removes the snapshot Templates::copyTemplate() writes, so a run leaves no files behind. */
+    /** Removes the snapshots Templates::copyTemplate() writes, so a run leaves no files behind. */
     private function removeArchive(): void
     {
-        if (!$this->campaignId) {
-            return;
-        }
-
-        if (file_exists($this->archivePath())) {
-            unlink($this->archivePath());
+        foreach ([$this->campaignId, $this->runId] as $campaignId) {
+            if ($campaignId && file_exists($this->archivePath($campaignId))) {
+                unlink($this->archivePath($campaignId));
+            }
         }
 
         $dir = MAWIBLAH_PLUGIN_DIR . '/email_templates/archived';

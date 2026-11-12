@@ -801,10 +801,15 @@ define('MAWIBLAH_BOUNCE_PASS', '…');</pre>
 
             <h3 style="margin-top:24px;"><?php esc_html_e('How recurring sends work', 'mawiblah'); ?></h3>
             <p>
-                <?php esc_html_e('Each time a schedule fires, the campaign\'s send state is fully reset so that all current subscribers receive the email — regardless of whether they received a previous scheduled send of the same campaign. The live subscriber list on the campaign at fire time is used (no snapshots).', 'mawiblah'); ?>
+                <?php esc_html_e('Each time a schedule fires, its campaign is copied into a new campaign for that send, titled with the send\'s date and time, and the copy is sent to all current subscribers of the campaign\'s audiences (the live list at fire time, no snapshots). Every send therefore has its own counts, clicks, opens and stats page, listed in the campaign list as "Scheduled send" and linked from the schedule\'s history. The schedule\'s own campaign is not sent and not changed — edit it to change what future sends say.', 'mawiblah'); ?>
             </p>
             <p>
                 <?php esc_html_e('Normal sending rules still apply: do-not-disturb threshold, unsubscribed flag, failing-email audience, and email-sending enabled/disabled setting.', 'mawiblah'); ?>
+            </p>
+
+            <h3 style="margin-top:24px;"><?php esc_html_e('Changing the text of the next send', 'mawiblah'); ?></h3>
+            <p>
+                <?php esc_html_e('Under "Next send only" on the schedule you can give the next send its own subject, content title ([mawiblah_title]) and content ([mawiblah_content]). Filled-in fields replace the campaign\'s in that send and its test run; empty fields keep the campaign\'s own, shown greyed out as a hint. After that send goes out the fields are cleared, and the following send uses the campaign\'s text again. If an occurrence does not send (its send condition said no, or the previous send was still running), the text waits for the next one.', 'mawiblah'); ?>
             </p>
 
             <h3 style="margin-top:24px;"><?php esc_html_e('Test run before each send', 'mawiblah'); ?></h3>

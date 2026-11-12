@@ -70,6 +70,8 @@ Technically yes, but it is not recommended. The plugin sends emails individually
 == Changelog ==
 
 = 1.1.9 =
+*   Change: each scheduled send is a campaign of its own (a copy of the schedule's campaign, titled with the send date), so every send keeps its own counts, clicks and stats instead of overwriting the previous one's.
+*   New: "Next send only" on a schedule replaces the subject, content title and content of the next send and its test run, then clears itself. The campaign is not changed.
 *   New: a scheduled test run. A schedule can send the campaign in test mode to its testers a set number of days before each send (default on, 1 day); the subject is prefixed with "[Test]".
 *   The test run does not touch counters, send state or the testers' do-not-disturb window, so testers still get the real send.
 *   Test runs are listed in the schedule history; the history keeps 50 entries.

@@ -55,6 +55,19 @@ MAWIBLAH is a WordPress plugin that provides Mailchimp-like functionality for se
   running -- **started and not finished**, both halves. Reading
   `backgroundStarted` alone retired a schedule for ever the first time that flag
   outlived its send (fixed in 1.0.41)
+- **Run campaigns** (1.1.9) - each occurrence is sent as a campaign of its own:
+  `Scheduler::prepareRunCampaign()` copies the schedule's campaign (title `Source — Y-m-d H:i`,
+  meta `scheduler_id`, `source_campaign_id`, `scheduled_for`, `testApproved` from the source),
+  made by the test run and re-synced until it starts sending; the schedule keeps it in
+  `run_campaign_id`, then `last_run_campaign_id` once sent (`runSent()`). The source campaign is
+  never sent or reset by a schedule (`resetCampaignForResend()` and `rerender_on_recurring` are no
+  longer used by it). `finishRun()` finds the schedule by the run's `scheduler_id`, falling back to
+  `campaign_id` for runs started before 1.1.9. A refused occurrence deletes its unsent copy
+  (`discardPreparedRun()`). `Campaigns::lastFinished()` is the newest finish of a campaign and its
+  runs -- what "since the last send" means for a scheduled campaign.
+- **Next-send overrides** (1.1.9) - `next_subject`, `next_content_title`, `next_content` on the
+  schedule (`setNextOverrides()`; content through `wp_kses_post`) replace the source's on the run
+  campaign and are cleared by `runSent()`. Kept through occurrences that do not send.
 - **Scheduled test run** - with `test_run` on (the default, also for schedules saved
   before it existed), `SchedulerCron::maybeRunTest()` sends the campaign to its testers
   `test_run_days` before `next_send` via `CronSend::sendTestRun()`, once per occurrence

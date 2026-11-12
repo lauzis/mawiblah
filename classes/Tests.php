@@ -1020,12 +1020,14 @@ class Tests
         update_post_meta($cId, 'send_condition_shortcode', 'mawiblah_test_condition_yes');
         SchedulerCron::check();
 
-        $campaign = Campaigns::getCampaignById($cId);
-        $started  = !empty($campaign->backgroundStarted);
+        // The occurrence is sent as a run campaign of its own.
+        $runId    = (int) Scheduler::getById((int) $sId)->last_run_campaign_id;
+        $run      = $runId ? Campaigns::getCampaignById($runId) : null;
+        $started  = $run && !empty($run->backgroundStarted);
         self::echoResult(
-            $started ? 'The campaign was reset and a background send started' : 'The send did not start',
+            $started ? "A background send of run campaign #{$runId} started" : 'The send did not start',
             $started ? 'success' : 'error',
-            $started ? null : ['backgroundStarted' => $campaign->backgroundStarted ?? null]
+            $started ? null : ['runCampaignId' => $runId, 'backgroundStarted' => $run->backgroundStarted ?? null]
         );
 
         $runs = Scheduler::getRuns((int) $sId);
@@ -1036,11 +1038,13 @@ class Tests
             $recorded ? null : $runs
         );
 
-        // Put the campaign back to rest before the second half.
-        CronSend::unschedule($cId);
-        Campaigns::backgroundSendStop($cId);
-        delete_post_meta($cId, 'campaignStarted');
-        delete_post_meta($cId, 'campaignFinished');
+        // Put the schedule back to rest before the second half: a run still
+        // sending would be skipped as "still running" rather than by the condition.
+        if ($runId) {
+            CronSend::unschedule($runId);
+            Campaigns::deleteCampaign($runId);
+        }
+        delete_post_meta($sId, 'last_run_campaign_id');
         delete_post_meta($sId, 'run_history');
         Scheduler::updateMeta((int) $sId, ['next_send' => time() - 60]);
 
@@ -1049,8 +1053,7 @@ class Tests
         update_post_meta($cId, 'send_condition_shortcode', 'mawiblah_test_condition_no');
         SchedulerCron::check();
 
-        $campaign = Campaigns::getCampaignById($cId);
-        $blocked  = empty($campaign->backgroundStarted);
+        $blocked  = !Scheduler::getById((int) $sId)->last_run_campaign_id;
         self::echoResult(
             $blocked ? 'No send was started' : 'The send started even though the condition returned nothing',
             $blocked ? 'success' : 'error'
@@ -1105,8 +1108,7 @@ class Tests
         update_post_meta($cId, 'send_condition_shortcode', '[mawiblah_test_condition_no campaign_id="' . $cId . '"]');
         SchedulerCron::check();
 
-        $campaign = Campaigns::getCampaignById($cId);
-        $blocked  = empty($campaign->backgroundStarted);
+        $blocked  = !Scheduler::getById((int) $sId)->last_run_campaign_id;
         self::echoResult(
             $blocked ? 'No send was started' : 'The send started: the brackets and attributes in the field were wrapped a second time',
             $blocked ? 'success' : 'error',
@@ -1121,10 +1123,9 @@ class Tests
         update_post_meta($cId, 'send_condition_shortcode', 'mawiblah_test_condition_missing');
         SchedulerCron::check();
 
-        $campaign = Campaigns::getCampaignById($cId);
         $runs     = Scheduler::getRuns((int) $sId);
         $reason   = $runs[0]['skipped_reason'] ?? '';
-        $ok       = empty($campaign->backgroundStarted) && str_contains($reason, 'mawiblah_test_condition_missing');
+        $ok       = !Scheduler::getById((int) $sId)->last_run_campaign_id && str_contains($reason, 'mawiblah_test_condition_missing');
         self::echoResult(
             $ok ? "History says: {$reason}" : 'An unknown shortcode did not stop the send',
             $ok ? 'success' : 'error',

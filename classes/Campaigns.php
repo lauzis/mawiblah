@@ -13,6 +13,15 @@ class Campaigns
     const STAT_LINKS_CLICKED = 'linksClicked';
     const STAT_EMAILS_OPENED = 'emailsOpened';
 
+    /** On a run campaign (one occurrence of a schedule, see Scheduler): the schedule. */
+    const RUN_SCHEDULER_META = 'scheduler_id';
+
+    /** On a run campaign: the campaign it was copied from. */
+    const RUN_SOURCE_META = 'source_campaign_id';
+
+    /** On a run campaign: the occurrence (Unix timestamp) it was made for. */
+    const RUN_FOR_META = 'scheduled_for';
+
     /** Transient prefix, per user, for notices about the Send Condition Shortcode just saved. */
     const SEND_CONDITION_NOTICE = 'mawiblah_send_condition_notice_';
 
@@ -271,6 +280,33 @@ class Campaigns
     }
 
     /**
+     * When the campaign was last sent out: its own finish or that of the newest run
+     * campaign copied from it, whichever is later.
+     *
+     * @param int $campaignPostId Campaign post ID.
+     * @return int Unix timestamp, or 0 when it has never finished a send.
+     */
+    public static function lastFinished(int $campaignPostId): int
+    {
+        $finished = [(int) get_post_meta($campaignPostId, 'campaignFinished', true)];
+
+        $runs = get_posts([
+            'post_type'      => self::postType(),
+            'post_status'    => 'any',
+            'posts_per_page' => -1,
+            'fields'         => 'ids',
+            'meta_key'       => self::RUN_SOURCE_META,
+            'meta_value'     => $campaignPostId,
+        ]);
+
+        foreach ($runs as $runId) {
+            $finished[] = (int) get_post_meta($runId, 'campaignFinished', true);
+        }
+
+        return max($finished);
+    }
+
+    /**
      * Creates a copy of a campaign with "(Copy)" appended to the title.
      * Copies subject, contentTitle, content, audiences, and template. Workflow state is not copied.
      *
@@ -466,6 +502,8 @@ class Campaigns
         // Default true: empty meta (never saved) is treated as enabled.
         $post->rerender_on_recurring        = get_post_meta($post->id, 'rerender_on_recurring', true) !== '0';
         $post->send_condition_shortcode     = get_post_meta($post->id, 'send_condition_shortcode', true) ?: '';
+        $post->scheduler_id                 = (int) get_post_meta($post->id, self::RUN_SCHEDULER_META, true);
+        $post->source_campaign_id           = (int) get_post_meta($post->id, self::RUN_SOURCE_META, true);
 
         if (!$post->campaignHash) {
             $post->campaignHash = Helpers::generateCampaignHash($post->id);

@@ -71,6 +71,22 @@ The initial version was built by hand. From version 1.0.9 onward, most changes h
 ## Change log
 
 ### --- 1.1.9 ---
+- **Change:** each scheduled send is a campaign of its own. When an occurrence (or its test run)
+  comes due, the schedule copies its campaign into a run campaign titled with the send's date
+  and sends that, so every send keeps its own sent/failed/skipped counts, clicks, opens and stats
+  page. Before, every occurrence reset and re-sent the one campaign, and each send overwrote the
+  last one's numbers. The schedule's own campaign is never sent or reset now; the schedule history
+  links each run to its campaign, and the campaign list marks run campaigns **Scheduled send**.
+  The "previous send still running" check looks at the last run campaign, and the
+  `mawiblah_new_posts_since_last_sent` send condition counts the newest run's finish as the last
+  send (`Campaigns::lastFinished()`).
+- **New:** a schedule can change the text of its next send. Under **Next send only** on the
+  schedule form: subject, content title (`[mawiblah_title]`) and content (`[mawiblah_content]`).
+  Filled-in fields replace the campaign's on the next send's run campaign and its test run; empty
+  ones keep the campaign's own (shown as the placeholder). They are cleared once that send goes
+  out, so the occurrence after it is the campaign's own text again. The campaign is not changed.
+  An occurrence that does not send (refused by its condition, previous send still running) keeps
+  the text for the next one, and its test run's run campaign is deleted.
 - **New:** a schedule can send a test run before each send. Tick **Send a test run to the
   campaign's testers before each send** on the schedule form (on by default) and choose how many
   days ahead (default 1). That many days before each occurrence, at the same time of day, the

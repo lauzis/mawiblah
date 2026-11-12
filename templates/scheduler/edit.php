@@ -9,6 +9,8 @@ defined('ABSPATH') || exit;
 
 $isEdit = isset($scheduler) && $scheduler->id;
 $globalDndThreshold = max(0, (int) Settings::dontDisturbThreshold());
+// Its text shows as the placeholder of the next-send fields: what an empty field sends.
+$scheduledCampaign = $isEdit ? Campaigns::getCampaignById((int) $scheduler->campaign_id) : null;
 ?>
 <div class="wrap mawiblah">
 
@@ -49,7 +51,9 @@ $globalDndThreshold = max(0, (int) Settings::dontDisturbThreshold());
                     <td>
                         <?php
                         $campaigns = Campaigns::getCampaigns();
-                        $approvedCampaigns = array_filter($campaigns, fn($c) => !empty($c->testApproved));
+                        // A schedule's own sends are campaigns too; scheduling one of
+                        // those would copy a copy.
+                        $approvedCampaigns = array_filter($campaigns, fn($c) => !empty($c->testApproved) && empty($c->scheduler_id));
                         ?>
                         <select id="scheduler-campaign" name="campaign_id" required>
                             <option value=""><?php esc_html_e('— Select a campaign —', 'mawiblah'); ?></option>
@@ -238,6 +242,58 @@ $globalDndThreshold = max(0, (int) Settings::dontDisturbThreshold());
                         <input type="date" id="scheduler-end-date" name="end_date"
                                value="<?php echo $isEdit ? esc_attr($scheduler->end_date) : ''; ?>">
                         <p class="description"><?php esc_html_e('Optional. Leave empty to repeat forever. For recurring schedules only.', 'mawiblah'); ?></p>
+                    </td>
+                </tr>
+
+                <tr>
+                    <th scope="row" colspan="2" style="padding-bottom:0;">
+                        <h2 style="margin:8px 0 0;"><?php esc_html_e('Next send only', 'mawiblah'); ?></h2>
+                        <p class="description" style="font-weight:normal;">
+                            <?php
+                            if ($isEdit && $scheduler->next_send > 0) {
+                                printf(
+                                    /* translators: %s: date and time of the schedule's next send */
+                                    esc_html__('Replaces the campaign\'s text in the next send (%s) and its test run. Empty fields keep the campaign\'s own. Cleared after that send goes out; the campaign itself is not changed.', 'mawiblah'),
+                                    esc_html(wp_date('Y-m-d H:i', (int) $scheduler->next_send, wp_timezone()))
+                                );
+                            } else {
+                                esc_html_e('Replaces the campaign\'s text in the next send and its test run. Empty fields keep the campaign\'s own. Cleared after that send goes out; the campaign itself is not changed.', 'mawiblah');
+                            }
+                            ?>
+                        </p>
+                    </th>
+                </tr>
+
+                <tr>
+                    <th scope="row">
+                        <label for="scheduler-next-subject"><?php esc_html_e('Subject', 'mawiblah'); ?></label>
+                    </th>
+                    <td>
+                        <input type="text" id="scheduler-next-subject" name="next_subject" class="large-text"
+                               value="<?php echo $isEdit ? esc_attr($scheduler->next_subject) : ''; ?>"
+                               placeholder="<?php echo esc_attr($isEdit && $scheduledCampaign ? $scheduledCampaign->subject : ''); ?>">
+                    </td>
+                </tr>
+
+                <tr>
+                    <th scope="row">
+                        <label for="scheduler-next-content-title"><?php esc_html_e('Content Title', 'mawiblah'); ?></label>
+                    </th>
+                    <td>
+                        <input type="text" id="scheduler-next-content-title" name="next_content_title" class="large-text"
+                               value="<?php echo $isEdit ? esc_attr($scheduler->next_content_title) : ''; ?>"
+                               placeholder="<?php echo esc_attr($isEdit && $scheduledCampaign ? $scheduledCampaign->contentTitle : ''); ?>">
+                    </td>
+                </tr>
+
+                <tr>
+                    <th scope="row">
+                        <label for="scheduler-next-content"><?php esc_html_e('Content', 'mawiblah'); ?></label>
+                    </th>
+                    <td>
+                        <textarea id="scheduler-next-content" name="next_content" class="large-text" rows="6"
+                                  placeholder="<?php echo esc_attr($isEdit && $scheduledCampaign ? wp_strip_all_tags($scheduledCampaign->post_content) : ''); ?>"><?php echo $isEdit ? esc_textarea($scheduler->next_content) : ''; ?></textarea>
+                        <p class="description"><?php esc_html_e('The paragraph the template shows with [mawiblah_content]. HTML is allowed.', 'mawiblah'); ?></p>
                     </td>
                 </tr>
 

@@ -13,8 +13,9 @@ namespace Mawiblah;
  *   - once    — status is set to 'completed'.
  *   - daily / weekly / monthly — next_send is advanced to the next occurrence.
  *
- * Campaigns are reset before each scheduled send so all subscribers receive
- * the email regardless of prior sends for the same campaign.
+ * Each occurrence is sent as a run campaign of its own, copied from the
+ * schedule's campaign (Scheduler::prepareRunCampaign()), with the schedule's
+ * next-send overrides applied. The schedule's campaign is never sent or reset.
  *
  * A schedule can also carry its own do-not-disturb threshold; the resolved value is
  * written to the campaign as CronSend::DND_OVERRIDE_META for the duration of that run.
@@ -133,6 +134,7 @@ class SchedulerCron
                 if ($campaign) {
                     Scheduler::recordSkippedRun((int) $scheduler->id, $campaignPostId, __('the campaign has not been test-approved', 'mawiblah'));
                 }
+                Scheduler::discardPreparedRun($scheduler);
                 continue;
             }
 
@@ -148,6 +150,7 @@ class SchedulerCron
                     $campaignPostId,
                     $skipReason
                 );
+                Scheduler::discardPreparedRun($scheduler);
                 if ($scheduler->schedule_type !== 'once') {
                     Scheduler::updateMeta($scheduler->id, [
                         'next_send' => Scheduler::computeNextSend(
@@ -168,9 +171,20 @@ class SchedulerCron
             // alone made a flag that outlived its send -- and one does, if a
             // batch aborts after the campaign finished -- silently retire the
             // schedule: every occurrence after it was skipped, for ever.
-            if (!empty($campaign->backgroundStarted) && empty($campaign->campaignFinished)) {
-                Logs::addLog('scheduler', "Scheduler #{$scheduler->id}: previous send still in progress, skipping this occurrence", ['campaignPostId' => $campaignPostId]);
+            //
+            // The previous send is the last run campaign. The campaign itself is
+            // checked too: a send started from it before runs had campaigns of their
+            // own, or by hand, goes to the same subscribers.
+            $lastRun = $scheduler->last_run_campaign_id ? Campaigns::getCampaignById((int) $scheduler->last_run_campaign_id) : null;
+            $stillSending = static fn($c) => $c && !empty($c->backgroundStarted) && empty($c->campaignFinished);
+
+            if ($stillSending($campaign) || $stillSending($lastRun)) {
+                Logs::addLog('scheduler', "Scheduler #{$scheduler->id}: previous send still in progress, skipping this occurrence", [
+                    'campaignPostId' => $campaignPostId,
+                    'lastRun'        => (int) $scheduler->last_run_campaign_id,
+                ]);
                 Scheduler::recordSkippedRun((int) $scheduler->id, $campaignPostId, __('the previous send was still running', 'mawiblah'));
+                Scheduler::discardPreparedRun($scheduler);
                 if ($scheduler->schedule_type !== 'once') {
                     Scheduler::updateMeta($scheduler->id, [
                         'next_send' => Scheduler::computeNextSend(
@@ -183,6 +197,16 @@ class SchedulerCron
                 continue;
             }
 
+            // The occurrence is sent as a campaign of its own, so its counters and
+            // clicks are not overwritten by the next one. Nobody has been sent a
+            // new campaign, so there is no send state to reset.
+            $runId = Scheduler::prepareRunCampaign($scheduler);
+            if (!$runId) {
+                Logs::addError('scheduler', "Scheduler #{$scheduler->id}: could not create the run campaign", ['campaignPostId' => $campaignPostId]);
+                Scheduler::recordSkippedRun((int) $scheduler->id, $campaignPostId, __('the campaign for this send could not be created', 'mawiblah'));
+                continue;
+            }
+
             // Hand this run its do-not-disturb threshold. The override belongs to the
             // schedule, not to the campaign, so it is written per run and dropped again
             // when the send finishes -- a schedule whose override was switched off falls
@@ -190,27 +214,27 @@ class SchedulerCron
             if ($scheduler->override_dnd) {
                 $dndThreshold = (int) $scheduler->dnd_threshold;
                 $dndSource    = 'schedule';
-                update_post_meta($campaignPostId, CronSend::DND_OVERRIDE_META, $dndThreshold);
+                update_post_meta($runId, CronSend::DND_OVERRIDE_META, $dndThreshold);
             } else {
                 $dndThreshold = (int) Settings::dontDisturbThreshold();
                 $dndSource    = 'global';
-                CronSend::clearDoNotDisturbOverride($campaignPostId);
+                CronSend::clearDoNotDisturbOverride($runId);
             }
 
-            Scheduler::startRun((int) $scheduler->id, $campaignPostId);
-
-            // Reset campaign so every subscriber is treated as unsent
-            Scheduler::resetCampaignForResend($campaignPostId, $scheduler->schedule_type);
+            Scheduler::startRun((int) $scheduler->id, $runId);
 
             // Trigger a background (cron-driven) send
-            Campaigns::backgroundSendStart($campaignPostId);
-            CronSend::schedule($campaignPostId);
+            Campaigns::backgroundSendStart($runId);
+            CronSend::schedule($runId);
+
+            Scheduler::runSent($scheduler, $runId);
 
             $triggered++;
 
-            Logs::addLog('scheduler', "Scheduled campaign started: {$campaign->post_title}", [
+            Logs::addLog('scheduler', "Scheduled campaign started: " . get_the_title($runId), [
                 'schedulerId'    => $scheduler->id,
                 'campaignPostId' => $campaignPostId,
+                'runCampaignId'  => $runId,
                 'campaign'       => $campaign->post_title,
                 'scheduleType'   => $scheduler->schedule_type,
                 'dndThreshold'   => $dndThreshold,
@@ -353,18 +377,28 @@ class SchedulerCron
 
         $started = time();
         $reason  = self::sendConditionRefusal($scheduler, $campaign);
+        $testedId = $campaignPostId;
 
         if ($reason !== null) {
             $result = ['sent' => 0, 'failed' => 0, 'skipped' => 0, 'reason' => $reason];
         } else {
-            $result = CronSend::sendTestRun($campaignPostId);
+            // The testers see the occurrence's own campaign, overrides and all --
+            // the letter that will go out, not the one it was copied from.
+            $runId = Scheduler::prepareRunCampaign($scheduler);
+            if ($runId) {
+                $testedId = $runId;
+                $result   = CronSend::sendTestRun($runId);
+            } else {
+                $result = ['sent' => 0, 'failed' => 0, 'skipped' => 0, 'reason' => __('the campaign for this send could not be created', 'mawiblah')];
+            }
         }
 
-        Scheduler::recordTestRun((int) $scheduler->id, $campaignPostId, $testFor, $started, $result, $result['reason']);
+        Scheduler::recordTestRun((int) $scheduler->id, $testedId, $testFor, $started, $result, $result['reason']);
 
         Logs::addLog('scheduler', "Scheduler #{$scheduler->id}: test run for {$campaign->post_title}", [
             'schedulerId'    => $scheduler->id,
             'campaignPostId' => $campaignPostId,
+            'runCampaignId'  => $testedId,
             'testFor'        => gmdate('Y-m-d H:i:s', $testFor),
             'sent'           => $result['sent'],
             'failed'         => $result['failed'],

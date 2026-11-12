@@ -21,6 +21,18 @@ namespace Mawiblah;
  * occurrence SchedulerCron sends the campaign to its testers in test mode, so the letter
  * can be looked at while there is still time to fix it. test_run_for remembers which
  * occurrence was last tested, so each one is tested once.
+ *
+ * Each occurrence is sent as a campaign of its own -- a run campaign, copied from the
+ * schedule's campaign when the occurrence (or its test run) comes due -- so every send
+ * keeps its own counters, clicks and stats instead of overwriting the last one's. The
+ * copy carries Campaigns::RUN_SCHEDULER_META, RUN_SOURCE_META and RUN_FOR_META; the
+ * schedule remembers the copy prepared for next_send in run_campaign_id and the last
+ * one sent in last_run_campaign_id.
+ *
+ * A schedule may replace the subject, the content title and the content of its next
+ * send (next_subject, next_content_title, next_content). They are written onto the run
+ * campaign, so the source campaign is never changed, and cleared once a send has gone
+ * out: the occurrence after it is the campaign's own text again.
  */
 class Scheduler
 {
@@ -83,7 +95,134 @@ class Scheduler
         $post->test_run      = !metadata_exists('post', $post->ID, 'test_run') || (bool) get_post_meta($post->ID, 'test_run', true);
         $post->test_run_days = max(1, (int) get_post_meta($post->ID, 'test_run_days', true) ?: self::TEST_RUN_DAYS_DEFAULT);
         $post->test_run_for  = (int) get_post_meta($post->ID, 'test_run_for', true);
+        $post->next_subject       = (string) get_post_meta($post->ID, 'next_subject', true);
+        $post->next_content_title = (string) get_post_meta($post->ID, 'next_content_title', true);
+        $post->next_content       = (string) get_post_meta($post->ID, 'next_content', true);
+        $post->run_campaign_id      = (int) get_post_meta($post->ID, 'run_campaign_id', true);
+        $post->last_run_campaign_id = (int) get_post_meta($post->ID, 'last_run_campaign_id', true);
         return $post;
+    }
+
+    /**
+     * Sets what the schedule's next send says instead of its campaign; an empty value
+     * leaves the campaign's own.
+     *
+     * @param int    $id           Scheduler post ID.
+     * @param string $subject      E-mail subject.
+     * @param string $contentTitle Content title ([mawiblah_title]).
+     * @param string $content      Content ([mawiblah_content]).
+     */
+    public static function setNextOverrides(int $id, string $subject, string $contentTitle, string $content): void
+    {
+        update_post_meta($id, 'next_subject',       sanitize_text_field($subject));
+        update_post_meta($id, 'next_content_title', sanitize_text_field($contentTitle));
+        update_post_meta($id, 'next_content',       wp_kses_post(trim($content)));
+    }
+
+    /** True when the schedule's next send replaces anything of its campaign's. */
+    public static function hasNextOverrides(object $scheduler): bool
+    {
+        return trim($scheduler->next_subject ?? '') !== ''
+            || trim($scheduler->next_content_title ?? '') !== ''
+            || trim($scheduler->next_content ?? '') !== '';
+    }
+
+    /**
+     * The campaign the schedule's next occurrence is sent as, created or brought up to date.
+     *
+     * A copy of the schedule's campaign, made for next_send: its title says which send it
+     * is, and the schedule's overrides replace the subject, content title and content. It is
+     * made by the test run when there is one and sent by the occurrence itself, and synced
+     * from the source each time until it starts sending, so a change made to the campaign or
+     * the overrides after the test run still reaches the real send.
+     *
+     * @param object $scheduler Scheduler with meta attached.
+     * @return int Run campaign post ID, or 0 when the schedule's campaign is gone.
+     */
+    public static function prepareRunCampaign(object $scheduler): int
+    {
+        $source = Campaigns::getCampaignById((int) $scheduler->campaign_id);
+        if (!$source) {
+            return 0;
+        }
+
+        $runId = (int) $scheduler->run_campaign_id;
+
+        // A copy left over from another occurrence -- the schedule's time was changed
+        // after its test run -- is not this one's; unsent, it is just in the way.
+        if ($runId && (int) get_post_meta($runId, Campaigns::RUN_FOR_META, true) !== (int) $scheduler->next_send) {
+            self::discardPreparedRun($scheduler);
+            $runId = 0;
+        }
+
+        // One that has started sending is history, never rewritten.
+        if ($runId && (!get_post_status($runId) || get_post_meta($runId, 'campaignStarted', true))) {
+            $runId = 0;
+        }
+
+        $title = sprintf(
+            '%s — %s',
+            $source->post_title,
+            wp_date('Y-m-d H:i', (int) $scheduler->next_send, wp_timezone())
+        );
+        $subject      = trim($scheduler->next_subject ?? '') !== '' ? $scheduler->next_subject : (string) $source->subject;
+        $contentTitle = trim($scheduler->next_content_title ?? '') !== '' ? $scheduler->next_content_title : (string) $source->contentTitle;
+        $content      = trim($scheduler->next_content ?? '') !== '' ? $scheduler->next_content : (string) $source->post_content;
+        $audiences    = array_map('intval', (array) $source->audiences);
+
+        if ($runId) {
+            Campaigns::updateCampaign($runId, $title, $subject, $contentTitle, $content, $audiences, (string) $source->template);
+        } else {
+            $runId = Campaigns::addCampaign($title, $subject, $contentTitle, $content, $audiences, (string) $source->template);
+            if (!$runId || is_wp_error($runId)) {
+                return 0;
+            }
+        }
+
+        update_post_meta($runId, Campaigns::RUN_SCHEDULER_META, (int) $scheduler->id);
+        update_post_meta($runId, Campaigns::RUN_SOURCE_META, (int) $source->id);
+        update_post_meta($runId, Campaigns::RUN_FOR_META, (int) $scheduler->next_send);
+        // The source passed its test; the copy is the same letter.
+        update_post_meta($runId, 'testApproved', $source->testApproved);
+        update_post_meta($scheduler->id, 'run_campaign_id', $runId);
+        $scheduler->run_campaign_id = $runId;
+
+        return $runId;
+    }
+
+    /**
+     * Deletes the run campaign prepared for the next occurrence, if it never started sending.
+     *
+     * For an occurrence that does not send (refused, or the previous one still running): its
+     * test run's copy would otherwise sit in the campaign list as a send that never happened.
+     *
+     * @param object $scheduler Scheduler with meta attached.
+     */
+    public static function discardPreparedRun(object $scheduler): void
+    {
+        $runId = (int) $scheduler->run_campaign_id;
+
+        if ($runId && get_post_status($runId) && !get_post_meta($runId, 'campaignStarted', true)
+            && (int) get_post_meta($runId, Campaigns::RUN_SCHEDULER_META, true) === (int) $scheduler->id) {
+            Campaigns::deleteCampaign($runId);
+        }
+
+        delete_post_meta($scheduler->id, 'run_campaign_id');
+        $scheduler->run_campaign_id = 0;
+    }
+
+    /**
+     * Records that the run campaign has started sending: it becomes the last run, and the
+     * overrides, which were for this send only, are cleared.
+     *
+     * @param object $scheduler Scheduler with meta attached.
+     * @param int    $runId     Run campaign post ID.
+     */
+    public static function runSent(object $scheduler, int $runId): void
+    {
+        update_post_meta($scheduler->id, 'last_run_campaign_id', $runId);
+        delete_post_meta($scheduler->id, 'run_campaign_id');
+        self::setNextOverrides((int) $scheduler->id, '', '', '');
     }
 
     /** Days before an occurrence its test run is sent, unless the schedule says otherwise. */
@@ -362,8 +501,13 @@ class Scheduler
     {
         $campaign = Campaigns::getCampaignById($campaignPostId);
 
+        // A run campaign names its schedule. Otherwise the campaign is a schedule's own:
+        // a run started before runs had campaigns of their own, or a hand-started send,
+        // which finds no open run and changes nothing.
+        $runOf = (int) get_post_meta($campaignPostId, Campaigns::RUN_SCHEDULER_META, true);
+
         foreach (self::getAll() as $scheduler) {
-            if ((int) $scheduler->campaign_id !== $campaignPostId) {
+            if ($runOf ? (int) $scheduler->id !== $runOf : (int) $scheduler->campaign_id !== $campaignPostId) {
                 continue;
             }
 
@@ -470,6 +614,9 @@ class Scheduler
 
     /**
      * Clears a campaign's send state so SchedulerCron can trigger a fresh background send.
+     *
+     * No longer called by SchedulerCron, which sends each occurrence as a run campaign of
+     * its own (prepareRunCampaign()) and so has no send state to clear.
      *
      * Removes campaignStarted, campaignFinished, and backgroundStarted timestamps, then
      * deletes the sent_{id} meta from every subscriber across the campaign's audiences.

@@ -42,7 +42,16 @@ use Mawiblah\Helpers;
         foreach ($campaigns as $campaign) {
             echo "<tr>";
             echo "<td>" . esc_html($campaign->id) . "</td>";
-            echo "<td>" . esc_html($campaign->post_title) . "</td>";
+            echo "<td>" . esc_html($campaign->post_title);
+            // One occurrence of a schedule, sent as a campaign of its own.
+            if (!empty($campaign->scheduler_id)) {
+                echo '<br><span class="description">' . esc_html(sprintf(
+                    /* translators: %s: schedule name */
+                    __('Scheduled send: %s', 'mawiblah'),
+                    get_the_title($campaign->scheduler_id) ?: '#' . $campaign->scheduler_id
+                )) . '</span>';
+            }
+            echo "</td>";
             echo "<td>" . esc_html($campaign->subject) . "</td>";
             echo "<td>" . esc_html($campaign->template) . "</td>";
             $audienceNames = [];

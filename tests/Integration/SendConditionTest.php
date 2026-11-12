@@ -45,12 +45,23 @@ class SendConditionTest extends WP_UnitTestCase
     public function tearDown(): void
     {
         CronSend::unschedule($this->campaignId);
+        $runId = $this->startedRun();
+        if ($runId) {
+            CronSend::unschedule($runId);
+            Campaigns::deleteCampaign($runId);
+        }
         Scheduler::delete($this->schedulerId);
         Campaigns::deleteCampaign($this->campaignId);
         delete_transient(Campaigns::SEND_CONDITION_NOTICE . get_current_user_id());
         $_POST = [];
 
         parent::tearDown();
+    }
+
+    /** The run campaign the schedule's occurrence was sent as, or 0 when nothing was sent. */
+    private function startedRun(): int
+    {
+        return (int) Scheduler::getById($this->schedulerId)->last_run_campaign_id;
     }
 
     public function fieldValues(): array
@@ -84,7 +95,7 @@ class SendConditionTest extends WP_UnitTestCase
 
         SchedulerCron::check();
 
-        $this->assertEmpty(get_post_meta($this->campaignId, 'backgroundStarted', true), 'The send started with no new post since the last one.');
+        $this->assertSame(0, $this->startedRun(), 'The send started with no new post since the last one.');
         $this->assertStringContainsString('mawiblah_new_posts_since_last_sent', $this->lastSkipReason());
         $this->assertStringNotContainsString('campaign_id', $this->lastSkipReason());
     }
@@ -97,7 +108,8 @@ class SendConditionTest extends WP_UnitTestCase
 
         SchedulerCron::check();
 
-        $this->assertNotEmpty(get_post_meta($this->campaignId, 'backgroundStarted', true), 'A post published since the last send did not let the send through.');
+        $this->assertNotSame(0, $this->startedRun(), 'A post published since the last send did not let the send through.');
+        $this->assertNotEmpty(get_post_meta($this->startedRun(), 'backgroundStarted', true));
     }
 
     public function testAConditionThatIsNotARegisteredShortcodeBlocksTheSend(): void
@@ -106,7 +118,7 @@ class SendConditionTest extends WP_UnitTestCase
 
         SchedulerCron::check();
 
-        $this->assertEmpty(get_post_meta($this->campaignId, 'backgroundStarted', true), 'An unknown shortcode, printed back as text, let the send through.');
+        $this->assertSame(0, $this->startedRun(), 'An unknown shortcode, printed back as text, let the send through.');
         $this->assertStringContainsString('not a registered shortcode', $this->lastSkipReason());
         $this->assertGreaterThan(time(), Scheduler::getById($this->schedulerId)->next_send, 'The schedule did not move on to its next occurrence.');
     }

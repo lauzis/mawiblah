@@ -16,6 +16,10 @@ use WP_UnitTestCase;
  * sent in test mode to its testers, once, and recorded in the schedule's history --
  * without touching the counters, send state or do-not-disturb window the real send
  * depends on.
+ *
+ * Also covers what both are sent as: each occurrence is a run campaign of its own,
+ * copied from the schedule's campaign with the schedule's next-send overrides, made
+ * by the test run and sent by the occurrence.
  */
 class SchedulerTestRunTest extends WP_UnitTestCase
 {
@@ -76,6 +80,14 @@ class SchedulerTestRunTest extends WP_UnitTestCase
         }
 
         if ($this->schedulerId) {
+            foreach ($this->runCampaigns() as $runId) {
+                CronSend::unschedule($runId);
+                $runArchive = MAWIBLAH_PLUGIN_DIR . '/email_templates/archived/' . $runId . '_' . self::TEMPLATE . '.html';
+                if (file_exists($runArchive)) {
+                    unlink($runArchive);
+                }
+                Campaigns::deleteCampaign($runId);
+            }
             Scheduler::delete($this->schedulerId);
         }
         wp_delete_post($this->testerId, true);
@@ -96,8 +108,12 @@ class SchedulerTestRunTest extends WP_UnitTestCase
         $this->assertSame('tester-run@mawiblah.test', $this->sent[0]['to']);
         $this->assertStringStartsWith('[Test] ', $this->sent[0]['subject']);
 
-        $this->assertTrue(Subscribers::isEmailSent($this->testerId, $this->campaignId, true));
-        $this->assertFalse(Subscribers::isEmailSent($this->testerId, $this->campaignId, false), 'The test run marked the tester as sent for the real send.');
+        $runs  = Scheduler::getRuns($this->schedulerId);
+        $runId = (int) $runs[0]['campaign_id'];
+        $this->assertNotSame($this->campaignId, $runId, 'The test run sent the schedule\'s own campaign, not the occurrence\'s.');
+
+        $this->assertTrue(Subscribers::isEmailSent($this->testerId, $runId, true));
+        $this->assertFalse(Subscribers::isEmailSent($this->testerId, $runId, false), 'The test run marked the tester as sent for the real send.');
         $this->assertEmpty(get_post_meta($this->testerId, 'lastInteraction', true), 'The test run started the do-not-disturb window.');
 
         $campaign = Campaigns::getCampaignById($this->campaignId);
@@ -105,7 +121,8 @@ class SchedulerTestRunTest extends WP_UnitTestCase
         $this->assertEmpty($campaign->backgroundStarted);
         $this->assertNotEmpty($campaign->campaignFinished);
 
-        $runs = Scheduler::getRuns($this->schedulerId);
+        $this->assertEmpty(get_post_meta($runId, 'backgroundStarted', true), 'The test run started the real send.');
+
         $this->assertCount(1, $runs);
         $this->assertTrue($runs[0]['test']);
         $this->assertSame($nextSend, $runs[0]['test_for']);
@@ -189,6 +206,134 @@ class SchedulerTestRunTest extends WP_UnitTestCase
         $this->assertTrue($runs[0]['test']);
         $this->assertNotEmpty($runs[1]['finished'], 'The real run was left open behind the test run.');
         $this->assertSame(42, $runs[1]['sent']);
+    }
+
+    public function testTheOccurrenceIsSentAsACampaignOfItsOwnWithTheOverrides(): void
+    {
+        $this->schedule(true, 1, HOUR_IN_SECONDS);
+        Scheduler::setNextOverrides($this->schedulerId, 'Only this time', 'A special title', '<p>A special paragraph.</p>');
+
+        SchedulerCron::check();
+
+        $this->assertSame('[Test] Only this time', $this->sent[0]['subject'], 'The test run did not carry the next-send subject.');
+        $testedId = (int) Scheduler::getRuns($this->schedulerId)[0]['campaign_id'];
+
+        // The occurrence comes due: it sends the copy the testers were sent.
+        $due = time() - 60;
+        Scheduler::updateMeta($this->schedulerId, ['next_send' => $due]);
+        update_post_meta($testedId, Campaigns::RUN_FOR_META, $due);
+        SchedulerCron::check();
+
+        $scheduler = Scheduler::getById($this->schedulerId);
+        $runId     = $scheduler->last_run_campaign_id;
+        $run       = Campaigns::getCampaignById($runId);
+
+        $this->assertSame($testedId, $runId, 'The real send was not the campaign the testers were sent.');
+        $this->assertNotEmpty($run->backgroundStarted);
+        $this->assertSame('Only this time', $run->subject);
+        $this->assertSame('A special title', $run->contentTitle);
+        $this->assertSame('<p>A special paragraph.</p>', $run->post_content);
+        $this->assertSame($this->schedulerId, $run->scheduler_id);
+        $this->assertSame($this->campaignId, $run->source_campaign_id);
+
+        $source = Campaigns::getCampaignById($this->campaignId);
+        $this->assertSame('Weekly digest', $source->subject, 'The schedule\'s campaign was changed.');
+        $this->assertSame('Body', $source->post_content);
+        $this->assertEmpty($source->backgroundStarted, 'The schedule\'s campaign was sent.');
+
+        $this->assertFalse(Scheduler::hasNextOverrides($scheduler), 'The overrides outlived the send they were for.');
+        $this->assertSame(0, $scheduler->run_campaign_id);
+        $this->assertSame($runId, (int) Scheduler::getRuns($this->schedulerId)[0]['campaign_id'], 'History does not point at the run campaign.');
+    }
+
+    public function testEachOccurrenceIsACampaignOfItsOwn(): void
+    {
+        $this->schedule(false, 1, HOUR_IN_SECONDS);
+
+        Scheduler::updateMeta($this->schedulerId, ['next_send' => time() - 120]);
+        SchedulerCron::check();
+        $first = Scheduler::getById($this->schedulerId)->last_run_campaign_id;
+        Campaigns::campaignFinish($first);
+        Campaigns::backgroundSendStop($first);
+
+        Scheduler::updateMeta($this->schedulerId, ['next_send' => time() - 60]);
+        SchedulerCron::check();
+        $second = Scheduler::getById($this->schedulerId)->last_run_campaign_id;
+
+        $this->assertNotSame(0, $first);
+        $this->assertNotSame(0, $second);
+        $this->assertNotSame($first, $second, 'Two occurrences were counted on one campaign.');
+        $this->assertSame([$second, $first], array_map('intval', array_column(Scheduler::getRuns($this->schedulerId), 'campaign_id')));
+    }
+
+    public function testASendStillRunningOnTheLastRunSkipsTheNextOccurrence(): void
+    {
+        $this->schedule(false, 1, HOUR_IN_SECONDS);
+
+        Scheduler::updateMeta($this->schedulerId, ['next_send' => time() - 120]);
+        SchedulerCron::check();
+        $first = Scheduler::getById($this->schedulerId)->last_run_campaign_id;
+
+        Scheduler::updateMeta($this->schedulerId, ['next_send' => time() - 60]);
+        SchedulerCron::check();
+
+        $this->assertSame($first, Scheduler::getById($this->schedulerId)->last_run_campaign_id, 'A second send started while the first was still going.');
+        $this->assertStringContainsString('still running', Scheduler::getRuns($this->schedulerId)[0]['skipped_reason'] ?? '');
+    }
+
+    public function testARefusedOccurrenceDiscardsTheCopyItsTestRunMade(): void
+    {
+        $this->schedule(true, 1, HOUR_IN_SECONDS);
+        SchedulerCron::check();
+        $testedId = (int) Scheduler::getRuns($this->schedulerId)[0]['campaign_id'];
+
+        add_shortcode('mawiblah_phpunit_refuse', fn() => '');
+        update_post_meta($this->campaignId, 'send_condition_shortcode', 'mawiblah_phpunit_refuse');
+        Scheduler::updateMeta($this->schedulerId, ['next_send' => time() - 60]);
+        SchedulerCron::check();
+
+        $this->assertFalse(get_post_status($testedId), 'A send that never happened was left in the campaign list.');
+        $this->assertSame(0, Scheduler::getById($this->schedulerId)->run_campaign_id);
+    }
+
+    public function testAFinishedRunCampaignClosesItsRun(): void
+    {
+        $this->schedule(false, 1, HOUR_IN_SECONDS);
+        Scheduler::updateMeta($this->schedulerId, ['next_send' => time() - 60]);
+        SchedulerCron::check();
+        $runId = Scheduler::getById($this->schedulerId)->last_run_campaign_id;
+        update_post_meta($runId, 'emailsSend', 7);
+
+        Scheduler::finishRun($runId);
+
+        $runs = Scheduler::getRuns($this->schedulerId);
+        $this->assertNotEmpty($runs[0]['finished']);
+        $this->assertSame(7, $runs[0]['sent'], 'The run took its counts from the wrong campaign.');
+    }
+
+    public function testTheLastSendIsTheNewestRunCampaignsFinish(): void
+    {
+        $this->schedule(false, 1, HOUR_IN_SECONDS);
+        Scheduler::updateMeta($this->schedulerId, ['next_send' => time() - 60]);
+        SchedulerCron::check();
+        $runId = Scheduler::getById($this->schedulerId)->last_run_campaign_id;
+        $finished = time() - 60;
+        update_post_meta($runId, 'campaignFinished', $finished);
+
+        $this->assertSame($finished, Campaigns::lastFinished($this->campaignId));
+    }
+
+    /** Run campaigns this test's schedule made. */
+    private function runCampaigns(): array
+    {
+        return get_posts([
+            'post_type'      => Campaigns::postType(),
+            'post_status'    => 'any',
+            'posts_per_page' => -1,
+            'fields'         => 'ids',
+            'meta_key'       => Campaigns::RUN_SCHEDULER_META,
+            'meta_value'     => $this->schedulerId,
+        ]);
     }
 
     /** A weekly schedule whose next occurrence is $sendIn seconds away. */

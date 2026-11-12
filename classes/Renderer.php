@@ -339,7 +339,19 @@ class Renderer
                         if ($schedulerId) {
                             Scheduler::update($schedulerId, $name, $campaignId, $scheduleType, $sendTime, $sendDay, $sendDate, $endDate, $overrideDnd, $dndThreshold, $testRun, $testRunDays);
                         } else {
-                            Scheduler::add($name, $campaignId, $scheduleType, $sendTime, $sendDay, $sendDate, $endDate, $overrideDnd, $dndThreshold, $testRun, $testRunDays);
+                            $schedulerId = Scheduler::add($name, $campaignId, $scheduleType, $sendTime, $sendDay, $sendDate, $endDate, $overrideDnd, $dndThreshold, $testRun, $testRunDays);
+                        }
+
+                        // What the next send says instead of the campaign. Sanitised
+                        // in setNextOverrides(); the content may carry HTML, like the
+                        // campaign's own.
+                        if ($schedulerId) {
+                            Scheduler::setNextOverrides(
+                                (int) $schedulerId,
+                                wp_unslash($_POST['next_subject'] ?? ''),
+                                wp_unslash($_POST['next_content_title'] ?? ''),
+                                wp_unslash($_POST['next_content'] ?? '')
+                            );
                         }
                     }
                 }

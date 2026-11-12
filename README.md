@@ -70,7 +70,7 @@ The initial version was built by hand. From version 1.0.9 onward, most changes h
 
 ## Change log
 
-### --- 1.1.8 ---
+### --- 1.1.9 ---
 - **New:** a schedule can send a test run before each send. Tick **Send a test run to the
   campaign's testers before each send** on the schedule form (on by default) and choose how many
   days ahead (default 1). That many days before each occurrence, at the same time of day, the
@@ -89,6 +89,17 @@ The initial version was built by hand. From version 1.0.9 onward, most changes h
   real run even when a test run was recorded above it while the send was still going.
 - The send-condition check moved into `SchedulerCron::sendConditionRefusal()`, shared by the send
   and the test run. Behaviour and log lines are unchanged.
+
+### --- 1.1.8 ---
+- **Change:** click tracking no longer uses a PHP session. The tracked link already names the
+  campaign and the subscriber, so who clicked what is now kept on the campaign (`clicked_by`,
+  `clicked_link` post meta) and `uniqueUserClicks`, `linksClicked` and the subscriber's
+  `activity` count once per subscriber, whichever browser or device the letter is opened on.
+  Before, they counted once per browser session: the same subscriber opening the letter on
+  their phone and then on their laptop was two unique users, and a session from one campaign
+  hid the first click in the next. The session also put a `PHPSESSID` cookie and `no-store`
+  headers on the page, which keeps it out of a page cache. `resetCounters()` clears the new
+  meta with the counters. Numbers from earlier sends stay as they were counted.
 
 ### --- 1.1.6 ---
 - **Fix:** a background send could stop halfway, for good. A batch hands over to the next one

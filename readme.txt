@@ -3,7 +3,7 @@ Contributors: lauzis
 Tags: email, newsletter, marketing, mailchimp alternative, subscribers
 Requires at least: 5.0
 Tested up to: 6.9
-Stable tag: 1.1.8
+Stable tag: 1.1.9
 Requires PHP: 8.0
 License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl.html
@@ -69,7 +69,7 @@ Technically yes, but it is not recommended. The plugin sends emails individually
 
 == Changelog ==
 
-= 1.1.8 =
+= 1.1.9 =
 *   New: a scheduled test run. A schedule can send the campaign in test mode to its testers a set number of days before each send (default on, 1 day); the subject is prefixed with "[Test]".
 *   The test run does not touch counters, send state or the testers' do-not-disturb window, so testers still get the real send.
 *   Test runs are listed in the schedule history; the history keeps 50 entries.

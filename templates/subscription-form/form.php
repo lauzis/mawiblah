@@ -64,5 +64,39 @@
 <?php if ($recaptcha && $recaptchaVersion === 'v3'): ?>
     <script src="https://www.google.com/recaptcha/api.js?render=<?= esc_attr($siteKey) ?>"></script>
 <?php elseif ($recaptcha && $recaptchaVersion === 'v2'): ?>
-    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+    <?php
+    // The v2 widget is ~360 KB and a third-party cookie, and this form usually
+    // sits at the foot of the page. Fetch Google's script once a widget nears
+    // the viewport or the form is touched; api.js then renders every
+    // .g-recaptcha on the page by itself. Printed once even with several forms.
+    if (empty($GLOBALS['mawiblah_recaptcha_loader'])) :
+        $GLOBALS['mawiblah_recaptcha_loader'] = true; ?>
+    <script>
+    (function () {
+        var loaded = false;
+        function load() {
+            if (loaded) { return; }
+            loaded = true;
+            var s = document.createElement('script');
+            s.src = 'https://www.google.com/recaptcha/api.js';
+            s.async = true;
+            document.head.appendChild(s);
+        }
+        function init() {
+            var widgets = document.querySelectorAll('.g-recaptcha');
+            if (!widgets.length) { return; }
+            if (!('IntersectionObserver' in window)) { load(); return; }
+            var io = new IntersectionObserver(function (entries) {
+                if (entries.some(function (e) { return e.isIntersecting; })) { io.disconnect(); load(); }
+            }, { rootMargin: '600px 0px' });
+            widgets.forEach(function (w) {
+                io.observe(w);
+                var form = w.closest('form');
+                if (form) { form.addEventListener('focusin', load, { once: true }); }
+            });
+        }
+        if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', init); } else { init(); }
+    })();
+    </script>
+    <?php endif; ?>
 <?php endif; ?>

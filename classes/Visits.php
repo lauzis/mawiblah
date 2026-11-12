@@ -22,9 +22,10 @@ class Visits
     /**
      * Records a link click for a campaign and subscriber.
      *
-     * Increments the campaign total-click and per-URL counters and the subscriber activity counter.
-     * Stores campaign/subscriber/URL state in the PHP session so subsequent calls on the same
-     * page load are counted correctly (total always increments; unique-per-session counts only once).
+     * Increments the campaign total-click and per-URL counters and the subscriber activity
+     * counters. The first click of a subscriber in a campaign, and on each URL, is
+     * remembered on the campaign (see Campaigns::linkCLicked()), so the unique counts hold
+     * whichever browser or device the subscriber opens the letter on.
      *
      * @param string $campaignHash   Campaign identifier hash.
      * @param string $subscriberHash Subscriber identifier hash.
@@ -32,15 +33,9 @@ class Visits
      */
     public static function visit(string $campaignHash, string $subscriberHash, $currentUrl): void
     {
-        if (!session_id()) {
-            session_start();
-        }
+        $click = Campaigns::linkCLicked($campaignHash, (string) $currentUrl, $subscriberHash);
 
-        Campaigns::linkCLicked($campaignHash, $currentUrl);
-        Subscribers::linksClicked($subscriberHash);
-
-        $_SESSION['campaignHash'] = $campaignHash;
-        $_SESSION['subscriberHash'] = $subscriberHash;
-        $_SESSION[$currentUrl] = true;
+        // A campaign that is not found has no first click to count.
+        Subscribers::linksClicked($subscriberHash, $click['firstInCampaign']);
     }
 }

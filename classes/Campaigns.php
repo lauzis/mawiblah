@@ -918,48 +918,54 @@ class Campaigns
         }
     }
 
+    /** Post meta on a campaign: one row per subscriber who clicked anything in it. */
+    const CLICKED_BY_META = 'clicked_by';
+
+    /** Post meta on a campaign: one row per subscriber and link they clicked. */
+    const CLICKED_LINK_META = 'clicked_link';
+
     /**
      * Records a link click for a campaign URL, updating all three click counters.
      *
-     * Always increments linksClickedTotal. Increments linksClicked and uniqueUserClicks
-     * only when the session doesn't already carry them (prevents double-counting per session).
+     * Always increments linksClickedTotal. uniqueUserClicks counts a subscriber's first
+     * click in the campaign, linksClicked (and the per-URL count) a subscriber's first
+     * click on that URL.
      *
-     * @param string $campaignHash Campaign identifier hash.
-     * @param string $url          The URL that was clicked.
-     * @return int Updated per-session click count, or 0 if campaign not found.
+     * Who already clicked what is kept on the campaign, not in a PHP session: the link
+     * itself names the subscriber, so the answer does not depend on which browser they
+     * use, and no page needs a session cookie (which keeps it out of any page cache).
+     * resetCounters() clears it along with the counters.
+     *
+     * @param string $campaignHash   Campaign identifier hash.
+     * @param string $url            The URL that was clicked.
+     * @param string $subscriberHash Subscriber identifier hash.
+     * @return array{found: bool, firstInCampaign: bool} Whether the campaign exists, and
+     *               whether this was the subscriber's first click in it.
      */
-    public static function linkCLicked(string $campaignHash, string $url): int
+    public static function linkCLicked(string $campaignHash, string $url, string $subscriberHash): array
     {
         $campaign = self::getCampaignByHash($campaignHash);
 
         if (!$campaign) {
             Logs::addLog('Campaign not found', 'Campaign not found', ['campaignHash' => $campaignHash, 'url' => $url]);
-            return 0;
+            return ['found' => false, 'firstInCampaign' => false];
         }
 
         $currentCountTotal = ( int )$campaign->linksClickedTotal ?? 0;
         update_post_meta($campaign->id, 'linksClickedTotal', $currentCountTotal + 1);
 
-        // lets check if visit is in session already
-        // check if session started
-        if (!session_id() && !headers_sent()) {
-            session_start();
-        }
-
-        // Track unique user clicks (once per subscriber per campaign)
-        $isNewUser = !isset($_SESSION['campaignHash']) || !isset($_SESSION['subscriberHash']);
-        if ($isNewUser) {
+        $firstInCampaign = self::markOnce($campaign->id, self::CLICKED_BY_META, $subscriberHash);
+        if ($firstInCampaign) {
             $currentUniqueUsers = ( int )$campaign->uniqueUserClicks ?? 0;
             update_post_meta($campaign->id, 'uniqueUserClicks', $currentUniqueUsers + 1);
         }
 
-        if (isset($_SESSION['campaignHash']) && isset($_SESSION['subscriberHash']) && isset($_SESSION[$url])) {
-            return (int)$campaign->linksClicked;
+        if (!self::markOnce($campaign->id, self::CLICKED_LINK_META, md5($subscriberHash . '|' . $url))) {
+            return ['found' => true, 'firstInCampaign' => $firstInCampaign];
         }
 
         $currentCount = ( int )$campaign->linksClicked ?? 0;
-        $newCount = $currentCount + 1;
-        update_post_meta($campaign->id, 'linksClicked', $newCount);
+        update_post_meta($campaign->id, 'linksClicked', $currentCount + 1);
 
         $links = $campaign->links;
         if (isset($links[$url])) {
@@ -971,7 +977,32 @@ class Campaigns
 
         add_post_meta($campaign->id, 'click_time', time(), false);
 
-        return $newCount;
+        return ['found' => true, 'firstInCampaign' => $firstInCampaign];
+    }
+
+    /**
+     * Adds $value under $key on the campaign unless it is already there.
+     *
+     * @return bool True when it was not there before (the first time).
+     */
+    private static function markOnce(int $campaignPostId, string $key, string $value): bool
+    {
+        global $wpdb;
+
+        $seen = $wpdb->get_var($wpdb->prepare(
+            "SELECT 1 FROM {$wpdb->postmeta} WHERE post_id = %d AND meta_key = %s AND meta_value = %s LIMIT 1",
+            $campaignPostId,
+            $key,
+            $value
+        ));
+
+        if ($seen) {
+            return false;
+        }
+
+        add_post_meta($campaignPostId, $key, $value, false);
+
+        return true;
     }
 
     /**
@@ -1356,6 +1387,8 @@ class Campaigns
         update_post_meta($campaignPostId, 'linksClicked', 0);
         update_post_meta($campaignPostId, 'linksClickedTotal', 0);
         update_post_meta($campaignPostId, 'uniqueUserClicks', 0);
+        delete_post_meta($campaignPostId, self::CLICKED_BY_META);
+        delete_post_meta($campaignPostId, self::CLICKED_LINK_META);
     }
 
     /**

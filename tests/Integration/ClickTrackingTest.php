@@ -22,7 +22,6 @@ class ClickTrackingTest extends WP_UnitTestCase
         $this->campaignHash = $c->campaignHash;
         $this->sub1         = Subscribers::addSubscriber('click1@mawiblah.test');
         $this->sub2         = Subscribers::addSubscriber('click2@mawiblah.test');
-        $_SESSION           = [];
     }
 
     public function tearDown(): void
@@ -30,7 +29,6 @@ class ClickTrackingTest extends WP_UnitTestCase
         Campaigns::deleteCampaign($this->campaignId);
         wp_delete_post($this->sub1->id, true);
         wp_delete_post($this->sub2->id, true);
-        $_SESSION = [];
         parent::tearDown();
     }
 
@@ -52,7 +50,7 @@ class ClickTrackingTest extends WP_UnitTestCase
         $this->assertSame(2, $this->getCounters()['total']);
     }
 
-    public function test_unique_per_session_deduplicates_same_url(): void
+    public function test_unique_per_subscriber_deduplicates_same_url(): void
     {
         $url = 'https://example.com/b';
         Visits::visit($this->campaignHash, $this->sub1->subscriberHash, $url);
@@ -61,7 +59,7 @@ class ClickTrackingTest extends WP_UnitTestCase
         $this->assertSame(1, $this->getCounters()['unique']);
     }
 
-    public function test_unique_per_session_counts_different_urls(): void
+    public function test_unique_per_subscriber_counts_different_urls(): void
     {
         Visits::visit($this->campaignHash, $this->sub1->subscriberHash, 'https://example.com/c1');
         Visits::visit($this->campaignHash, $this->sub1->subscriberHash, 'https://example.com/c2');
@@ -80,11 +78,38 @@ class ClickTrackingTest extends WP_UnitTestCase
 
     public function test_different_subscribers_each_count_as_unique_user(): void
     {
-        $_SESSION = [];
         Visits::visit($this->campaignHash, $this->sub1->subscriberHash, 'https://example.com/e');
-        $_SESSION = [];
         Visits::visit($this->campaignHash, $this->sub2->subscriberHash, 'https://example.com/e');
 
         $this->assertSame(2, $this->getCounters()['users']);
+        $this->assertSame(2, $this->getCounters()['unique']);
+    }
+
+    // The same subscriber in another browser (a new session, before) is still the same subscriber.
+    public function test_repeat_click_without_session_state_is_not_unique_again(): void
+    {
+        Visits::visit($this->campaignHash, $this->sub1->subscriberHash, 'https://example.com/f');
+        $_SESSION = [];
+        Visits::visit($this->campaignHash, $this->sub1->subscriberHash, 'https://example.com/f');
+
+        $this->assertSame(['total' => 2, 'unique' => 1, 'users' => 1], $this->getCounters());
+    }
+
+    public function test_subscriber_activity_counts_once_per_campaign(): void
+    {
+        Visits::visit($this->campaignHash, $this->sub1->subscriberHash, 'https://example.com/g1');
+        Visits::visit($this->campaignHash, $this->sub1->subscriberHash, 'https://example.com/g2');
+
+        $this->assertSame(2, (int) get_post_meta($this->sub1->id, 'activityTotal', true));
+        $this->assertSame(1, (int) get_post_meta($this->sub1->id, 'activity', true));
+    }
+
+    public function test_reset_counters_forgets_who_clicked(): void
+    {
+        Visits::visit($this->campaignHash, $this->sub1->subscriberHash, 'https://example.com/h');
+        Campaigns::resetCounters($this->campaignId);
+        Visits::visit($this->campaignHash, $this->sub1->subscriberHash, 'https://example.com/h');
+
+        $this->assertSame(['total' => 1, 'unique' => 1, 'users' => 1], $this->getCounters());
     }
 }

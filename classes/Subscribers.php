@@ -951,30 +951,28 @@ class Subscribers
     }
 
     /**
-     * Increments the subscriber's total activity counter and, when not already counted in
-     * the current session, the per-session activity counter.
+     * Records a link click for a subscriber.
      *
-     * @param string $subscriberHash Subscriber identifier hash.
-     * @return int|null Updated per-session activity count, or null if subscriber not found.
+     * Always increments activityTotal; activity only for the subscriber's first click in a
+     * campaign, as Campaigns::linkCLicked() reports it.
+     *
+     * @param string $subscriberHash  Subscriber identifier hash.
+     * @param bool   $firstInCampaign Whether this is their first click in the campaign.
+     * @return int|null Updated activity count, or null if subscriber not found.
      */
-    public static function linksClicked($subscriberHash)
+    public static function linksClicked($subscriberHash, bool $firstInCampaign = true)
     {
         $subscriber = self::getSubscriberBySubscriberHash($subscriberHash);
-        
+
         if (!$subscriber) {
             Logs::addLog('Subscriber not found', '', ['subscriberHash' => $subscriberHash]);
             return;
         }
-        
+
         $subscriber->activityTotal++;
         update_post_meta($subscriber->id, 'activityTotal', $subscriber->activityTotal);
 
-        // lets check if visit is in session already
-        // check if session started
-        if (!session_id()) {
-            session_start();
-        }
-        if (isset($_SESSION['campaignHash']) && isset($_SESSION['subscriberHash'])) {
+        if (!$firstInCampaign) {
             return $subscriber->activity;
         }
 

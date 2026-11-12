@@ -185,10 +185,11 @@ Each campaign in MAWIBLAH tracks various metrics and metadata stored as WordPres
 - **`emailsNewlyUnsubed`** - Number of recipients who unsubscribed after receiving this specific campaign
 
 ### Click Tracking Counters
-- **`linksClickedTotal`** - Total number of all link clicks (includes duplicates from same user/session)
-- **`linksClicked`** - Unique link clicks per session (duplicate clicks from same session don't count)
+- **`linksClickedTotal`** - Total number of all link clicks (includes repeat clicks from the same subscriber)
+- **`linksClicked`** - Unique link clicks: each subscriber counts once per URL
 - **`uniqueUserClicks`** - Number of unique users/subscribers who clicked any link in the campaign (counted once per subscriber)
 - **`links`** - JSON object tracking individual URL click counts: `{"https://example.com": 5, "https://example.com/page": 3}`
+- **`clicked_by`** / **`clicked_link`** - Which subscribers already clicked, and which URLs each of them clicked (one meta row each); cleared with the counters
 - **`click_time`** - Timestamps of when links were clicked (stored as multiple meta entries for timing analysis)
 
 ### Campaign Workflow Status
@@ -208,7 +209,6 @@ The plugin uses two different identifiers for campaigns to ensure security and s
   - Unsubscribe links
   - Tracking URLs
   - Public-facing shortcodes
-  - Session tracking
   - Email template placeholders (`{campaignHash}`)
 
 ### Counter Usage Examples
@@ -250,7 +250,7 @@ MAWIBLAH tracks link clicks in three different ways to provide comprehensive eng
 ### linksClickedTotal
 **Total clicks including duplicates**
 
-This metric counts every single click on links in your campaign, including multiple clicks from the same user/session. It represents the total engagement with your campaign links.
+This metric counts every single click on links in your campaign, including multiple clicks from the same subscriber. It represents the total engagement with your campaign links.
 
 - Incremented on every link click
 - Includes duplicate clicks from same subscriber
@@ -258,13 +258,13 @@ This metric counts every single click on links in your campaign, including multi
 - Example: If one person clicks a link 5 times, this counts as 5
 
 ### linksClicked
-**Unique clicks per session**
+**Unique clicks per subscriber and URL**
 
-This metric counts only unique clicks per user session. If a subscriber clicks the same link multiple times during their session, it only counts once.
+This metric counts each URL once per subscriber. If a subscriber clicks the same link several times -- on the same day or a week later, on their phone or their laptop -- it counts once.
 
-- Incremented only once per URL per session
-- Duplicate clicks from same subscriber/session are ignored
-- Session is tracked using PHP sessions with `campaignHash`, `subscriberHash`, and URL
+- Incremented only for a subscriber's first click on a URL
+- Repeat clicks by the same subscriber are ignored
+- Remembered in the campaign's `clicked_link` meta (md5 of `subscriberHash` and URL), not in a PHP session
 - Useful for measuring unique link engagement
 - Example: If one person clicks 3 different links, this counts as 3
 
